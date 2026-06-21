@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}</style>
+</helmet>
+<div style="width:max-content;min-width:100%;min-height:100vh;box-sizing:border-box;padding:48px;background:#e7e5df;font-family:'Inter',system-ui,sans-serif;color:#2B2A27">
+
+  <!-- ===== HEADER ===== -->
+  <div style="max-width:1080px;margin-bottom:46px">
+    <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#8a857c;margin-bottom:14px">White-label lead pipeline · Design system</div>
+    <h1 style="margin:0 0 12px;font-size:42px;font-weight:700;letter-spacing:-.03em;line-height:1.05">One layout. Two themes.<br>Zero layout changes.</h1>
+    <p style="margin:0;font-size:17px;line-height:1.55;color:#6B6862;max-width:680px">Every screen reads from abstract theme tokens. Swapping the token set — Neutral Default → GamersLab — reskins the entire product without moving a single box. The board below shows the tokens, the component kit, and all six screens (the three review-critical screens rendered in both themes as the portability proof).</p>
+  </div>
+
+  <!-- ===== SECTION A — TOKENS ===== -->
+  <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#807b72;margin:0 0 20px">A · Tokens — both themes</div>
+  <div style="display:flex;gap:40px;align-items:flex-start;margin-bottom:70px">
+
+    <!-- Neutral token frame -->
+    <div style="flex:none;width:560px">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">Neutral Default — warm baseline</div>
+      <div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden">
+        <div style="background:#FAF9F6;color:#2B2A27;padding:26px;font-size:13px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 22px">
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#FAF9F6;border:1px solid rgba(0,0,0,.14);flex:none"></span><span style="flex:1;font-weight:600">bg-canvas</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9A968E">#FAF9F6</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#2F6F62;border:1px solid rgba(0,0,0,.1);flex:none"></span><span style="flex:1;font-weight:600">accent</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9A968E">#2F6F62</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#FFFFFF;border:1px solid rgba(0,0,0,.14);flex:none"></span><span style="flex:1;font-weight:600">bg-surface</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9A968E">#FFFFFF</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#265B50;flex:none"></span><span style="flex:1;font-weight:600">accent-hover</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9A968E">#265B50</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#F3F1EC;border:1px solid rgba(0,0,0,.1);flex:none"></span><span style="flex:1;font-weight:600">bg-subtle</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9A968E">#F3F1EC</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#E5F0EC;border:1px solid rgba(0,0,0,.1);flex:none"></span><span style="flex:1;font-weight:600">accent-soft</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9A968E">#E5F0EC</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#E7E4DD;flex:none"></span><span style="flex:1;font-weight:600">border</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9A968E">#E7E4DD</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#C9792E;flex:none"></span><span style="flex:1;font-weight:600">highlight</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9A968E">#C9792E</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#2B2A27;flex:none"></span><span style="flex:1;font-weight:600">text-primary</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9A968E">#2B2A27</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#2E7D5B;flex:none"></span><span style="flex:1;font-weight:600">success</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9A968E">#2E7D5B</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#6B6862;flex:none"></span><span style="flex:1;font-weight:600">text-secondary</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9A968E">#6B6862</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#B8860B;flex:none"></span><span style="flex:1;font-weight:600">warning</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9A968E">#B8860B</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#9A968E;flex:none"></span><span style="flex:1;font-weight:600">text-muted</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9A968E">#9A968E</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#B4453C;flex:none"></span><span style="flex:1;font-weight:600">danger</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9A968E">#B4453C</span></div>
+          </div>
+          <div style="height:1px;background:#E7E4DD;margin:20px 0"></div>
+          <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px"><span style="font-size:36px;font-weight:700;letter-spacing:-.02em">Aa 36</span><span style="font-size:28px;font-weight:700;letter-spacing:-.01em">Aa 28</span><span style="font-size:20px;font-weight:600">Aa 20</span><span style="font-size:16px">Body 16</span><span style="font-size:14px;color:#6B6862">Label 14</span><span style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9A968E">Mono 12</span></div>
+          <div style="display:flex;align-items:flex-end;gap:18px;margin-top:18px">
+            <div style="display:flex;align-items:flex-end;gap:9px"><span style="width:34px;height:34px;background:#E5F0EC;border:1px solid #2F6F62;border-radius:8px"></span><span style="width:34px;height:34px;background:#E5F0EC;border:1px solid #2F6F62;border-radius:12px"></span><span style="width:34px;height:34px;background:#E5F0EC;border:1px solid #2F6F62;border-radius:16px"></span><span style="font-size:11px;color:#9A968E">r 8·12·16</span></div>
+            <div style="display:flex;align-items:flex-end;gap:4px"><span style="width:4px;height:14px;background:#2F6F62;border-radius:1px"></span><span style="width:8px;height:14px;background:#2F6F62;border-radius:1px"></span><span style="width:12px;height:14px;background:#2F6F62;border-radius:1px"></span><span style="width:16px;height:14px;background:#2F6F62;border-radius:1px"></span><span style="width:24px;height:14px;background:#2F6F62;border-radius:1px"></span><span style="width:32px;height:14px;background:#2F6F62;border-radius:1px"></span><span style="font-size:11px;color:#9A968E;margin-left:4px">space 4→48</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GamersLab token frame -->
+    <div style="flex:none;width:560px">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">GamersLab Overlay — same tokens, reskinned</div>
+      <div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden">
+        <div style="background:#0D1F2D;color:#ECEEF5;padding:26px;font-size:13px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px 22px">
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#0D1F2D;border:1px solid rgba(255,255,255,.18);flex:none"></span><span style="flex:1;font-weight:600">bg-canvas</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#6E7689">#0D1F2D</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#7C5CFF;flex:none"></span><span style="flex:1;font-weight:600">accent</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#6E7689">#7C5CFF</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#171A22;border:1px solid rgba(255,255,255,.14);flex:none"></span><span style="flex:1;font-weight:600">bg-surface</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#6E7689">#171A22</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#6A49F0;flex:none"></span><span style="flex:1;font-weight:600">accent-hover</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#6E7689">#6A49F0</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#1F2330;border:1px solid rgba(255,255,255,.12);flex:none"></span><span style="flex:1;font-weight:600">bg-subtle</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#6E7689">#1F2330</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#211C3D;border:1px solid rgba(255,255,255,.12);flex:none"></span><span style="flex:1;font-weight:600">accent-soft</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#6E7689">#211C3D</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#2B3040;flex:none"></span><span style="flex:1;font-weight:600">border</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#6E7689">#2B3040</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#34D399;flex:none"></span><span style="flex:1;font-weight:600">highlight</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#6E7689">#34D399</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#ECEEF5;flex:none"></span><span style="flex:1;font-weight:600">text-primary</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#6E7689">#ECEEF5</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#3CCB7F;flex:none"></span><span style="flex:1;font-weight:600">success</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#6E7689">#3CCB7F</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#A9B0C2;flex:none"></span><span style="flex:1;font-weight:600">text-secondary</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#6E7689">#A9B0C2</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#F5C451;flex:none"></span><span style="flex:1;font-weight:600">warning</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#6E7689">#F5C451</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#6E7689;flex:none"></span><span style="flex:1;font-weight:600">text-muted</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#6E7689">#6E7689</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:22px;height:22px;border-radius:6px;background:#FF6B6B;flex:none"></span><span style="flex:1;font-weight:600">danger</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#6E7689">#FF6B6B</span></div>
+          </div>
+          <div style="height:1px;background:#2B3040;margin:20px 0"></div>
+          <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px"><span style="font-size:36px;font-weight:700;letter-spacing:-.02em">Aa 36</span><span style="font-size:28px;font-weight:700;letter-spacing:-.01em">Aa 28</span><span style="font-size:20px;font-weight:600">Aa 20</span><span style="font-size:16px">Body 16</span><span style="font-size:14px;color:#A9B0C2">Label 14</span><span style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6E7689">Mono 12</span></div>
+          <div style="display:flex;align-items:flex-end;gap:18px;margin-top:18px">
+            <div style="display:flex;align-items:flex-end;gap:9px"><span style="width:34px;height:34px;background:#211C3D;border:1px solid #7C5CFF;border-radius:8px"></span><span style="width:34px;height:34px;background:#211C3D;border:1px solid #7C5CFF;border-radius:12px"></span><span style="width:34px;height:34px;background:#211C3D;border:1px solid #7C5CFF;border-radius:16px"></span><span style="font-size:11px;color:#6E7689">r 8·12·16</span></div>
+            <div style="display:flex;align-items:flex-end;gap:4px"><span style="width:4px;height:14px;background:#7C5CFF;border-radius:1px"></span><span style="width:8px;height:14px;background:#7C5CFF;border-radius:1px"></span><span style="width:12px;height:14px;background:#7C5CFF;border-radius:1px"></span><span style="width:16px;height:14px;background:#7C5CFF;border-radius:1px"></span><span style="width:24px;height:14px;background:#7C5CFF;border-radius:1px"></span><span style="width:32px;height:14px;background:#7C5CFF;border-radius:1px"></span><span style="font-size:11px;color:#6E7689;margin-left:4px">space 4→48</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SECTION B — COMPONENT KIT ===== -->
+  <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#807b72;margin:0 0 20px">B · Component kit</div>
+  <div style="display:flex;gap:40px;align-items:flex-start;margin-bottom:34px">
+
+    <!-- Buttons / inputs -->
+    <div style="flex:none;width:420px">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">Buttons · Inputs · Dropzone</div>
+      <div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden">
+        <div style="background:#FAF9F6;padding:24px;color:#2B2A27;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <span style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:999px;background:#2F6F62;color:#fff;font-size:15px;font-weight:600">Primary</span>
+            <span style="display:inline-flex;align-items:center;padding:11px 19px;border-radius:999px;background:#fff;border:1px solid #E7E4DD;color:#2B2A27;font-size:15px;font-weight:600">Secondary</span>
+            <span style="display:inline-flex;align-items:center;padding:11px 14px;border-radius:999px;color:#2F6F62;font-size:15px;font-weight:600">Ghost</span>
+          </div>
+          <div>
+            <label style="display:block;font-size:13px;font-weight:600;color:#6B6862;margin-bottom:6px">Input</label>
+            <div style="padding:12px 14px;border:1px solid #E7E4DD;border-radius:12px;background:#fff;font-size:15px;color:#9A968E">you@studio.com</div>
+          </div>
+          <div>
+            <label style="display:block;font-size:13px;font-weight:600;color:#6B6862;margin-bottom:6px">Textarea</label>
+            <div style="padding:12px 14px;border:1px solid #2F6F62;border-radius:12px;background:#fff;font-size:15px;color:#2B2A27;line-height:1.5">Editing — focused field with accent ring.</div>
+          </div>
+          <div style="border:2px dashed #E7E4DD;background:#F3F1EC;border-radius:16px;padding:20px;text-align:center">
+            <div style="font-size:15px;font-weight:600">Drop files, or <span style="color:#2F6F62">browse</span></div>
+            <div style="font-size:12px;color:#9A968E;margin-top:3px">PDFs, decks, docs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chips / toggle / stepper / score / usage -->
+    <div style="flex:none;width:440px">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">Chips · Toggle · Stepper · Score · Usage</div>
+      <div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden">
+        <div style="background:#FAF9F6;padding:24px;color:#2B2A27;display:flex;flex-direction:column;gap:18px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span style="display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid #E7E4DD;border-radius:999px;background:#fff;font-size:13px">onepager.pdf <span style="color:#2E7D5B;font-weight:700">✓</span> <span style="color:#9A968E">✕</span></span>
+            <span style="display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid #E7E4DD;border-radius:999px;background:#fff;font-size:13px">gamerslab.com <span style="font-size:11px;font-weight:600;color:#2F6F62;background:#E5F0EC;padding:2px 7px;border-radius:99px">parsing</span></span>
+            <span style="display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid #E7E4DD;border-radius:999px;background:#fff;font-size:13px">@gamerslab <span style="color:#9A968E">✕</span></span>
+          </div>
+          <div style="display:inline-flex;background:#F3F1EC;border:1px solid #E7E4DD;border-radius:999px;padding:3px;width:max-content">
+            <span style="padding:7px 16px;border-radius:999px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.06);font-size:14px;font-weight:600">Customers</span>
+            <span style="padding:7px 16px;border-radius:999px;color:#6B6862;font-size:14px;font-weight:600">Investors</span>
+          </div>
+          <div style="display:flex;align-items:center">
+            <span style="width:24px;height:24px;border-radius:50%;background:#2F6F62;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">✓</span><span style="font-size:13px;color:#9A968E;margin:0 8px">Context</span>
+            <span style="flex:1;height:2px;background:#2F6F62;min-width:18px"></span>
+            <span style="width:24px;height:24px;border-radius:50%;background:#2F6F62;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-left:8px">2</span><span style="font-size:13px;font-weight:600;margin:0 8px">Intake</span>
+            <span style="flex:1;height:2px;background:#E7E4DD;min-width:18px"></span>
+            <span style="width:24px;height:24px;border-radius:50%;background:#F3F1EC;border:1px solid #E7E4DD;color:#9A968E;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-left:8px">3</span><span style="font-size:13px;color:#9A968E;margin-left:8px">Review</span>
+          </div>
+          <div style="display:flex;gap:9px;align-items:center">
+            <span style="padding:5px 11px;border-radius:10px;font-size:15px;font-weight:700;background:rgba(46,125,91,.13);color:#2E7D5B">94<span style="font-size:10px;opacity:.7">/100</span></span>
+            <span style="padding:5px 11px;border-radius:10px;font-size:15px;font-weight:700;background:rgba(47,111,98,.13);color:#2F6F62">74<span style="font-size:10px;opacity:.7">/100</span></span>
+            <span style="padding:5px 11px;border-radius:10px;font-size:15px;font-weight:700;background:rgba(184,134,11,.14);color:#B8860B">58<span style="font-size:10px;opacity:.7">/100</span></span>
+            <span style="padding:5px 11px;border-radius:10px;font-size:15px;font-weight:700;background:rgba(180,69,60,.13);color:#B4453C">41<span style="font-size:10px;opacity:.7">/100</span></span>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:#6B6862;margin-bottom:6px"><span>Usage</span><span>320 / 1,000 credits</span></div>
+            <div style="height:8px;border-radius:99px;background:#F3F1EC;overflow:hidden"><div style="height:100%;width:32%;background:#2F6F62;border-radius:99px"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gate banner both themes -->
+    <div style="flex:none;width:440px">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">Gate banner — the human-review moment</div>
+      <div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden">
+        <div style="padding:20px;display:flex;flex-direction:column;gap:16px">
+          <div style="background:#FAF9F6;border-radius:12px;padding:14px">
+            <div style="display:flex;gap:12px;align-items:flex-start;background:#F8ECD9;border:1px solid #C9792E;border-radius:14px;padding:14px 16px">
+              <span style="flex:none;width:34px;height:34px;border-radius:10px;background:#C9792E;color:#1a1a1a;display:flex;align-items:center;justify-content:center;font-size:18px">✦</span>
+              <div><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9A5816;margin-bottom:2px">Your turn to review</div><div style="font-size:16px;font-weight:700;margin-bottom:2px">Here's what we understood</div><p style="margin:0;font-size:13px;color:#6B6862;line-height:1.45">Make it right before we go further.</p></div>
+            </div>
+          </div>
+          <div style="background:#0D1F2D;border-radius:12px;padding:14px">
+            <div style="display:flex;gap:12px;align-items:flex-start;background:#222E14;border:1px solid #34D399;border-radius:14px;padding:14px 16px">
+              <span style="flex:none;width:34px;height:34px;border-radius:10px;background:#34D399;color:#0D1F2D;display:flex;align-items:center;justify-content:center;font-size:18px">✦</span>
+              <div><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#34D399;margin-bottom:2px">Your turn to review</div><div style="font-size:16px;font-weight:700;color:#ECEEF5;margin-bottom:2px">Approve the ones worth pursuing</div><p style="margin:0;font-size:13px;color:#A9B0C2;line-height:1.45">Keep the good fits, skip the rest.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:40px;align-items:flex-start;margin-bottom:70px">
+    <!-- Lead row + field card -->
+    <div style="flex:none;width:600px">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">Lead row · Field card</div>
+      <div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden">
+        <div style="background:#FAF9F6;padding:22px;color:#2B2A27;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;gap:14px;align-items:flex-start;background:#fff;border:1px solid #E7E4DD;border-radius:14px;padding:16px">
+            <span style="flex:none;width:46px;height:46px;border-radius:12px;background:#F3F1EC;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#6B6862">PF</span>
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:9px"><span style="font-size:16px;font-weight:600">Pixel Forge Studios</span><span style="font-size:11px;font-weight:600;color:#2E7D5B;background:#E4F1E9;padding:2px 8px;border-radius:99px">✓ Verified</span></div>
+              <p style="margin:4px 0 7px;font-size:14px;color:#6B6862;line-height:1.5">Closed a $2.1M seed and posted a "first UX hire" role — actively building a research function.</p>
+              <div style="display:flex;gap:12px;align-items:center"><span style="font-size:12px;font-weight:600;color:#2F6F62">↗ TechCrunch</span><span style="font-size:12px;color:#9A968E">14 people</span><span style="font-size:12px;color:#9A968E">Seattle</span></div>
+            </div>
+            <div style="flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+              <span style="padding:5px 11px;border-radius:10px;font-size:15px;font-weight:700;background:rgba(46,125,91,.13);color:#2E7D5B">94<span style="font-size:10px;opacity:.7">/100</span></span>
+              <div style="display:flex;gap:7px"><span style="width:34px;height:34px;border-radius:9px;border:1px solid #E7E4DD;background:#fff;color:#9A968E;display:flex;align-items:center;justify-content:center">✕</span><span style="width:34px;height:34px;border-radius:9px;border:1px solid #2E7D5B;background:#2E7D5B;color:#fff;display:flex;align-items:center;justify-content:center">✓</span></div>
+            </div>
+          </div>
+          <div style="background:#fff;border:1px solid #E7E4DD;border-radius:16px;padding:18px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:16px;font-weight:600">Business summary</span><span style="font-size:11px;font-weight:600;color:#2E7D5B;background:#F3F1EC;padding:3px 8px;border-radius:99px">⛉ High confidence</span></div><span style="font-size:13px;font-weight:600;color:#6B6862;border:1px solid #E7E4DD;padding:5px 11px;border-radius:99px">✎ Edit</span></div>
+            <p style="margin:0;font-size:15px;line-height:1.6;color:#6B6862">Gamers Lab helps indie and mid-size game studios run structured playtests and turn scattered session data into clear, shippable design decisions.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- States -->
+    <div style="flex:none;width:420px">
+      <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">States — empty · loading · toast</div>
+      <div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden">
+        <div style="background:#FAF9F6;padding:22px;color:#2B2A27;display:flex;flex-direction:column;gap:16px">
+          <div style="border:1px dashed #E7E4DD;border-radius:14px;padding:26px;text-align:center;color:#9A968E"><div style="font-size:15px;font-weight:600;color:#6B6862;margin-bottom:4px">No leads yet</div><div style="font-size:13px">Run discovery to find your first matches.</div></div>
+          <div style="background:#fff;border:1px solid #E7E4DD;border-radius:14px;padding:22px;text-align:center">
+            <div style="width:44px;height:44px;margin:0 auto 12px;border:3px solid #E5F0EC;border-top-color:#2F6F62;border-radius:50%"></div>
+            <div style="font-size:15px;font-weight:600">Searching and verifying…</div>
+            <div style="height:7px;border-radius:99px;background:#F3F1EC;overflow:hidden;margin-top:12px"><div style="height:100%;width:64%;background:#2F6F62;border-radius:99px"></div></div>
+          </div>
+          <div style="display:inline-flex;align-items:center;gap:9px;background:#2B2A27;color:#fff;padding:11px 16px;border-radius:99px;font-size:14px;width:max-content"><span style="color:#3CCB7F">✓</span> 12 leads exported</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SECTION C — SCREENS ===== -->
+  <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#807b72;margin:0 0 6px">C · Six screens — live, clickable</div>
+  <p style="margin:0 0 22px;font-size:14px;color:#6B6862;max-width:760px">Each frame is the real prototype, rendered at the requested screen and theme. The three review-critical screens — Context, Gate&nbsp;A, Gate&nbsp;B — appear in <b>both themes</b> to prove the layout never moves.</p>
+
+  <!-- Row 1: onboarding -->
+  <div style="display:flex;gap:36px;align-items:flex-start;margin-bottom:40px">
+    <div style="flex:none;width:640px"><div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">1 · Sign in — Neutral</div><div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;width:640px;height:400px"><div style="width:1280px;height:800px;transform:scale(.5);transform-origin:top left"><dc-import name="Lead Pipeline Prototype" initial-screen="signin" initial-theme="neutral" chrome="{{ false }}" hint-size="1280px,800px" style="display:block;width:1280px;height:800px"></dc-import></div></div></div>
+    <div style="flex:none;width:640px"><div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">3 · Guided intake — Neutral</div><div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;width:640px;height:400px"><div style="width:1280px;height:800px;transform:scale(.5);transform-origin:top left"><dc-import name="Lead Pipeline Prototype" initial-screen="intake" initial-theme="neutral" chrome="{{ false }}" hint-size="1280px,800px" style="display:block;width:1280px;height:800px"></dc-import></div></div></div>
+    <div style="flex:none;width:640px"><div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">Discovery — Neutral</div><div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;width:640px;height:400px"><div style="width:1280px;height:800px;transform:scale(.5);transform-origin:top left"><dc-import name="Lead Pipeline Prototype" initial-screen="loading" initial-theme="neutral" chrome="{{ false }}" hint-size="1280px,800px" style="display:block;width:1280px;height:800px"></dc-import></div></div></div>
+  </div>
+
+  <!-- Row 2: Context both themes -->
+  <div style="display:flex;gap:36px;align-items:flex-start;margin-bottom:40px">
+    <div style="flex:none;width:640px"><div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">2 · Context drop — Neutral</div><div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;width:640px;height:400px"><div style="width:1280px;height:800px;transform:scale(.5);transform-origin:top left"><dc-import name="Lead Pipeline Prototype" initial-screen="context" initial-theme="neutral" chrome="{{ false }}" hint-size="1280px,800px" style="display:block;width:1280px;height:800px"></dc-import></div></div></div>
+    <div style="flex:none;width:640px"><div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">2 · Context drop — GamersLab</div><div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;width:640px;height:400px"><div style="width:1280px;height:800px;transform:scale(.5);transform-origin:top left"><dc-import name="Lead Pipeline Prototype" initial-screen="context" initial-theme="gamerslab" chrome="{{ false }}" hint-size="1280px,800px" style="display:block;width:1280px;height:800px"></dc-import></div></div></div>
+  </div>
+
+  <!-- Row 3: Gate A both themes -->
+  <div style="display:flex;gap:36px;align-items:flex-start;margin-bottom:40px">
+    <div style="flex:none;width:640px"><div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">4 · Gate A · Review summary — Neutral</div><div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;width:640px;height:400px"><div style="width:1280px;height:800px;transform:scale(.5);transform-origin:top left"><dc-import name="Lead Pipeline Prototype" initial-screen="gateA" initial-theme="neutral" chrome="{{ false }}" hint-size="1280px,800px" style="display:block;width:1280px;height:800px"></dc-import></div></div></div>
+    <div style="flex:none;width:640px"><div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">4 · Gate A · Review summary — GamersLab</div><div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;width:640px;height:400px"><div style="width:1280px;height:800px;transform:scale(.5);transform-origin:top left"><dc-import name="Lead Pipeline Prototype" initial-screen="gateA" initial-theme="gamerslab" chrome="{{ false }}" hint-size="1280px,800px" style="display:block;width:1280px;height:800px"></dc-import></div></div></div>
+  </div>
+
+  <!-- Row 4: Gate B both themes -->
+  <div style="display:flex;gap:36px;align-items:flex-start;margin-bottom:40px">
+    <div style="flex:none;width:640px"><div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">5 · Gate B · Review leads — Neutral</div><div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;width:640px;height:400px"><div style="width:1280px;height:800px;transform:scale(.5);transform-origin:top left"><dc-import name="Lead Pipeline Prototype" initial-screen="gateB" initial-theme="neutral" chrome="{{ false }}" hint-size="1280px,800px" style="display:block;width:1280px;height:800px"></dc-import></div></div></div>
+    <div style="flex:none;width:640px"><div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">5 · Gate B · Review leads — GamersLab</div><div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;width:640px;height:400px"><div style="width:1280px;height:800px;transform:scale(.5);transform-origin:top left"><dc-import name="Lead Pipeline Prototype" initial-screen="gateB" initial-theme="gamerslab" chrome="{{ false }}" hint-size="1280px,800px" style="display:block;width:1280px;height:800px"></dc-import></div></div></div>
+  </div>
+
+  <!-- Row 5: Dashboard -->
+  <div style="display:flex;gap:36px;align-items:flex-start;margin-bottom:20px">
+    <div style="flex:none;width:640px"><div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">6 · Dashboard — Neutral</div><div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;width:640px;height:400px"><div style="width:1280px;height:800px;transform:scale(.5);transform-origin:top left"><dc-import name="Lead Pipeline Prototype" initial-screen="dashboard" initial-theme="neutral" chrome="{{ false }}" hint-size="1280px,800px" style="display:block;width:1280px;height:800px"></dc-import></div></div></div>
+    <div style="flex:none;width:640px"><div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:11px">6 · Dashboard — GamersLab</div><div style="background:#fff;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;width:640px;height:400px"><div style="width:1280px;height:800px;transform:scale(.5);transform-origin:top left"><dc-import name="Lead Pipeline Prototype" initial-screen="dashboard" initial-theme="gamerslab" chrome="{{ false }}" hint-size="1280px,800px" style="display:block;width:1280px;height:800px"></dc-import></div></div></div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,450;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  #dc-root,.sc-host,.sc-host>div{height:100%}
+  ::placeholder{color:var(--text-muted);opacity:1}
+  textarea,input,button,select{font-family:inherit}
+  *:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+  @keyframes lp-spin{to{transform:rotate(360deg)}}
+  @keyframes lp-fade{from{transform:translateY(8px)}to{transform:none}}
+  @keyframes lp-shimmer{0%{background-position:-220px 0}100%{background-position:220px 0}}
+  @keyframes lp-pulse{0%,100%{opacity:.55}50%{opacity:1}}
+  .lp-scroll::-webkit-scrollbar{width:10px;height:10px}
+  .lp-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;border:3px solid transparent;background-clip:content-box}
+</style>
+</helmet>
+<div style="{{ rootStyle }}">
+
+  <!-- ============ SIGN IN ============ -->
+  <sc-if value="{{ isSignin }}" hint-placeholder-val="{{ true }}">
+    <div style="height:100%;width:100%;display:flex;align-items:center;justify-content:center;padding:32px">
+      <div style="width:380px;animation:lp-fade .4s ease both">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:26px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:34px;height:34px;display:flex;align-items:center;justify-content:center">{{ logoMark }}</div>
+            <span style="font-size:20px;font-weight:700;letter-spacing:-.02em">{{ tenantName }}</span>
+          </div>
+          <p style="margin:0;font-size:15px;color:var(--text-secondary);text-align:center;max-width:300px">Set up your lead pipeline in a few calm steps. We'll handle the searching — you stay in control.</p>
+        </div>
+        <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow-md);padding:26px 24px">
+          <label style="display:block;font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:7px">Work email</label>
+          <div style="position:relative">
+            <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text-muted);display:flex">{{ icoMail }}</span>
+            <input type="email" value="{{ email }}" onInput="{{ onEmail }}" placeholder="you@studio.com" style="width:100%;padding:13px 14px 13px 40px;border:1px solid var(--border);border-radius:12px;background:var(--bg-canvas);color:var(--text-primary);font-size:16px">
+          </div>
+          <sc-if value="{{ signinError }}">
+            <div style="display:flex;align-items:center;gap:7px;margin-top:9px;color:var(--danger);font-size:13px"><span style="display:flex">{{ icoAlert }}</span>Enter a valid email to continue.</div>
+          </sc-if>
+          <button onClick="{{ onSigninContinue }}" style="margin-top:16px;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px;border-radius:999px;border:none;background:var(--accent);color:var(--on-accent);font-size:16px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-sm)" style-hover="background:var(--accent-hover)">
+            <sc-if value="{{ signinLoading }}" hint-placeholder-val="{{ false }}"><span style="width:17px;height:17px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;animation:lp-spin .7s linear infinite"></span></sc-if>
+            <sc-if value="{{ signinIdle }}" hint-placeholder-val="{{ true }}"><span>Continue with email</span></sc-if>
+          </button>
+          <div style="display:flex;align-items:center;gap:12px;margin:16px 0">
+            <div style="flex:1;height:1px;background:var(--border)"></div>
+            <span style="font-size:12px;color:var(--text-muted)">or</span>
+            <div style="flex:1;height:1px;background:var(--border)"></div>
+          </div>
+          <button onClick="{{ onSigninContinue }}" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px;border-radius:999px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:15px;font-weight:600;cursor:pointer" style-hover="background:var(--bg-subtle)">
+            <span style="width:18px;height:18px;border-radius:50%;background:conic-gradient(from -45deg,#ea4335 0 25%,#fbbc05 0 50%,#34a853 0 75%,#4285f4 0 100%);display:inline-block"></span>
+            Continue with Google
+          </button>
+        </div>
+        <div style="text-align:center;margin-top:16px"><a href="#" style="font-size:13px;color:var(--text-muted);text-decoration:none">How it works ↗</a></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ CONTEXT DROP (step 1) ============ -->
+  <sc-if value="{{ isContext }}">
+    <div style="height:100%;display:flex;flex-direction:column">
+      <div style="flex:none;border-bottom:1px solid var(--border);background:var(--bg-surface)">
+        <div style="display:flex;align-items:center;gap:10px;padding:16px 28px 0">
+          <div style="width:26px;height:26px">{{ logoMark }}</div><span style="font-weight:700;font-size:15px;letter-spacing:-.01em">{{ tenantName }}</span>
+        </div>
+        {{ stepper }}
+      </div>
+      <div class="lp-scroll" style="flex:1;overflow:auto;padding:40px 28px 110px">
+        <div style="max-width:660px;margin:0 auto;animation:lp-fade .4s ease both">
+          <h1 style="margin:0 0 8px;font-size:30px;font-weight:700;letter-spacing:-.02em">Tell us about your business.</h1>
+          <p style="margin:0 0 26px;font-size:16px;color:var(--text-secondary)">Drop in whatever you've got. The more context we have, the sharper your leads. You can add more anytime.</p>
+
+          <div onClick="{{ onBrowse }}" style="border:2px dashed var(--border);background:var(--bg-subtle);border-radius:16px;padding:34px;text-align:center;cursor:pointer;transition:all .15s" style-hover="border-color:var(--accent);background:var(--accent-soft)">
+            <div style="width:54px;height:54px;border-radius:14px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;margin:0 auto 12px">{{ icoUpload }}</div>
+            <div style="font-size:16px;font-weight:600">Drop files, or <span style="color:var(--accent)">browse</span></div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:5px">PDFs, decks, docs — e.g. your one-pager, pitch deck, About page</div>
+          </div>
+
+          <sc-if value="{{ hasSources }}">
+            <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:18px">
+              <sc-for list="{{ sources }}" as="source" hint-placeholder-count="2">
+                <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 10px 8px 11px;border:1px solid var(--border);border-radius:999px;background:var(--bg-surface);font-size:14px;max-width:300px">
+                  <span style="display:flex;color:var(--text-muted)">{{ source.icon }}</span>
+                  <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ source.label }}</span>
+                  <sc-if value="{{ source.parsing }}"><span style="font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:2px 7px;border-radius:99px;animation:lp-pulse 1.2s ease infinite">parsing</span></sc-if>
+                  <sc-if value="{{ source.done }}"><span style="display:flex;color:var(--success)">{{ icoCheckSm }}</span></sc-if>
+                  <button onClick="{{ source.onRemove }}" style="display:flex;border:none;background:none;color:var(--text-muted);cursor:pointer;padding:2px;margin-left:1px">{{ icoXSm }}</button>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:26px">
+            <div>
+              <label style="display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;margin-bottom:8px"><span style="display:flex;color:var(--text-muted)">{{ icoGlobe }}</span>Website URL</label>
+              <div style="display:flex;gap:8px">
+                <input value="{{ websiteInput }}" onInput="{{ onWebsite }}" onKeyDown="{{ onWebsiteKey }}" placeholder="gamerslab.com" style="flex:1;padding:11px 13px;border:1px solid var(--border);border-radius:12px;background:var(--bg-surface);color:var(--text-primary);font-size:15px">
+                <button onClick="{{ onAddWebsite }}" style="flex:none;width:42px;border:1px solid var(--border);border-radius:12px;background:var(--bg-surface);color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:var(--accent-soft)">{{ icoPlus }}</button>
+              </div>
+            </div>
+            <div>
+              <label style="display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;margin-bottom:8px"><span style="display:flex;color:var(--text-muted)">{{ icoAt }}</span>Social handles</label>
+              <div style="display:flex;gap:8px">
+                <input value="{{ socialInput }}" onInput="{{ onSocial }}" onKeyDown="{{ onSocialKey }}" placeholder="@gamerslab" style="flex:1;padding:11px 13px;border:1px solid var(--border);border-radius:12px;background:var(--bg-surface);color:var(--text-primary);font-size:15px">
+                <button onClick="{{ onAddSocial }}" style="flex:none;width:42px;border:1px solid var(--border);border-radius:12px;background:var(--bg-surface);color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:var(--accent-soft)">{{ icoPlus }}</button>
+              </div>
+            </div>
+          </div>
+          <p style="margin:16px 0 0;font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:7px"><span style="display:flex">{{ icoLock }}</span>Your files stay private and are only used to build your pipeline.</p>
+        </div>
+      </div>
+      {{ onbFooter }}
+    </div>
+  </sc-if>
+
+  <!-- ============ GUIDED INTAKE (step 2) ============ -->
+  <sc-if value="{{ isIntake }}">
+    <div style="height:100%;display:flex;flex-direction:column">
+      <div style="flex:none;border-bottom:1px solid var(--border);background:var(--bg-surface)">
+        <div style="display:flex;align-items:center;gap:10px;padding:16px 28px 0">
+          <div style="width:26px;height:26px">{{ logoMark }}</div><span style="font-weight:700;font-size:15px;letter-spacing:-.01em">{{ tenantName }}</span>
+        </div>
+        {{ stepper }}
+      </div>
+      <div class="lp-scroll" style="flex:1;overflow:auto;padding:36px 28px 110px">
+        <div style="max-width:660px;margin:0 auto;animation:lp-fade .4s ease both">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:8px">
+            <div>
+              <h1 style="margin:0 0 6px;font-size:28px;font-weight:700;letter-spacing:-.02em">A few questions in your words.</h1>
+              <p style="margin:0;font-size:15px;color:var(--text-secondary)">No wrong answers — this just teaches us who to look for.</p>
+            </div>
+            <div style="flex:none">
+              <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-align:right">I'm looking for</div>
+              <div style="display:inline-flex;background:var(--bg-subtle);border:1px solid var(--border);border-radius:999px;padding:3px">
+                <button onClick="{{ onCustomers }}" style="{{ segCustomers }}">Customers</button>
+                <button onClick="{{ onInvestors }}" style="{{ segInvestors }}">Investors</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:16px;margin-top:22px">
+            <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow-sm)">
+              <label style="display:block;font-size:16px;font-weight:600;margin-bottom:4px">What do you offer?</label>
+              <p style="margin:0 0 11px;font-size:13px;color:var(--text-muted)">Your product and the value props that matter most.</p>
+              <textarea value="{{ intakeOffer }}" onInput="{{ onOffer }}" rows="2" placeholder="e.g. Structured playtesting + player analytics for game studios." style="width:100%;resize:vertical;padding:11px 13px;border:1px solid var(--border);border-radius:12px;background:var(--bg-canvas);color:var(--text-primary);font-size:15px;line-height:1.5"></textarea>
+            </div>
+            <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow-sm)">
+              <label style="display:block;font-size:16px;font-weight:600;margin-bottom:4px">{{ intakeQ2 }}</label>
+              <p style="margin:0 0 11px;font-size:13px;color:var(--text-muted)">{{ intakeQ2Sub }}</p>
+              <textarea value="{{ intakeIcp }}" onInput="{{ onIcp }}" rows="2" placeholder="{{ intakeIcpPh }}" style="width:100%;resize:vertical;padding:11px 13px;border:1px solid var(--border);border-radius:12px;background:var(--bg-canvas);color:var(--text-primary);font-size:15px;line-height:1.5"></textarea>
+            </div>
+            <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow-sm)">
+              <label style="display:block;font-size:16px;font-weight:600;margin-bottom:4px">{{ intakeQ3 }}</label>
+              <p style="margin:0 0 11px;font-size:13px;color:var(--text-muted)">The outcome that would make this worth it.</p>
+              <textarea value="{{ intakeOutcome }}" onInput="{{ onOutcome }}" rows="2" placeholder="{{ intakeOutcomePh }}" style="width:100%;resize:vertical;padding:11px 13px;border:1px solid var(--border);border-radius:12px;background:var(--bg-canvas);color:var(--text-primary);font-size:15px;line-height:1.5"></textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow-sm)">
+                <label style="display:block;font-size:16px;font-weight:600;margin-bottom:9px">Where do leads come from today?</label>
+                <textarea value="{{ intakeLeadsToday }}" onInput="{{ onLeadsToday }}" rows="2" placeholder="e.g. Community events, Discord, word of mouth." style="width:100%;resize:vertical;padding:11px 13px;border:1px solid var(--border);border-radius:12px;background:var(--bg-canvas);color:var(--text-primary);font-size:15px;line-height:1.5"></textarea>
+              </div>
+              <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow-sm)">
+                <label style="display:block;font-size:16px;font-weight:600;margin-bottom:9px">What makes a lead good?</label>
+                <textarea value="{{ intakeGoodLead }}" onInput="{{ onGoodLead }}" rows="2" placeholder="e.g. Funded, pre-launch, no in-house research." style="width:100%;resize:vertical;padding:11px 13px;border:1px solid var(--border);border-radius:12px;background:var(--bg-canvas);color:var(--text-primary);font-size:15px;line-height:1.5"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {{ onbFooter }}
+    </div>
+  </sc-if>
+
+  <!-- ============ VENUE MAP (step 3) ============ -->
+  <sc-if value="{{ isVenues }}">
+    <div style="height:100%;display:flex;flex-direction:column">
+      <div style="flex:none;border-bottom:1px solid var(--border);background:var(--bg-surface)">
+        <div style="display:flex;align-items:center;gap:10px;padding:16px 28px 0">
+          <div style="width:26px;height:26px">{{ logoMark }}</div><span style="font-weight:700;font-size:15px;letter-spacing:-.01em">{{ tenantName }}</span>
+        </div>
+        {{ stepper }}
+      </div>
+      <div class="lp-scroll" style="flex:1;overflow:auto;padding:36px 28px 110px">
+        <div style="max-width:680px;margin:0 auto;animation:lp-fade .4s ease both">
+          <div style="display:flex;align-items:center;gap:9px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px"><span style="display:flex">{{ icoPin }}</span>Venue map</div>
+          <h1 style="margin:0 0 6px;font-size:28px;font-weight:700;letter-spacing:-.02em">Where do your customers actually hang out?</h1>
+          <p style="margin:0 0 8px;font-size:15px;color:var(--text-secondary)">From your context, we think these are the places worth searching. Turn off anywhere that isn't a fit — we'll only hunt where you point us. <b style="color:var(--text-primary)">{{ venuesOnCount }} active.</b></p>
+
+          <div style="display:flex;flex-direction:column;gap:10px;margin:20px 0">
+            <sc-for list="{{ venueList }}" as="venue" hint-placeholder-count="6">
+              <div style="{{ venue.cardStyle }}">
+                <div style="{{ venue.tileStyle }}">{{ venue.pinIcon }}</div>
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+                    <span style="font-size:15px;font-weight:600">{{ venue.name }}</span>
+                    <span style="font-size:11px;font-weight:600;white-space:nowrap;padding:2px 8px;border-radius:99px;background:var(--bg-subtle);color:{{ venue.strengthColor }}">{{ venue.strengthLabel }}</span>
+                  </div>
+                  <div style="font-size:13px;color:var(--text-muted);margin-top:2px">{{ venue.platform }} · {{ venue.note }}</div>
+                </div>
+                <button onClick="{{ venue.onToggle }}" style="{{ venue.toggleStyle }}"><span style="{{ venue.knobStyle }}"></span></button>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;gap:9px">
+            <input value="{{ venueInput }}" onInput="{{ onVenueInput }}" onKeyDown="{{ onVenueKey }}" placeholder="Add another place — a forum, subreddit, Discord, event…" style="flex:1;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--bg-surface);color:var(--text-primary);font-size:15px">
+            <button onClick="{{ onAddVenue }}" style="flex:none;display:inline-flex;align-items:center;gap:7px;padding:0 18px;border:1px solid var(--border);border-radius:12px;background:var(--bg-surface);color:var(--accent);font-size:15px;font-weight:600;cursor:pointer">{{ icoPlus }}Add</button>
+          </div>
+        </div>
+      </div>
+      {{ onbFooter }}
+    </div>
+  </sc-if>
+
+  <!-- ============ GATE A — REVIEW SUMMARY (step 4) ============ -->
+  <sc-if value="{{ isGateA }}">
+    <div style="height:100%;display:flex;flex-direction:column">
+      <div style="flex:none;border-bottom:1px solid var(--border);background:var(--bg-surface)">
+        <div style="display:flex;align-items:center;gap:10px;padding:16px 28px 0">
+          <div style="width:26px;height:26px">{{ logoMark }}</div><span style="font-weight:700;font-size:15px;letter-spacing:-.01em">{{ tenantName }}</span>
+        </div>
+        {{ stepper }}
+      </div>
+      <div class="lp-scroll" style="flex:1;overflow:auto;padding:30px 28px 120px">
+        <div style="max-width:720px;margin:0 auto;animation:lp-fade .4s ease both">
+          {{ gateBannerA }}
+          <div style="display:flex;flex-direction:column;gap:14px;margin-top:20px">
+            <sc-for list="{{ fieldsList }}" as="field" hint-placeholder-count="4">
+              <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-sm)">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span style="font-size:16px;font-weight:600">{{ field.label }}</span>
+                    <span style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px;background:var(--bg-subtle);color:{{ field.confColor }}"><span style="display:flex">{{ field.confIcon }}</span>{{ field.confLabel }}</span>
+                  </div>
+                  <sc-if value="{{ field.notEditing }}">
+                    <button onClick="{{ field.onEdit }}" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text-secondary);border:1px solid var(--border);background:var(--bg-surface);padding:5px 11px;border-radius:99px;cursor:pointer" style-hover="background:var(--bg-subtle);color:var(--text-primary)"><span style="display:flex">{{ icoEditSm }}</span>Edit</button>
+                  </sc-if>
+                </div>
+                <sc-if value="{{ field.notEditing }}">
+                  <p style="margin:0;font-size:15px;line-height:1.6;color:var(--text-secondary)">{{ field.text }}</p>
+                  <sc-if value="{{ field.why }}"><p style="margin:9px 0 0;font-size:13px;color:var(--text-muted);font-style:italic">{{ field.why }}</p></sc-if>
+                </sc-if>
+                <sc-if value="{{ field.isEditing }}">
+                  <textarea value="{{ editDraft }}" onInput="{{ onEditDraft }}" rows="4" style="width:100%;resize:vertical;padding:12px 13px;border:1px solid var(--accent);border-radius:12px;background:var(--bg-canvas);color:var(--text-primary);font-size:15px;line-height:1.6"></textarea>
+                  <div style="display:flex;gap:9px;margin-top:11px">
+                    <button onClick="{{ field.onSave }}" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:99px;border:none;background:var(--accent);color:var(--on-accent);font-size:14px;font-weight:600;cursor:pointer">Save</button>
+                    <button onClick="{{ field.onCancel }}" style="padding:8px 16px;border-radius:99px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-secondary);font-size:14px;font-weight:600;cursor:pointer">Cancel</button>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="flex:none;border-top:1px solid var(--border);background:var(--bg-surface);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+        <button onClick="{{ onBack }}" style="display:inline-flex;align-items:center;gap:7px;padding:11px 18px;border-radius:999px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-secondary);font-size:15px;font-weight:600;cursor:pointer">{{ icoArrowL }}Keep editing</button>
+        <button onClick="{{ onFindLeads }}" style="display:inline-flex;align-items:center;gap:9px;padding:13px 24px;border-radius:999px;border:none;background:var(--accent);color:var(--on-accent);font-size:16px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-sm)" style-hover="background:var(--accent-hover)">Looks right — find leads {{ icoArrowR }}</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ LOADING / DISCOVERY ============ -->
+  <sc-if value="{{ isLoading }}">
+    <div style="height:100%;width:100%;display:flex;align-items:center;justify-content:center;padding:32px">
+      <div style="width:440px;text-align:center;animation:lp-fade .4s ease both">
+        <div style="width:78px;height:78px;margin:0 auto 22px;position:relative;display:flex;align-items:center;justify-content:center">
+          <span style="position:absolute;inset:0;border:3px solid var(--accent-soft);border-top-color:var(--accent);border-radius:50%;animation:lp-spin 1s linear infinite"></span>
+          <span style="color:var(--accent);display:flex">{{ icoSearch }}</span>
+        </div>
+        <h2 style="margin:0 0 8px;font-size:23px;font-weight:700;letter-spacing:-.01em">Searching and verifying across the web…</h2>
+        <p style="margin:0 0 24px;font-size:15px;color:var(--text-secondary);min-height:22px">{{ loadingMsg }}</p>
+        <div style="height:8px;border-radius:99px;background:var(--bg-subtle);overflow:hidden;margin-bottom:10px">
+          <div style="height:100%;border-radius:99px;background:var(--accent);width:{{ loadingPct }}%;transition:width .35s ease"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted)"><span>{{ loadingPct }}% complete</span><span>This can take a minute — you can leave and we'll save it.</span></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ APP SHELL (Gate B + Dashboard) ============ -->
+  <sc-if value="{{ inShell }}">
+    <div style="height:100%;display:flex">
+      <!-- sidebar -->
+      <nav style="flex:none;width:210px;border-right:1px solid var(--border);background:var(--bg-surface);display:flex;flex-direction:column;padding:16px 12px">
+        <div style="display:flex;align-items:center;gap:9px;padding:6px 8px 18px">
+          <div style="width:26px;height:26px">{{ logoMark }}</div><span style="font-weight:700;font-size:15px;letter-spacing:-.01em">{{ tenantName }}</span>
+        </div>
+        <sc-for list="{{ navItems }}" as="nav" hint-placeholder-count="5">
+          <div onClick="{{ nav.onClick }}" style="{{ nav.style }}"><span style="display:flex;flex:none">{{ nav.icon }}</span>{{ nav.label }}</div>
+        </sc-for>
+        <div style="margin-top:auto;padding:12px 8px 4px">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;display:flex;justify-content:space-between"><span>Usage</span><span>320 / 1,000</span></div>
+          <div style="height:6px;border-radius:99px;background:var(--bg-subtle);overflow:hidden"><div style="height:100%;width:32%;background:var(--accent);border-radius:99px"></div></div>
+        </div>
+      </nav>
+      <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+        <!-- top bar -->
+        <header style="flex:none;height:58px;border-bottom:1px solid var(--border);background:var(--bg-surface);display:flex;align-items:center;justify-content:space-between;padding:0 24px">
+          <div style="font-size:15px;font-weight:600">{{ shellTitle }}</div>
+          <div style="display:flex;align-items:center;gap:14px">
+            <button onClick="{{ onBell }}" style="position:relative;width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:var(--bg-subtle)">{{ icoBell }}<sc-if value="{{ hasApprovals }}"><span style="position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:99px;background:var(--highlight);color:#1a1a1a;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ pendingApprovals }}</span></sc-if></button>
+            <span style="font-size:13px;color:var(--text-secondary)">{{ tenantName }}</span>
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">A</div>
+          </div>
+        </header>
+
+        <!-- ===== GATE B ===== -->
+        <sc-if value="{{ isGateB }}">
+          <div class="lp-scroll" style="flex:1;overflow:auto;padding:24px">
+            <div style="max-width:920px;margin:0 auto">
+              {{ gateBannerB }}
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:22px 0 14px">
+                <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+                  <span style="font-size:20px;font-weight:700;white-space:nowrap">{{ foundCount }} found</span>
+                  <span style="font-size:14px;color:var(--text-muted)">·</span>
+                  <span style="display:inline-flex;align-items:center;gap:5px;font-size:14px;color:var(--success);font-weight:600"><span style="display:flex">{{ icoShieldSm }}</span>{{ verifiedCount }} verified</span>
+                  <span style="font-size:14px;color:var(--text-muted)">· {{ approvedCount }} approved</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:9px">
+                  <button onClick="{{ onToggleVerified }}" style="{{ filterStyle }}"><span style="display:flex">{{ icoShieldSm }}</span>Verified only</button>
+                  <button onClick="{{ onToggleSort }}" style="display:inline-flex;align-items:center;gap:7px;white-space:nowrap;font-size:13px;font-weight:600;color:var(--text-secondary);border:1px solid var(--border);background:var(--bg-surface);padding:8px 13px;border-radius:99px;cursor:pointer">{{ sortLabel }}</button>
+                </div>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{ visibleLeads }}" as="lead" hint-placeholder-count="5">
+                  <div style="{{ lead.rowStyle }}">
+                    <div style="display:flex;gap:14px;align-items:flex-start;width:100%">
+                      <div style="flex:none;width:46px;height:46px;border-radius:12px;background:var(--bg-subtle);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--text-secondary)">{{ lead.initials }}</div>
+                      <div style="flex:1;min-width:0">
+                        <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+                          <span style="font-size:16px;font-weight:600">{{ lead.name }}</span>
+                          <sc-if value="{{ lead.verified }}"><span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--success);background:var(--success-soft);padding:2px 8px;border-radius:99px"><span style="display:flex">{{ icoShieldSm }}</span>Verified</span></sc-if>
+                        </div>
+                        <p style="margin:4px 0 7px;font-size:14px;line-height:1.5;color:var(--text-secondary)">{{ lead.reason }}</p>
+                        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:9px">
+                          <a href="#" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--accent);text-decoration:none">{{ icoExtSm }}{{ lead.source }}</a>
+                          <sc-for list="{{ lead.meta }}" as="m" hint-placeholder-count="3"><span style="font-size:12px;color:var(--text-muted)">{{ m }}</span></sc-for>
+                        </div>
+                        <button onClick="{{ lead.onToggle }}" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;padding:0">{{ lead.toggleIcon }}Evidence dossier · {{ lead.evCount }} signals</button>
+                      </div>
+                      <div style="flex:none;width:140px;display:flex;flex-direction:column;align-items:flex-end;gap:9px">
+                        <div style="display:inline-flex;align-items:baseline;gap:5px;padding:5px 11px;border-radius:10px;font-size:16px;font-weight:700;background:{{ lead.scoreBg }};color:{{ lead.scoreFg }}">{{ lead.score }}<span style="font-size:10px;font-weight:600;opacity:.75">/100</span></div>
+                        <div style="width:100%;display:flex;flex-direction:column;gap:6px">
+                          <div>
+                            <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:600;margin-bottom:3px"><span style="color:var(--text-muted)">Value to you</span><span style="color:{{ lead.valueColor }}">{{ lead.valueScore }}</span></div>
+                            <div style="height:5px;border-radius:99px;background:var(--bg-subtle)"><div style="height:100%;border-radius:99px;width:{{ lead.valueW }};background:{{ lead.valueColor }}"></div></div>
+                          </div>
+                          <div>
+                            <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:600;margin-bottom:3px"><span style="color:var(--text-muted)">Prospect match</span><span style="color:{{ lead.matchColor }}">{{ lead.matchScore }}</span></div>
+                            <div style="height:5px;border-radius:99px;background:var(--bg-subtle)"><div style="height:100%;border-radius:99px;width:{{ lead.matchW }};background:{{ lead.matchColor }}"></div></div>
+                          </div>
+                        </div>
+                        <div style="display:flex;gap:7px;margin-top:1px">
+                          <button onClick="{{ lead.onReject }}" style="{{ lead.rejectStyle }}">{{ lead.rejectIcon }}</button>
+                          <button onClick="{{ lead.onApprove }}" style="{{ lead.approveStyle }}">{{ lead.approveIcon }}</button>
+                        </div>
+                      </div>
+                    </div>
+                    <sc-if value="{{ lead.expanded }}">
+                      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+                        <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:11px">Why this is a match — the evidence</div>
+                        <div style="display:flex;flex-direction:column;gap:11px">
+                          <sc-for list="{{ lead.evidence }}" as="ev" hint-placeholder-count="2">
+                            <div style="display:flex;gap:11px">
+                              <div style="flex:none;width:3px;border-radius:2px;background:var(--accent)"></div>
+                              <div style="flex:1">
+                                <p style="margin:0;font-size:14px;line-height:1.55;color:var(--text-primary)">“{{ ev.q }}”</p>
+                                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);margin-top:4px"><a href="#" style="display:inline-flex;align-items:center;gap:4px;color:var(--accent);text-decoration:none;font-weight:600">{{ icoExtSm }}{{ ev.src }}</a><span>·</span><span>{{ ev.date }}</span></div>
+                              </div>
+                            </div>
+                          </sc-for>
+                        </div>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+              <p style="text-align:center;font-size:13px;color:var(--text-muted);margin:18px 0 0">Showing top {{ visibleCount }} of {{ foundCount }} · scroll to load more</p>
+            </div>
+          </div>
+          <div style="flex:none;border-top:1px solid var(--border);background:var(--bg-surface);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+            <span style="font-size:14px;color:var(--text-secondary)"><b style="color:var(--text-primary)">{{ approvedCount }}</b> leads approved</span>
+            <div style="display:flex;gap:10px">
+              <button onClick="{{ onSendCrm }}" style="display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:999px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:15px;font-weight:600;cursor:pointer">Send to CRM</button>
+              <button onClick="{{ onExport }}" style="display:inline-flex;align-items:center;gap:9px;padding:12px 22px;border-radius:999px;border:none;background:var(--accent);color:var(--on-accent);font-size:15px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-sm)" style-hover="background:var(--accent-hover)">Export {{ approvedCount }} approved {{ icoArrowR }}</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- ===== DASHBOARD ===== -->
+        <sc-if value="{{ isDashboard }}">
+          <div class="lp-scroll" style="flex:1;overflow:auto;padding:26px 24px">
+            <div style="max-width:980px;margin:0 auto;animation:lp-fade .4s ease both">
+              <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px">
+                <div>
+                  <h1 style="margin:0 0 5px;font-size:26px;font-weight:700;letter-spacing:-.02em">Your pipeline is live.</h1>
+                  <p style="margin:0;font-size:15px;color:var(--text-secondary)">Everything's running. Here's where things stand.</p>
+                </div>
+                <button onClick="{{ onRerun }}" style="display:inline-flex;align-items:center;gap:9px;padding:11px 20px;border-radius:999px;border:none;background:var(--accent);color:var(--on-accent);font-size:15px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-sm)" style-hover="background:var(--accent-hover)"><span style="display:flex">{{ icoRefresh }}</span>Re-run discovery</button>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+                <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow-sm)">
+                  <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);margin-bottom:12px"><span style="display:flex;color:var(--accent)">{{ icoFlow }}</span>Pipeline status</div>
+                  <div style="display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:50%;background:var(--success)"></span><span style="font-size:22px;font-weight:700">Active</span></div>
+                  <div style="font-size:13px;color:var(--text-muted);margin-top:4px">Last run 2h ago · auto-refresh weekly</div>
+                </div>
+                <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow-sm)">
+                  <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);margin-bottom:12px"><span style="display:flex;color:var(--accent)">{{ icoUsers }}</span>Leads</div>
+                  <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:30px;font-weight:700">{{ approvedCount }}</span><span style="font-size:14px;color:var(--text-muted)">approved of {{ foundCount }}</span></div>
+                  <div style="height:6px;border-radius:99px;background:var(--bg-subtle);overflow:hidden;margin-top:10px"><div style="height:100%;background:var(--success);border-radius:99px;width:{{ approvedPct }}%"></div></div>
+                </div>
+                <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow-sm)">
+                  <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);margin-bottom:12px"><span style="display:flex;color:var(--accent)">{{ icoLayers }}</span>Sources ingested</div>
+                  <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:30px;font-weight:700">5</span><span style="font-size:14px;color:var(--text-muted)">files · 1 site · 2 socials</span></div>
+                  <div style="font-size:13px;color:var(--text-muted);margin-top:6px">All parsed and indexed</div>
+                </div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:14px;margin-top:14px">
+                <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow-sm)">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font-size:15px;font-weight:600">Recent runs</span><a href="#" style="font-size:13px;color:var(--accent);text-decoration:none;font-weight:600">View all</a></div>
+                  <div style="display:flex;flex-direction:column">
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:var(--success)"></span><span style="font-size:14px">Discovery run · customers</span></div><span style="font-size:13px;color:var(--text-muted)">18 found · 2h ago</span></div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:var(--success)"></span><span style="font-size:14px">Context indexed</span></div><span style="font-size:13px;color:var(--text-muted)">5 sources · 3h ago</span></div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0"><div style="display:flex;align-items:center;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:var(--text-muted)"></span><span style="font-size:14px">Account created</span></div><span style="font-size:13px;color:var(--text-muted)">Today</span></div>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:14px">
+                  <div style="background:var(--highlight-soft);border:1px solid var(--highlight);border-radius:16px;padding:18px">
+                    <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:8px"><span style="display:flex;color:var(--highlight-ink)">{{ icoSparkle }}</span>Channel recommendation</div>
+                    <div style="font-size:16px;font-weight:600;margin-bottom:3px">Warm-first, CRM-driven</div>
+                    <p style="margin:0;font-size:13px;color:var(--text-secondary);line-height:1.5">Your strongest signal is community presence — lead with warm intros over cold volume.</p>
+                  </div>
+                  <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow-sm)">
+                    <div style="font-size:15px;font-weight:600;margin-bottom:12px">Next actions</div>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                      <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="width:18px;height:18px;border-radius:6px;border:1.5px solid var(--accent);color:var(--accent);display:flex;align-items:center;justify-content:center;flex:none">{{ icoCheckSm }}</span><span>Review {{ approvedCount }} approved leads</span></div>
+                      <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-secondary)"><span style="width:18px;height:18px;border-radius:6px;border:1.5px solid var(--border);flex:none"></span><span>Connect your CRM</span></div>
+                      <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-secondary)"><span style="width:18px;height:18px;border-radius:6px;border:1.5px solid var(--border);flex:none"></span><span>Add model keys in Settings</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:14px;background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow-sm)">
+                <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px"><span style="display:flex;color:var(--accent)">{{ icoTrend }}</span><span style="font-size:16px;font-weight:700;letter-spacing:-.01em">Learn &amp; iterate</span></div>
+                <p style="margin:0 0 16px;font-size:14px;color:var(--text-secondary)">The engine watches what actually converts and tunes your scoring. It's refined your model twice this week from your approvals and outcomes.</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                  <div>
+                    <div style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">What's converting</div>
+                    <div style="display:flex;flex-direction:column;gap:11px">
+                      <sc-for list="{{ convertsView }}" as="c" hint-placeholder-count="5">
+                        <div>
+                          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>{{ c.label }}</span><span style="font-weight:700;color:{{ c.color }}">{{ c.pct }}%</span></div>
+                          <div style="height:6px;border-radius:99px;background:var(--bg-subtle)"><div style="height:100%;border-radius:99px;width:{{ c.w }};background:{{ c.color }}"></div></div>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Suggested refinement</div>
+                    <div style="background:var(--highlight-soft);border:1px solid var(--highlight);border-radius:14px;padding:16px">
+                      <div style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--highlight-ink);margin-bottom:8px"><span style="display:flex">{{ icoSparkle }}</span>The engine noticed</div>
+                      <p style="margin:0 0 14px;font-size:14px;line-height:1.55;color:var(--text-primary)">Prospects found on <b>Reddit / r/gamedev</b> are converting <b>2.9× better</b> than LinkedIn. Want me to weight community signals higher and de-prioritise LinkedIn on the next run?</p>
+                      <div style="display:flex;gap:9px">
+                        <button onClick="{{ onApplyRefine }}" style="display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:999px;border:none;background:var(--accent);color:var(--on-accent);font-size:14px;font-weight:600;cursor:pointer">Apply refinement</button>
+                        <button style="padding:9px 16px;border-radius:999px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-secondary);font-size:14px;font-weight:600;cursor:pointer">Dismiss</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- ===== SOURCES ===== -->
+        <sc-if value="{{ isSources }}">
+          <div class="lp-scroll" style="flex:1;overflow:auto;padding:26px 24px">
+            <div style="max-width:840px;margin:0 auto;animation:lp-fade .4s ease both">
+              <div style="margin-bottom:18px">
+                <h1 style="margin:0 0 5px;font-size:24px;font-weight:700;letter-spacing:-.02em">Sources</h1>
+                <p style="margin:0;font-size:15px;color:var(--text-secondary)">Add context whenever you like — fresh material sharpens every future run. Re-run discovery after adding to pick up new signals.</p>
+              </div>
+
+              <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow-sm);margin-bottom:22px">
+                <div onClick="{{ onBrowse }}" style="border:2px dashed var(--border);background:var(--bg-subtle);border-radius:14px;padding:24px;text-align:center;cursor:pointer" style-hover="border-color:var(--accent);background:var(--accent-soft)">
+                  <div style="width:46px;height:46px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;margin:0 auto 10px">{{ icoUpload }}</div>
+                  <div style="font-size:15px;font-weight:600">Drop files, or <span style="color:var(--accent)">browse</span></div>
+                  <div style="font-size:13px;color:var(--text-muted);margin-top:4px">PDFs, decks, docs — add a new one-pager, deck, or case study anytime</div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+                  <div style="display:flex;gap:8px">
+                    <input value="{{ websiteInput }}" onInput="{{ onWebsite }}" onKeyDown="{{ onWebsiteKey }}" placeholder="Add a website URL" style="flex:1;padding:11px 13px;border:1px solid var(--border);border-radius:12px;background:var(--bg-canvas);color:var(--text-primary);font-size:15px">
+                    <button onClick="{{ onAddWebsite }}" style="flex:none;width:42px;border:1px solid var(--border);border-radius:12px;background:var(--bg-surface);color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer">{{ icoPlus }}</button>
+                  </div>
+                  <div style="display:flex;gap:8px">
+                    <input value="{{ socialInput }}" onInput="{{ onSocial }}" onKeyDown="{{ onSocialKey }}" placeholder="Add a social handle" style="flex:1;padding:11px 13px;border:1px solid var(--border);border-radius:12px;background:var(--bg-canvas);color:var(--text-primary);font-size:15px">
+                    <button onClick="{{ onAddSocial }}" style="flex:none;width:42px;border:1px solid var(--border);border-radius:12px;background:var(--bg-surface);color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer">{{ icoPlus }}</button>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                <span style="font-size:15px;font-weight:600">Ingested · {{ sourceCount }}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{ sourceCards }}" as="source" hint-placeholder-count="3">
+                  <div style="display:flex;align-items:center;gap:14px;background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow-sm)">
+                    <div style="flex:none;width:42px;height:42px;border-radius:11px;background:var(--bg-subtle);color:var(--text-secondary);display:flex;align-items:center;justify-content:center">{{ source.bigIcon }}</div>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ source.label }}</div>
+                      <div style="font-size:13px;color:var(--text-muted)">{{ source.typeLabel }}</div>
+                    </div>
+                    <sc-if value="{{ source.parsing }}"><span style="font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:4px 10px;border-radius:99px;animation:lp-pulse 1.2s ease infinite">Parsing…</span></sc-if>
+                    <sc-if value="{{ source.done }}"><span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--success);background:var(--success-soft);padding:4px 10px;border-radius:99px">{{ icoShieldSm }}Indexed</span></sc-if>
+                    <button onClick="{{ source.onRemove }}" style="flex:none;width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center">{{ icoXSm }}</button>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- ===== OUTREACH (Pipeline) ===== -->
+        <sc-if value="{{ isOutreach }}">
+          <div class="lp-scroll" style="flex:1;overflow:auto;padding:24px">
+            <div style="max-width:920px;margin:0 auto;animation:lp-fade .4s ease both">
+              <sc-if value="{{ hasApprovals }}">
+                <div style="display:flex;gap:14px;align-items:flex-start;background:var(--highlight-soft);border:1px solid var(--highlight);border-radius:16px;padding:16px 18px;margin-bottom:22px">
+                  <div style="flex:none;width:38px;height:38px;border-radius:11px;background:var(--highlight);color:#1a1a1a;display:flex;align-items:center;justify-content:center">{{ icoBell }}</div>
+                  <div style="flex:1">
+                    <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--highlight-ink);margin-bottom:3px">Your turn to review</div>
+                    <div style="font-size:18px;font-weight:700;letter-spacing:-.01em;margin-bottom:3px">{{ pendingApprovals }} messages need your approval before they send</div>
+                    <p style="margin:0;font-size:14px;color:var(--text-secondary);line-height:1.5">Nothing goes out without your sign-off. Review each draft, then approve to send or skip to hold.</p>
+                  </div>
+                </div>
+              </sc-if>
+
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
+                <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm)">
+                  <div style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text-secondary);margin-bottom:8px"><span style="display:flex;color:var(--accent)">{{ icoSend }}</span>Contacted</div>
+                  <div style="font-size:26px;font-weight:700;line-height:1">{{ contactedTotal }}</div>
+                </div>
+                <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm)">
+                  <div style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text-secondary);margin-bottom:8px"><span style="display:flex;color:var(--highlight-ink)">{{ icoTrend }}</span>Replied</div>
+                  <div style="font-size:26px;font-weight:700;line-height:1">{{ repliedTotal }}</div>
+                </div>
+                <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm)">
+                  <div style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text-secondary);margin-bottom:8px"><span style="display:flex;color:var(--success)">{{ icoCheckSm }}</span>Success</div>
+                  <div style="font-size:26px;font-weight:700;line-height:1;color:var(--success)">{{ successCount }}</div>
+                </div>
+              </div>
+
+              <sc-if value="{{ hasApprovals }}">
+                <div style="font-size:15px;font-weight:600;margin-bottom:12px">Awaiting your approval</div>
+                <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px">
+                  <sc-for list="{{ awaiting }}" as="msg" hint-placeholder-count="2">
+                    <div style="background:var(--bg-surface);border:1px solid var(--highlight);border-radius:16px;padding:18px;box-shadow:var(--shadow-sm)">
+                      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                        <div style="flex:none;width:40px;height:40px;border-radius:11px;background:var(--bg-subtle);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--text-secondary)">{{ msg.initials }}</div>
+                        <div style="flex:1">
+                          <div style="font-size:16px;font-weight:600">{{ msg.name }}</div>
+                          <div style="font-size:13px;color:var(--text-muted)">{{ msg.channel }}</div>
+                        </div>
+                        <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 11px;border-radius:99px;white-space:nowrap;background:var(--highlight-soft);color:var(--highlight-ink)">{{ icoBell }}Awaiting approval</span>
+                      </div>
+                      <div style="background:var(--bg-canvas);border:1px solid var(--border);border-radius:12px;padding:14px;font-size:14px;line-height:1.6;color:var(--text-secondary)">{{ msg.draft }}</div>
+                      <div style="display:flex;gap:9px;margin-top:14px">
+                        <button onClick="{{ msg.onApprove }}" style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;border:none;background:var(--accent);color:var(--on-accent);font-size:15px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-sm)" style-hover="background:var(--accent-hover)">{{ icoSend }}Approve &amp; send</button>
+                        <button style="display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:999px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-secondary);font-size:15px;font-weight:600;cursor:pointer">{{ icoEditSm }}Edit draft</button>
+                        <button onClick="{{ msg.onSkip }}" style="padding:10px 16px;border-radius:999px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-muted);font-size:15px;font-weight:600;cursor:pointer">Skip</button>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                <span style="font-size:15px;font-weight:600">Prospect board</span>
+                <span style="font-size:13px;color:var(--text-muted)">Each prospect moves contacted → replied → outcome</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
+                <sc-for list="{{ prospectCols }}" as="col" hint-placeholder-count="5">
+                  <div>
+                    <div style="{{ col.headStyle }}">
+                      <span style="font-size:13px;font-weight:700;color:{{ col.color }}">{{ col.label }}</span>
+                      <span style="font-size:12px;font-weight:600;color:var(--text-muted)">{{ col.n }}</span>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                      <sc-for list="{{ col.cards }}" as="p" hint-placeholder-count="2">
+                        <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:11px;box-shadow:var(--shadow-sm)">
+                          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                            <span style="flex:none;width:26px;height:26px;border-radius:8px;background:var(--bg-subtle);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-secondary)">{{ p.initials }}</span>
+                            <span style="font-size:13px;font-weight:600;line-height:1.2">{{ p.name }}</span>
+                          </div>
+                          <div style="font-size:11px;color:var(--text-muted)">{{ p.channel }}</div>
+                          <div style="font-size:11px;color:var(--text-secondary);margin-top:3px">{{ p.last }}</div>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ FLOATING PROTOTYPE CONTROLS ============ -->
+  <sc-if value="{{ chrome }}">
+    <div style="position:absolute;bottom:76px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;background:var(--bg-surface);border:1px solid var(--border);border-radius:999px;box-shadow:var(--shadow-md);padding:5px 6px;z-index:50;font-size:13px">
+      <button onClick="{{ onPrev }}" style="width:30px;height:30px;border-radius:50%;border:none;background:none;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center">{{ icoArrowLSm }}</button>
+      <span style="min-width:128px;text-align:center;font-weight:600;color:var(--text-primary)">{{ screenIndexLabel }}</span>
+      <button onClick="{{ onNext }}" style="width:30px;height:30px;border-radius:50%;border:none;background:none;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center">{{ icoArrowRSm }}</button>
+      <div style="width:1px;height:20px;background:var(--border);margin:0 4px"></div>
+      <button onClick="{{ onRestart }}" style="width:30px;height:30px;border-radius:50%;border:none;background:none;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center">{{ icoRefreshSm }}</button>
+    </div>
+  </sc-if>
+
+  <!-- ============ TOAST ============ -->
+  <sc-if value="{{ toast }}">
+    <div style="position:absolute;bottom:134px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:9px;background:var(--text-primary);color:var(--bg-surface);padding:11px 18px;border-radius:99px;box-shadow:var(--shadow-md);font-size:14px;font-weight:500;z-index:60;animation:lp-fade .25s ease both"><span style="display:flex;color:var(--success)">{{ icoCheckSm }}</span>{{ toast }}</div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800},&quot;initialScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;signin&quot;,&quot;context&quot;,&quot;intake&quot;,&quot;gateA&quot;,&quot;loading&quot;,&quot;gateB&quot;,&quot;dashboard&quot;,&quot;sources&quot;,&quot;outreach&quot;],&quot;default&quot;:&quot;signin&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;initialTheme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;neutral&quot;,&quot;gamerslab&quot;,&quot;midnight&quot;,&quot;aqua&quot;,&quot;emerald&quot;,&quot;ember&quot;,&quot;rose&quot;],&quot;default&quot;:&quot;gamerslab&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;initialMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;customers&quot;,&quot;investors&quot;],&quot;default&quot;:&quot;customers&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;chrome&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  P = {
+    upload:[['path','M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'],['path','M7 9l5-5 5 5'],['path','M12 4v12']],
+    file:[['path','M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'],['path','M14 2v6h6']],
+    globe:[['circle','12','12','9'],['path','M3 12h18'],['path','M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18']],
+    at:[['circle','12','12','4'],['path','M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-3.5 7.1']],
+    x:[['path','M18 6L6 18'],['path','M6 6l12 12']],
+    check:[['path','M20 6L9 17l-5-5']],
+    search:[['circle','11','11','7'],['path','M21 21l-4.3-4.3']],
+    edit:[['path','M12 20h9'],['path','M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z']],
+    sparkle:[['path','M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z']],
+    arrowRight:[['path','M5 12h14'],['path','M13 6l6 6-6 6']],
+    arrowLeft:[['path','M19 12H5'],['path','M11 6l-6 6 6 6']],
+    external:[['path','M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'],['path','M15 3h6v6'],['path','M10 14L21 3']],
+    home:[['path','M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'],['path','M9 22V12h6v10']],
+    flow:[['circle','5','6','2'],['circle','5','18','2'],['circle','19','12','2'],['path','M7 6h6a2 2 0 0 1 2 2v2'],['path','M7 18h6a2 2 0 0 1 2-2v-2']],
+    users:[['path','M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'],['circle','9','7','4'],['path','M22 21v-2a4 4 0 0 0-3-3.9'],['path','M16 3.1a4 4 0 0 1 0 7.8']],
+    layers:[['path','M12 2L2 7l10 5 10-5z'],['path','M2 17l10 5 10-5'],['path','M2 12l10 5 10-5']],
+    sliders:[['path','M4 21v-7'],['path','M4 10V3'],['path','M12 21v-9'],['path','M12 8V3'],['path','M20 21v-5'],['path','M20 12V3'],['path','M1 14h6'],['path','M9 8h6'],['path','M17 16h6']],
+    refresh:[['path','M21 3v6h-6'],['path','M3 21v-6h6'],['path','M21 9a9 9 0 0 0-15-3L3 9'],['path','M3 15a9 9 0 0 0 15 3l3-3']],
+    shield:[['path','M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z'],['path','M9 12l2 2 4-4']],
+    plus:[['path','M12 5v14'],['path','M5 12h14']],
+    lock:[['rect','5','11','14','10','2'],['path','M8 11V7a4 4 0 0 1 8 0v4']],
+    mail:[['rect','3','5','18','14','2'],['path','M4 7l8 6 8-6']],
+    alert:[['path','M12 9v4'],['path','M12 17h.01'],['path','M10.3 3.9L2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z']],
+    bell:[['path','M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9'],['path','M13.7 21a2 2 0 0 1-3.4 0']],
+    send:[['path','M22 2L11 13'],['path','M22 2l-7 20-4-9-9-4z']],
+    clock:[['circle','12','12','9'],['path','M12 7v5l3 2']],
+    reply:[['path','M9 17l-5-5 5-5'],['path','M4 12h11a5 5 0 0 1 5 5v2']],
+    cal:[['rect','3','5','18','16','3'],['path','M3 10h18'],['path','M8 3v4'],['path','M16 3v4']],
+    chevron:[['path','M6 9l6 6 6-6']],
+    pin:[['path','M12 21s-7-5.6-7-11a7 7 0 0 1 14 0c0 5.4-7 11-7 11z'],['circle','12','10','2.4']],
+    target:[['circle','12','12','9'],['circle','12','12','5'],['circle','12','12','1.3']],
+    trend:[['path','M3 17l6-6 4 4 7-7'],['path','M17 7h4v4']],
+    gift:[['path','M12 8v13'],['path','M4 8h16v3H4z'],['path','M5 11v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9'],['path','M12 8C9 8 8 4 9.5 3.2 11 2.5 12 5 12 8c0-3 1-5.5 2.5-4.8C16 4 15 8 12 8z']],
+  };
+  icon(name,size,sw){
+    const defs=this.P[name]||[];
+    const kids=defs.map((e,i)=>{
+      if(e[0]==='circle') return React.createElement('circle',{key:i,cx:e[1],cy:e[2],r:e[3]});
+      if(e[0]==='rect') return React.createElement('rect',{key:i,x:e[1],y:e[2],width:e[3],height:e[4],rx:e[5]||0});
+      return React.createElement('path',{key:i,d:e[1]});
+    });
+    return React.createElement('svg',{width:size,height:size,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:sw||2,strokeLinecap:'round',strokeLinejoin:'round',style:{display:'block',flex:'none'}},kids);
+  }
+  logo(size){
+    return React.createElement('svg',{width:size,height:size,viewBox:'0 0 24 24',style:{display:'block'}},
+      React.createElement('path',{key:0,d:'M12 2.4l9.6 9.6-9.6 9.6L2.4 12z',fill:'var(--logo)'}),
+      React.createElement('path',{key:1,d:'M12 7.6l4.4 4.4-4.4 4.4L7.6 12z',fill:'var(--bg-surface)'})
+    );
+  }
+
+  get themes(){
+    const dark={
+      '--bg-canvas':'#0D1F2D','--bg-surface':'#15293A','--bg-subtle':'#1C3547','--border':'#294657',
+      '--text-primary':'#EAF1F6','--text-secondary':'#9FB3C2','--text-muted':'#62788B',
+      '--success':'#3CCB7F','--success-soft':'#16271F','--warning':'#F5C451','--danger':'#FF6B6B',
+      '--shadow-sm':'0 1px 2px rgba(0,0,0,.4)',
+      '--shadow-md':'0 10px 34px rgba(0,0,0,.55),0 2px 10px rgba(0,0,0,.4)',
+    };
+    const mk=(a,ah,as,on,h,hs,hi)=>({...dark,'--accent':a,'--accent-hover':ah,'--accent-soft':as,'--on-accent':on,'--highlight':h,'--highlight-soft':hs,'--highlight-ink':hi,'--logo':a});
+    return {
+      neutral:{
+        '--bg-canvas':'#FAF9F6','--bg-surface':'#FFFFFF','--bg-subtle':'#F3F1EC','--border':'#E7E4DD',
+        '--text-primary':'#2B2A27','--text-secondary':'#6B6862','--text-muted':'#9A968E',
+        '--accent':'#2F6F62','--accent-hover':'#265B50','--accent-soft':'#E5F0EC','--on-accent':'#FFFFFF',
+        '--highlight':'#C9792E','--highlight-soft':'#F8ECD9','--highlight-ink':'#9A5816',
+        '--success':'#2E7D5B','--success-soft':'#E4F1E9','--warning':'#B8860B','--danger':'#B4453C','--logo':'#2F6F62',
+        '--shadow-sm':'0 1px 2px rgba(43,42,39,.05),0 1px 3px rgba(43,42,39,.04)',
+        '--shadow-md':'0 8px 30px rgba(43,42,39,.10),0 2px 8px rgba(43,42,39,.06)',
+      },
+      gamerslab: mk('#7C5CFF','#6A49F0','#221C42','#FFFFFF','#34D399','#123026','#34D399'),
+      midnight:  mk('#5B8BFF','#4574EE','#161E36','#FFFFFF','#FACC15','#2A2410','#FACC15'),
+      aqua:      mk('#2DD4BF','#1FB9A6','#0E2A2A','#04231F','#FBBF24','#2A2210','#FBBF24'),
+      emerald:   mk('#34D399','#22B886','#0F2A20','#04230F','#FBBF24','#2A2210','#FBBF24'),
+      ember:     mk('#FB923C','#F47A1F','#2A1A0E','#2A1402','#56C7F5','#0E2733','#7DD3FC'),
+      rose:      mk('#FB6F92','#F2557C','#2C1620','#2A0A12','#A3E635','#23280F','#BEF264'),
+    };
+  }
+
+  flow = ['signin','context','intake','venues','gateA','loading','gateB','dashboard','sources','outreach'];
+  flowLabels = {signin:'Sign in',context:'Context drop',intake:'Guided intake',venues:'Venue map',gateA:'Gate A · Review',loading:'Discovering…',gateB:'Gate B · Leads',dashboard:'Dashboard',sources:'Sources',outreach:'Prospect tracking'};
+
+  state = {
+    theme: this.props.initialTheme || 'gamerslab',
+    mode: this.props.initialMode || 'customers',
+    screen: this.props.initialScreen || 'signin',
+    email:'', signinState:'idle',
+    sources:[
+      {id:1,type:'file',label:'GamersLab-onepager.pdf',parsing:false,done:true},
+    ],
+    websiteInput:'', socialInput:'',
+    intake:{offer:'Structured playtesting + player analytics for game studios.',icp:'Indie & mid-size studios shipping PC/console games.',outcome:'Book demos with studios that are pre-launch.',leadsToday:'Community events, Discord, word of mouth.',goodLead:'Funded, pre-launch, no in-house research.'},
+    fields:{
+      summary:{text:'Gamers Lab helps indie and mid-size game studios run structured playtests and turn scattered session data into clear, shippable design decisions — before launch, not after.',conf:'high'},
+      icp:{text:'Studios of 5–60 people building PC or console games, usually post-prototype and 6–18 months from launch, with no dedicated player-research role.',conf:'medium'},
+      pains:{text:"Feedback lives in Discord threads and spreadsheets. Small teams can't staff research, so they often discover what's broken after release — when fixes are slow and costly.",conf:'high'},
+      where:{text:'Steam "upcoming" pages, recently-funded studios (game funds, Kickstarter), indie showcases (Day of the Devs, WASD), r/gamedev, and game-industry LinkedIn.',conf:'medium'},
+      channel:{text:'Warm-first, CRM-driven. Many studios already meet Gamers Lab at community events — lead with warm intros and event follow-ups, and reserve cold outreach for newly-funded teams.',conf:'low',why:'Your strongest signal is existing community presence, not cold volume.'},
+    },
+    editingField:null, editDraft:'',
+    venues:[
+      {id:1,name:'Steam — "Upcoming" & wishlists',platform:'Steam',strength:'strong',note:'Where pre-launch studios show traction',on:true},
+      {id:2,name:'r/gamedev & r/IndieDev',platform:'Reddit',strength:'strong',note:'Founders openly discuss playtest pains',on:true},
+      {id:3,name:'Game showcases — WASD, Day of the Devs',platform:'Events',strength:'strong',note:'Warm, high-intent — you already attend',on:true},
+      {id:4,name:'Indie dev Discords',platform:'Discord',strength:'medium',note:'High-trust communities, slower to reach',on:true},
+      {id:5,name:'X / Twitter gamedev',platform:'X',strength:'medium',note:'Public signals & founder posts',on:true},
+      {id:6,name:'LinkedIn — studios & publishers',platform:'LinkedIn',strength:'weak',note:'Better for larger studios',on:false},
+      {id:7,name:'TikTok / YouTube devlogs',platform:'Video',strength:'weak',note:'Emerging signal, noisy',on:false},
+    ],
+    venueInput:'', expandedLead:null,
+    leads:[
+      {id:1,name:'Pixel Forge Studios',initials:'PF',score:94,valueScore:92,matchScore:96,verified:true,reason:'Closed a $2.1M seed and posted a "first UX hire" role — actively building a research function.',source:'TechCrunch',meta:['14 people','Seattle','38k wishlists'],status:'pending',venue:'Steam',evidence:[{q:'We just hired our first UX person and we\u2019re building research from scratch.',src:'Founder · LinkedIn',date:'3d ago'},{q:'$2.1M seed round announced, led by a dedicated gaming fund.',src:'TechCrunch',date:'1w ago'},{q:'38,000 Steam wishlists on a title that hasn\u2019t shipped yet.',src:'SteamDB',date:'Today'}]},
+      {id:2,name:'Hollow Oak Interactive',initials:'HO',score:88,valueScore:86,matchScore:90,verified:true,reason:'Wishlists surging on an unreleased title; founder posted about "flying blind on playtest data."',source:'Steam · X',meta:['9 people','Remote','Pre-launch'],status:'pending',venue:'Reddit',evidence:[{q:'Honestly flying blind on playtest data right now — it\u2019s all vibes.',src:'Founder · X',date:'2d ago'},{q:'Wishlist velocity up 3× this month.',src:'Steam',date:'5d ago'}]},
+      {id:3,name:'Neon Drift Games',initials:'ND',score:81,valueScore:84,matchScore:78,verified:true,reason:'Second title in production; hiring two designers this quarter.',source:'LinkedIn',meta:['28 people','Berlin','Series A'],status:'pending',venue:'LinkedIn',evidence:[{q:'Hiring 2 game designers as we scale content for our next title.',src:'LinkedIn Jobs',date:'1w ago'},{q:'Second title officially entered production.',src:'Press release',date:'2w ago'}]},
+      {id:4,name:'Voxel Republic',initials:'VR',score:74,valueScore:70,matchScore:78,verified:true,reason:'Featured at the WASD 2026 showcase; pre-launch with no research tooling detected.',source:'WASD',meta:['11 people','London'],status:'pending',venue:'Events',evidence:[{q:'Showcased an unreleased build at WASD 2026.',src:'WASD lineup',date:'3w ago'},{q:'No research or analytics tooling detected in their stack.',src:'Enrichment',date:'Today'}]},
+      {id:5,name:'Starbound Collective',initials:'SC',score:66,valueScore:64,matchScore:68,verified:false,reason:'Active in r/gamedev about playtest pains; small but highly engaged.',source:'Reddit',meta:['5 people','Austin'],status:'pending',venue:'Reddit',evidence:[{q:'How do you all run playtests without a budget or a research hire?',src:'r/gamedev',date:'4d ago'}]},
+      {id:6,name:'Lumen Tactics',initials:'LT',score:58,valueScore:60,matchScore:56,verified:false,reason:'Early prototype stage — fit is plausible but timing may be too early.',source:'itch.io',meta:['4 people','Remote'],status:'pending',venue:'X',evidence:[{q:'Posted an early prototype gif — pre-vertical-slice.',src:'itch.io',date:'1w ago'}]},
+      {id:7,name:'Granite & Gold',initials:'GG',score:41,valueScore:44,matchScore:38,verified:false,reason:'Mobile-first studio; partial ICP match with a platform mismatch.',source:'App Store',meta:['18 people','Toronto'],status:'pending',venue:'LinkedIn',evidence:[{q:'Mobile-first F2P title in soft launch.',src:'App Store',date:'2w ago'}]},
+    ],
+    sortDesc:true, onlyVerified:false,
+    loadingPct:0, loadingMsgIdx:0,
+    outreach:[
+      {id:1,name:'Pixel Forge Studios',initials:'PF',channel:'Warm intro',stage:'awaiting',draft:'Hi Maya — huge congrats on the seed. Saw you\u2019re standing up a UX research function. We help studios run structured playtests and turn the data into clear design calls before launch. Worth a 20-min look next week?'},
+      {id:2,name:'Hollow Oak Interactive',initials:'HO',channel:'Cold email',stage:'awaiting',draft:'Hi — noticed wishlists climbing on your next title. We help small teams turn scattered playtest feedback into shippable design decisions, fast. Open to a quick intro this week?'},
+      {id:3,name:'Neon Drift Games',initials:'ND',channel:'Warm intro',stage:'contacted',last:'Sent 1d ago'},
+      {id:8,name:'Maple & Bit',initials:'MB',channel:'Cold email',stage:'contacted',last:'Sent 3d ago'},
+      {id:4,name:'Voxel Republic',initials:'VR',channel:'Cold email',stage:'replied',last:'Replied 4h ago'},
+      {id:9,name:'Ashen Foundry',initials:'AF',channel:'Warm intro',stage:'replied',last:'Replied 1d ago'},
+      {id:5,name:'Lumen Tactics',initials:'LT',channel:'Warm intro',stage:'success',last:'Demo booked — trialing'},
+      {id:6,name:'Starbound Collective',initials:'SC',channel:'Cold email',stage:'partial',last:'Interested, not now'},
+      {id:7,name:'Granite & Gold',initials:'GG',channel:'Cold email',stage:'lost',last:'No fit — platform mismatch'},
+    ],
+    toast:null,
+  };
+
+  componentWillUnmount(){ clearInterval(this._t); clearTimeout(this._toastT); }
+
+  go(screen){ this.setState({screen}); }
+  showToast(msg){ this.setState({toast:msg}); clearTimeout(this._toastT); this._toastT=setTimeout(()=>this.setState({toast:null}),1900); }
+
+  startDiscovery(){
+    this.setState({screen:'loading',loadingPct:0,loadingMsgIdx:0});
+    clearInterval(this._t);
+    this._t=setInterval(()=>{
+      this.setState(s=>{
+        const pct=Math.min(100,s.loadingPct+Math.round(6+Math.random()*9));
+        const idx=pct<25?0:pct<55?1:pct<82?2:3;
+        if(pct>=100){ clearInterval(this._t); setTimeout(()=>this.setState({screen:'gateB'}),550); }
+        return {loadingPct:pct,loadingMsgIdx:idx};
+      });
+    },380);
+  }
+
+  addSource(type,label){
+    const id=Date.now()+Math.random();
+    this.setState(s=>({sources:[...s.sources,{id,type,label,parsing:true,done:false}]}));
+    setTimeout(()=>this.setState(s=>({sources:s.sources.map(x=>x.id===id?{...x,parsing:false,done:true}:x)})),1500);
+  }
+  removeSource(id){ this.setState(s=>({sources:s.sources.filter(x=>x.id!==id)})); }
+
+  setLead(id,status){ this.setState(s=>({leads:s.leads.map(l=>l.id===id?{...l,status:l.status===status?'pending':status}:l)})); }
+
+  approveOutreach(id){ this.setState(s=>({outreach:s.outreach.map(o=>o.id===id?{...o,stage:'contacted',last:'Sent just now'}:o)})); this.showToast('Message approved & sent'); }
+  skipOutreach(id){ this.setState(s=>({outreach:s.outreach.map(o=>o.id===id?{...o,stage:'lost',last:'Skipped'}:o)})); }
+  toggleVenue(id){ this.setState(s=>({venues:s.venues.map(v=>v.id===id?{...v,on:!v.on}:v)})); }
+  addVenue(){ const n=this.state.venueInput.trim(); if(!n) return; this.setState(s=>({venues:[...s.venues,{id:Date.now(),name:n,platform:'Custom',strength:'medium',note:'Added by you',on:true}],venueInput:''})); }
+  toggleExpand(id){ this.setState(s=>({expandedLead:s.expandedLead===id?null:id})); }
+
+  saveField(key){ this.setState(s=>({fields:{...s.fields,[key]:{...s.fields[key],text:s.editDraft}},editingField:null})); this.showToast('Saved'); }
+
+  scoreColors(score){
+    const t=this.themes[this.state.theme];
+    let c;
+    if(score>=85)c=t['--success']; else if(score>=70)c=t['--accent']; else if(score>=55)c=t['--warning']; else c=t['--danger'];
+    return {fg:c,bg:this.hexA(c,this.state.theme==='neutral'?0.13:0.18)};
+  }
+  hexA(hex,a){ const h=hex.replace('#',''); const r=parseInt(h.substring(0,2),16),g=parseInt(h.substring(2,4),16),b=parseInt(h.substring(4,6),16); return `rgba(${r},${g},${b},${a})`; }
+
+  renderVals(){
+    const S=this.state, t=this.themes[S.theme];
+    const screen=S.screen;
+    const rootStyle={...t,fontFamily:"'Inter',system-ui,-apple-system,sans-serif",color:'var(--text-primary)',background:'var(--bg-canvas)',width:'100%',height:'100%',minHeight:'100%',position:'relative',overflow:'hidden',fontSize:'16px',lineHeight:1.5};
+
+    // stepper
+    const steps=[['Context','context'],['Intake','intake'],['Venues','venues'],['Review','gateA']];
+    const stepIdxMap={context:0,intake:1,venues:2,gateA:3};
+    const curStepIdx=stepIdxMap[screen]||0;
+    const stepper=React.createElement('div',{style:{display:'flex',alignItems:'center',gap:0,padding:'14px 28px 16px',maxWidth:760,margin:'0 auto',width:'100%'}},
+      steps.map(([label],i)=>{
+        const done=i<curStepIdx, active=i===curStepIdx;
+        const circle=React.createElement('div',{style:{width:26,height:26,borderRadius:'50%',flex:'none',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,background:active?'var(--accent)':done?'var(--accent)':'var(--bg-subtle)',color:active||done?'var(--on-accent)':'var(--text-muted)',border:active||done?'none':'1px solid var(--border)'}}, done?this.icon('check',14,2.5):String(i+1));
+        const lab=React.createElement('span',{style:{fontSize:14,fontWeight:active?600:500,color:active?'var(--text-primary)':'var(--text-muted)',marginLeft:9,whiteSpace:'nowrap'}},label);
+        const node=React.createElement('div',{key:i,style:{display:'flex',alignItems:'center',flex:'none'}},circle,lab);
+        const conn=i<steps.length-1?React.createElement('div',{key:'c'+i,style:{flex:1,height:2,margin:'0 14px',borderRadius:2,background:i<curStepIdx?'var(--accent)':'var(--border)'}}):null;
+        return [node,conn];
+      })
+    );
+
+    // onboarding footer (context/intake/venues)
+    const backMap={context:'signin',intake:'context',venues:'intake'};
+    const nextMap={context:'intake',intake:'venues',venues:'gateA'};
+    const backScreen=backMap[screen]||'signin';
+    const nextScreen=nextMap[screen]||'gateA';
+    const onbFooter=React.createElement('div',{style:{flex:'none',borderTop:'1px solid var(--border)',background:'var(--bg-surface)',padding:'16px 28px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:16}},
+      React.createElement('button',{onClick:()=>this.go(backScreen),style:{display:'inline-flex',alignItems:'center',gap:7,padding:'11px 18px',borderRadius:999,border:'1px solid var(--border)',background:'var(--bg-surface)',color:'var(--text-secondary)',fontSize:15,fontWeight:600,cursor:'pointer'}},this.icon('arrowLeft',16,2),'Back'),
+      React.createElement('button',{onClick:()=>this.go(nextScreen),style:{display:'inline-flex',alignItems:'center',gap:9,padding:'13px 24px',borderRadius:999,border:'none',background:'var(--accent)',color:'var(--on-accent)',fontSize:16,fontWeight:600,cursor:'pointer',boxShadow:'var(--shadow-sm)'}},screen==='intake'?'Save & continue':'Continue',this.icon('arrowRight',16,2))
+    );
+
+    // gate banner builder
+    const gateBanner=(eyebrow,head,sub)=>React.createElement('div',{style:{display:'flex',gap:14,alignItems:'flex-start',background:'var(--highlight-soft)',border:'1px solid var(--highlight)',borderRadius:16,padding:'16px 18px'}},
+      React.createElement('div',{style:{flex:'none',width:38,height:38,borderRadius:11,background:'var(--highlight)',color:'#1a1a1a',display:'flex',alignItems:'center',justifyContent:'center'}},this.icon('sparkle',20,2)),
+      React.createElement('div',{},
+        React.createElement('div',{style:{fontSize:11,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'var(--highlight-ink)',marginBottom:3}},eyebrow),
+        React.createElement('div',{style:{fontSize:18,fontWeight:700,letterSpacing:'-.01em',marginBottom:3}},head),
+        React.createElement('p',{style:{margin:0,fontSize:14,color:'var(--text-secondary)',lineHeight:1.5}},sub)
+      )
+    );
+
+    // source icons
+    const sicon={file:this.icon('file',15,2),url:this.icon('globe',15,2),social:this.icon('at',15,2)};
+    const sources=S.sources.map(s=>({...s,icon:sicon[s.type]||sicon.file,onRemove:()=>this.removeSource(s.id)}));
+
+    // intake mode copy
+    const cust=S.mode==='customers';
+    const segBase='padding:7px 16px;border-radius:999px;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;';
+    const segOn=segBase+'background:var(--bg-surface);color:var(--text-primary);box-shadow:var(--shadow-sm);';
+    const segOff=segBase+'background:transparent;color:var(--text-secondary);';
+
+    // gate A fields
+    const fieldMeta={summary:'Business summary',icp:'Ideal customer (ICP)',pains:'Pain points',where:'Where to find them',channel:'Channel recommendation'};
+    const confMap={high:{label:'High confidence',color:'var(--success)',icon:this.icon('shield',12,2.2)},medium:{label:'Medium confidence',color:'var(--warning)',icon:this.icon('shield',12,2.2)},low:{label:'Low confidence',color:'var(--text-muted)',icon:this.icon('alert',12,2.2)}};
+    const fieldsList=Object.keys(fieldMeta).map(key=>{
+      const f=S.fields[key], c=confMap[f.conf], editing=S.editingField===key;
+      return {key,label:fieldMeta[key],text:f.text,why:f.why||'',confLabel:c.label,confColor:c.color,confIcon:c.icon,
+        isEditing:editing,notEditing:!editing,
+        onEdit:()=>this.setState({editingField:key,editDraft:S.fields[key].text}),
+        onSave:()=>this.saveField(key),
+        onCancel:()=>this.setState({editingField:null})};
+    });
+
+    // leads
+    let leads=S.leads.slice();
+    if(S.onlyVerified) leads=leads.filter(l=>l.verified);
+    leads.sort((a,b)=>S.sortDesc?b.score-a.score:a.score-b.score);
+    const rejectBase='width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid var(--border);';
+    const visibleLeads=leads.map(l=>{
+      const sc=this.scoreColors(l.score);
+      const vc=this.scoreColors(l.valueScore), mc=this.scoreColors(l.matchScore);
+      const appr=l.status==='approved', rej=l.status==='rejected';
+      const expanded=S.expandedLead===l.id;
+      return {...l,
+        scoreBg:sc.bg,scoreFg:sc.fg,
+        valueColor:vc.fg, valueW:l.valueScore+'%', matchColor:mc.fg, matchW:l.matchScore+'%',
+        expanded, collapsed:!expanded,
+        evidence:l.evidence.map(e=>({...e})),
+        evCount:l.evidence.length,
+        onToggle:()=>this.toggleExpand(l.id),
+        toggleIcon:this.icon('chevron',16,2.2),
+        toggleStyle:`display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 0;transform:${expanded?'':''}`,
+        rowStyle:`display:flex;flex-direction:column;background:var(--bg-surface);border:1px solid ${appr?'var(--success)':rej?'var(--danger)':expanded?'var(--accent)':'var(--border)'};border-radius:14px;padding:16px;box-shadow:var(--shadow-sm);opacity:${rej?'.55':'1'};transition:all .15s`,
+        approveStyle:rejectBase+(appr?'background:var(--success);border-color:var(--success);color:#fff;':'background:var(--bg-surface);color:var(--success);'),
+        rejectStyle:rejectBase+(rej?'background:var(--danger);border-color:var(--danger);color:#fff;':'background:var(--bg-surface);color:var(--text-muted);'),
+        approveIcon:this.icon('check',17,2.4),
+        rejectIcon:this.icon('x',16,2.4),
+        onApprove:()=>this.setLead(l.id,'approved'),
+        onReject:()=>this.setLead(l.id,'rejected'),
+      };
+    });
+    const approvedCount=S.leads.filter(l=>l.status==='approved').length;
+    const verifiedCount=S.leads.filter(l=>l.verified).length;
+
+    // prospect tracking board
+    const colMeta={contacted:{label:'Contacted',color:'var(--accent)'},replied:{label:'Replied',color:'var(--highlight-ink)'},success:{label:'Success',color:'var(--success)'},partial:{label:'Partial',color:'var(--warning)'},lost:{label:'Lost',color:'var(--text-muted)'}};
+    const colOrder=['contacted','replied','success','partial','lost'];
+    const prospectCols=colOrder.map(k=>({key:k,label:colMeta[k].label,color:colMeta[k].color,
+      headStyle:`display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px;border-bottom:2px solid ${colMeta[k].color};margin-bottom:10px`,
+      cards:S.outreach.filter(o=>o.stage===k).map(o=>({...o,chanWarm:o.channel==='Warm intro'})),
+      n:S.outreach.filter(o=>o.stage===k).length}));
+    const awaiting=S.outreach.filter(o=>o.stage==='awaiting').map(o=>({...o,chanWarm:o.channel==='Warm intro',onApprove:()=>this.approveOutreach(o.id),onSkip:()=>this.skipOutreach(o.id)}));
+    const pendingApprovals=awaiting.length;
+    const successCount=S.outreach.filter(o=>o.stage==='success').length;
+    const repliedTotal=S.outreach.filter(o=>['replied','success','partial'].includes(o.stage)).length;
+    const contactedTotal=S.outreach.filter(o=>o.stage!=='awaiting').length;
+
+    // sources list for the Sources screen
+    const srcStatusIcon={file:this.icon('file',18,2),url:this.icon('globe',18,2),social:this.icon('at',18,2)};
+    const sourceCards=S.sources.map(s=>({...s,bigIcon:srcStatusIcon[s.type]||srcStatusIcon.file,typeLabel:s.type==='file'?'Document':s.type==='url'?'Website':'Social',onRemove:()=>this.removeSource(s.id)}));
+
+    // venue map
+    const strengthMeta={strong:{label:'Strong signal',color:'var(--success)'},medium:{label:'Medium',color:'var(--warning)'},weak:{label:'Weak',color:'var(--text-muted)'}};
+    const venueList=S.venues.map(v=>({...v,
+      strengthLabel:strengthMeta[v.strength].label, strengthColor:strengthMeta[v.strength].color,
+      pinIcon:this.icon('pin',18,2),
+      cardStyle:`display:flex;gap:13px;align-items:center;background:var(--bg-surface);border:1px solid ${v.on?'var(--accent)':'var(--border)'};border-radius:14px;padding:14px 16px;box-shadow:var(--shadow-sm);opacity:${v.on?'1':'.55'};transition:all .15s`,
+      tileStyle:`flex:none;width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:${v.on?'var(--accent-soft)':'var(--bg-subtle)'};color:${v.on?'var(--accent)':'var(--text-muted)'}`,
+      toggleStyle:`flex:none;width:42px;height:25px;border-radius:99px;border:none;cursor:pointer;position:relative;padding:0;background:${v.on?'var(--accent)':'var(--bg-subtle)'};transition:all .15s`,
+      knobStyle:`position:absolute;top:3px;left:${v.on?'20px':'3px'};width:19px;height:19px;border-radius:50%;background:#fff;transition:all .15s;box-shadow:0 1px 2px rgba(0,0,0,.3)`,
+      onToggle:()=>this.toggleVenue(v.id)}));
+    const venuesOnCount=S.venues.filter(v=>v.on).length;
+
+    // learn & iterate
+    const convertsView=[['Recently funded',62,'var(--success)'],['Founder posted about playtest pain',54,'var(--success)'],['Steam wishlist surge',48,'var(--accent)'],['Found via Reddit / r/gamedev',41,'var(--accent)'],['Found via LinkedIn',14,'var(--text-muted)']].map(([label,pct,color])=>({label,pct,color,w:pct+'%'}));
+
+    // nav
+    const navDef=[['Dashboard','home','dashboard'],['Pipeline','flow','outreach'],['Leads','users','gateB'],['Sources','layers','sources'],['Settings','sliders','dashboard']];
+    const navMap={gateB:'Leads',outreach:'Pipeline',sources:'Sources',dashboard:'Dashboard'};
+    const activeNav=navMap[screen]||'Dashboard';
+    const navItems=navDef.map(([label,ic,target])=>{
+      const on=label===activeNav;
+      return {label,icon:this.icon(ic,18,2),onClick:()=>this.go(target),
+        style:`display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;font-size:14px;font-weight:${on?600:500};cursor:pointer;margin-bottom:2px;color:${on?'var(--accent)':'var(--text-secondary)'};background:${on?'var(--accent-soft)':'transparent'};`};
+    });
+
+    // theme + nav controls
+    const themeSeg='padding:5px 13px;border-radius:999px;border:none;font-size:12px;font-weight:600;cursor:pointer;';
+    const curIdx=this.flow.indexOf(screen);
+    const filterBase='display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:8px 13px;border-radius:99px;cursor:pointer;';
+
+    const loadingMsgs=['Reading your business context…','Scanning Steam, funding feeds & showcases…','Cross-checking signals across the web…','Verifying and scoring matches…'];
+
+    return {
+      rootStyle, tenantName:'Gamers Lab', logoMark:this.logo(28),
+      chrome: this.props.chrome !== false,
+      // screen flags
+      isSignin:screen==='signin', isContext:screen==='context', isIntake:screen==='intake',
+      isGateA:screen==='gateA', isLoading:screen==='loading', isGateB:screen==='gateB', isDashboard:screen==='dashboard',
+      isSources:screen==='sources', isOutreach:screen==='outreach', isVenues:screen==='venues',
+      inShell: screen==='gateB'||screen==='dashboard'||screen==='sources'||screen==='outreach',
+      shellTitle: {gateB:'Leads',dashboard:'Dashboard',sources:'Sources',outreach:'Prospect tracking'}[screen]||'Dashboard',
+      awaiting, awaitingCount:awaiting.length, pendingApprovals, hasApprovals:pendingApprovals>0,
+      prospectCols, successCount, repliedTotal, contactedTotal,
+      venueList, venuesOnCount, venueInput:S.venueInput, onVenueInput:e=>this.setState({venueInput:e.target.value}), onAddVenue:()=>this.addVenue(),
+      onVenueKey:e=>{ if(e.key==='Enter') this.addVenue(); },
+      convertsView, onApplyRefine:()=>this.showToast('Refinement applied — re-scoring future runs'),
+      icoTarget:this.icon('target',15,2), icoTrend:this.icon('trend',16,2), icoPin:this.icon('pin',16,2), icoGift:this.icon('gift',15,2),
+      sourceCards, sourceCount:S.sources.length,
+      icoBell:this.icon('bell',18,2), icoSend:this.icon('send',16,2.2), onBell:()=>this.go('outreach'),
+      stepper, onbFooter,
+      // icons
+      icoUpload:this.icon('upload',26,1.7), icoMail:this.icon('mail',18,2), icoAlert:this.icon('alert',15,2),
+      icoGlobe:this.icon('globe',16,2), icoAt:this.icon('at',16,2), icoPlus:this.icon('plus',18,2.2),
+      icoLock:this.icon('lock',14,2), icoCheckSm:this.icon('check',13,2.6), icoXSm:this.icon('x',14,2.4),
+      icoArrowR:this.icon('arrowRight',17,2), icoArrowL:this.icon('arrowLeft',16,2),
+      icoEditSm:this.icon('edit',13,2), icoSparkle:this.icon('sparkle',16,2),
+      icoSearch:this.icon('search',30,1.8), icoShieldSm:this.icon('shield',13,2.2),
+      icoExtSm:this.icon('external',12,2.2), icoRefresh:this.icon('refresh',16,2),
+      icoFlow:this.icon('flow',16,2), icoUsers:this.icon('users',16,2), icoLayers:this.icon('layers',16,2),
+      icoArrowLSm:this.icon('arrowLeft',15,2), icoArrowRSm:this.icon('arrowRight',15,2), icoRefreshSm:this.icon('refresh',14,2),
+      // signin
+      email:S.email, onEmail:e=>this.setState({email:e.target.value,signinState:'idle'}),
+      signinLoading:S.signinState==='loading', signinIdle:S.signinState!=='loading', signinError:S.signinState==='error',
+      onSigninContinue:()=>{ if(!/.+@.+\..+/.test(S.email)){this.setState({signinState:'error'});return;} this.setState({signinState:'loading'}); setTimeout(()=>this.go('context'),850); },
+      // context
+      sources, hasSources:S.sources.length>0,
+      onBrowse:()=>this.addSource('file','pitch-deck-2026.pdf'),
+      websiteInput:S.websiteInput, onWebsite:e=>this.setState({websiteInput:e.target.value}),
+      socialInput:S.socialInput, onSocial:e=>this.setState({socialInput:e.target.value}),
+      onAddWebsite:()=>{ if(S.websiteInput.trim()){this.addSource('url',S.websiteInput.trim());this.setState({websiteInput:''});} },
+      onAddSocial:()=>{ if(S.socialInput.trim()){this.addSource('social',S.socialInput.trim());this.setState({socialInput:''});} },
+      onWebsiteKey:e=>{ if(e.key==='Enter'&&S.websiteInput.trim()){this.addSource('url',S.websiteInput.trim());this.setState({websiteInput:''});} },
+      onSocialKey:e=>{ if(e.key==='Enter'&&S.socialInput.trim()){this.addSource('social',S.socialInput.trim());this.setState({socialInput:''});} },
+      // intake
+      segCustomers:cust?segOn:segOff, segInvestors:cust?segOff:segOn,
+      onCustomers:()=>this.setState({mode:'customers'}), onInvestors:()=>this.setState({mode:'investors'}),
+      intakeOffer:S.intake.offer, onOffer:e=>this.setState({intake:{...S.intake,offer:e.target.value}}),
+      intakeIcp:S.intake.icp, onIcp:e=>this.setState({intake:{...S.intake,icp:e.target.value}}),
+      intakeOutcome:S.intake.outcome, onOutcome:e=>this.setState({intake:{...S.intake,outcome:e.target.value}}),
+      intakeLeadsToday:S.intake.leadsToday, onLeadsToday:e=>this.setState({intake:{...S.intake,leadsToday:e.target.value}}),
+      intakeGoodLead:S.intake.goodLead, onGoodLead:e=>this.setState({intake:{...S.intake,goodLead:e.target.value}}),
+      intakeQ2:cust?"Who's your ideal customer?":"Who's your ideal investor?",
+      intakeQ2Sub:cust?'The kind of company you most want to reach.':'The kind of fund or angel you most want to reach.',
+      intakeIcpPh:cust?'e.g. Indie & mid-size studios shipping PC/console games.':'e.g. Seed-stage funds backing gaming & creator tools.',
+      intakeQ3:cust?'What outcome do you want?':'What are you raising for?',
+      intakeOutcomePh:cust?'e.g. Book demos with studios that are pre-launch.':'e.g. Raise a $1.5M seed in the next quarter.',
+      // gate A
+      gateBannerA:gateBanner('Your turn to review','Here\u2019s what we understood','Make it right before we go further. Edit anything that\u2019s off — your leads are only as good as this.'),
+      fieldsList, editDraft:S.editDraft, onEditDraft:e=>this.setState({editDraft:e.target.value}),
+      onBack:()=>this.go('intake'), onFindLeads:()=>this.startDiscovery(),
+      // loading
+      loadingPct:S.loadingPct, loadingMsg:loadingMsgs[S.loadingMsgIdx],
+      // gate B
+      gateBannerB:gateBanner('Your turn to review','Approve the ones worth pursuing','We found and verified these against live sources. Keep the good fits, skip the rest — only approved leads move forward.'),
+      visibleLeads, visibleCount:visibleLeads.length, foundCount:18, verifiedCount, approvedCount,
+      onToggleVerified:()=>this.setState({onlyVerified:!S.onlyVerified}),
+      filterStyle:filterBase+(S.onlyVerified?'background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent);':'background:var(--bg-surface);color:var(--text-secondary);border:1px solid var(--border);'),
+      onToggleSort:()=>this.setState({sortDesc:!S.sortDesc}),
+      sortLabel:S.sortDesc?'Score: high → low':'Score: low → high',
+      onExport:()=>this.showToast(approvedCount+' leads exported'), onSendCrm:()=>this.showToast('Sent to CRM'),
+      // dashboard
+      approvedPct:Math.round(approvedCount/18*100), onRerun:()=>this.startDiscovery(),
+      navItems,
+      // controls — palette templates
+      themeSwatches:[['neutral','Daylight','#2F6F62'],['gamerslab','Violet','#7C5CFF'],['midnight','Midnight','#5B8BFF'],['aqua','Aqua','#2DD4BF'],['emerald','Emerald','#34D399'],['ember','Ember','#FB923C'],['rose','Rose','#FB6F92']].map(([key,label,dot])=>({key,label,dot,
+        onClick:()=>this.setState({theme:key}),
+        style:`width:22px;height:22px;border-radius:50%;cursor:pointer;padding:0;background:${dot};border:2px solid ${S.theme===key?'var(--text-primary)':'transparent'};box-shadow:0 0 0 1px var(--border)`})),
+      onPrev:()=>this.go(this.flow[Math.max(0,curIdx-1)]), onNext:()=>this.go(this.flow[Math.min(this.flow.length-1,curIdx+1)]),
+      onRestart:()=>{ clearInterval(this._t); this.setState({screen:'signin',email:'',signinState:'idle'}); },
+      screenIndexLabel:(curIdx+1)+'/'+this.flow.length+' · '+this.flowLabels[screen],
+      toast:S.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>
