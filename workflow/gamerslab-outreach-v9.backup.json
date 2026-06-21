@@ -1,0 +1,1280 @@
+{
+  "name": "GamersLab Publisher Outreach v9",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "7e6374c1-58a4-4e35-92b9-b16c88341841",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [7296, 1552]
+    },
+    {
+      "parameters": {
+        "url": "https://openrouter.ai/api/v1/models",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "options": {}
+      },
+      "id": "5a01bbe3-b944-427b-bdfb-51e5d036c632",
+      "name": "Fetch OpenRouter Free Models",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [7568, 1552],
+      "credentials": {
+        "openRouterApi": {
+          "id": "IagcDRWeKjcBlMEk",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json.data || [];\nconst free = data\n  .filter(m => {\n    const p = m.pricing || {};\n    return (p.prompt === '0' || p.prompt === 0) &&\n           (p.completion === '0' || p.completion === 0) &&\n           m.id && m.id.includes(':free');\n  })\n  .map(m => m.id)\n  .slice(0, 6);\nif (!free.length) throw new Error('No free models from OpenRouter. Check API key.');\nreturn [{ json: { free_models: free } }];"
+      },
+      "id": "3649bd92-28c2-4359-8f04-56e163a06b98",
+      "name": "Filter Free Models",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [7824, 1552]
+    },
+    {
+      "parameters": {
+        "url": "https://steamspy.com/api.php?request=top100in2weeks",
+        "options": {}
+      },
+      "id": "6770447d-beb8-4a34-87cb-e6722f1aa45a",
+      "name": "Fetch SteamSpy Games",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [8080, 1552]
+    },
+    {
+      "parameters": {
+        "jsCode": "const steamInput = $input.first().json;\nconst freeModels = $('Filter Free Models').first().json.free_models || [];\n\nconst BLOCKED = [\n  'valve','electronic arts','ea games','ubisoft','activision','take-two','2k games',\n  'bethesda','square enix','bandai namco','capcom','sega','thq nordic','deep silver',\n  'sony','microsoft','nintendo','paradox','focus entertainment','team17',\n  'devolver digital','505 games','kalypso','raw fury','annapurna interactive',\n  'humble games','curve games','thunderful','modus games','fireshine games'\n];\n\nconst list = Object.values(steamInput).filter(g => {\n  if (!g || typeof g !== 'object' || !g.appid) return false;\n  const pub   = (g.publisher || '').trim().toLowerCase();\n  const total = (g.positive || 0) + (g.negative || 0);\n  return pub.length > 1 && !BLOCKED.some(b => pub.includes(b)) && total >= 10;\n});\n\nif (!list.length) throw new Error('No publishers in SteamSpy response.');\n\nconst maxId = Math.max(...list.map(g => g.appid));\nconst scored = list.map(g => {\n  const t = (g.positive || 0) + (g.negative || 1);\n  return { ...g, _s: ((g.positive / t) * 0.5) + ((g.appid / maxId) * 0.5) };\n}).sort((a, b) => b._s - a._s);\n\nreturn scored.slice(0, 100).map(g => {\n  const tot = (g.positive || 0) + (g.negative || 0);\n  return { json: {\n    free_models:         freeModels,\n    steam_app_id:        String(g.appid),\n    game_name:           g.name || '',\n    publisher_name:      g.publisher || '',\n    developer_name:      g.developer || '',\n    review_score:        tot > 0 ? Math.round((g.positive / tot) * 100) : 0,\n    total_reviews:       tot,\n    owners_estimate:     g.owners || 'unknown',\n    avg_playtime_2weeks: g.average_2weeks || 0\n  }};\n});"
+      },
+      "id": "f71076c3-7eaf-4923-9f3f-8914d44872b7",
+      "name": "Pick 100 Publishers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [8336, 1552]
+    },
+    {
+      "parameters": {
+        "url": "=https://store.steampowered.com/api/appdetails?appids={{ $json.steam_app_id }}&json=1",
+        "options": {}
+      },
+      "id": "dcc214a3-34eb-48fa-9833-f052303e4f3b",
+      "name": "Get Steam App Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [8608, 1552]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const raw   = $input.item.json;\nconst prev  = $('Pick 100 Publishers').item.json;\nconst appId = prev.steam_app_id;\n\nconst entry = raw[appId] || raw[parseInt(appId)];\n\nif (!entry || !entry.success || !entry.data) {\n  return { json: {\n    _skip:        true,\n    _skip_reason: 'No Steam data for ' + appId + ' (' + (prev.game_name || '') + ')',\n    steam_app_id: appId || '',\n    game_name:    prev.game_name || '',\n    free_models:  prev.free_models || []\n  }};\n}\n\nconst d      = entry.data;\nconst catIds = (d.categories || []).map(c => c.id);\nconst shortD = (d.short_description || '').replace(/<[^>]+>/g, '').trim().substring(0, 500);\nconst genres = (d.genres || []).map(g => g.description).join(', ');\nconst tags   = Object.keys(d.tags || {}).slice(0, 10).join(', ');\n\nconst supportEmail = ((d.support_info || {}).email || '').trim();\nconst supportUrl   = ((d.support_info || {}).url   || '').trim();\nconst website      = (d.website || '').trim();\n\nlet domain = '';\nconst urlBase = website || supportUrl;\nif (urlBase) {\n  try {\n    const safe = urlBase.startsWith('http') ? urlBase : 'https://' + urlBase;\n    domain = new URL(safe).hostname.replace(/^www\\./, '');\n  } catch(e) {}\n}\n\nconst comingSoon  = !!(d.release_date || {}).coming_soon;\nconst releaseDate = ((d.release_date || {}).date || '').trim();\n\nlet gamePhase = 'unknown';\nif (comingSoon) {\n  gamePhase = 'pre-launch';\n} else if (releaseDate) {\n  try {\n    const mo = (Date.now() - new Date(releaseDate).getTime()) / (1000 * 60 * 60 * 24 * 30);\n    if      (mo < 6)                           gamePhase = 'just-launched';\n    else if (mo < 24)                          gamePhase = 'growth';\n    else if (prev.avg_playtime_2weeks > 30)    gamePhase = 'mature';\n    else                                       gamePhase = 'sunset';\n  } catch(e) {}\n}\n\nreturn { json: {\n  _skip:                  false,\n  free_models:            prev.free_models || [],\n  steam_app_id:           prev.steam_app_id,\n  game_name:              prev.game_name,\n  publisher_name:         prev.publisher_name,\n  developer_name:         prev.developer_name,\n  review_score:           prev.review_score,\n  total_reviews:          prev.total_reviews,\n  owners_estimate:        prev.owners_estimate,\n  avg_playtime_2weeks:    prev.avg_playtime_2weeks,\n  steam_description:      shortD,\n  primary_genre:          genres,\n  steam_tags:             tags,\n  release_date:           releaseDate,\n  coming_soon:            comingSoon,\n  game_phase:             gamePhase,\n  is_free:                !!d.is_free,\n  price_usd:              d.is_free ? 0 : Math.round(((d.price_overview || {}).initial || 0) / 100),\n  publisher_website:      website,\n  support_email:          supportEmail,\n  publisher_domain:       domain,\n  has_multi_player:       catIds.includes(1) || catIds.includes(27),\n  has_online_pvp:         catIds.includes(36) || catIds.includes(37) || catIds.includes(49),\n  has_steam_leaderboards: catIds.includes(23),\n  has_steam_workshop:     catIds.includes(30),\n  has_online_coop:        catIds.includes(38)\n}};"
+      },
+      "id": "8110dd19-a133-4b46-b268-1c30b4c2c2bb",
+      "name": "Extract Steam Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [8864, 1552]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "skip-check",
+              "leftValue": "={{ $json._skip }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "230a1724-edfd-4ff4-87d8-8347e127a8a8",
+      "name": "Filter Valid Games",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [9120, 1552]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "08431559-c806-439c-b672-bc6d47e98051",
+      "name": "Batch for Serper",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [9488, 1552]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://google.serper.dev/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-KEY",
+              "value": "={{ $env.SERPER_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.publisher_name + ' ' + $json.game_name + ' contact email founder interview website press' }}"
+            },
+            {
+              "name": "num",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ab1e94fa-cf7f-4d1d-bce3-b3155d5bfd34",
+      "name": "Serper: Combined Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [9888, 1536]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://who-dat.as93.net/' + $json.publisher_domain }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "fdca0117-4c71-4785-96a2-4868257b7fd9",
+      "name": "WHOIS Lookup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [10112, 1536],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.publisher_website || 'https://httpbin.org/status/204' }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "e4ee8797-32aa-410e-83ff-58c9db6c8580",
+      "name": "Fetch Publisher Website",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [10336, 1536],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "let html = '';\ntry {\n  const r = $input.first().json;\n  html = (typeof r === 'string') ? r : (r.data || r.body || r.text || '');\n  if (typeof html !== 'string') html = '';\n} catch(e) { html = ''; }\n\nconst SKIP = ['sentry','example','wixpress','noreply','no-reply','steam','.png','.svg','@2x','schema','donotreply'];\nconst rawEmails = html.match(/[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}/g) || [];\nconst emails = [...new Set(rawEmails)].filter(e =>\n  !SKIP.some(x => e.toLowerCase().includes(x)) && e.length < 60\n);\n\nconst after = (src, prefix) => {\n  const i = src.indexOf(prefix);\n  if (i === -1) return '';\n  const stops = ['\"', \"'\", ' ', '\\n', '\\r', '<', '>', '?', '&', '#'];\n  let e = i + prefix.length;\n  while (e < src.length && !stops.includes(src[e])) e++;\n  const val = src.substring(i + prefix.length, e);\n  return val.length > 1 && val.length < 50 ? val : '';\n};\n\nconst tw = after(html, 'twitter.com/') || after(html, 'x.com/');\nconst li = after(html, 'linkedin.com/company/');\nconst dc = after(html, 'discord.gg/');\n\nconst cM = html.match(/href=[\"']([^\"']{0,120}(?:contact|about|team|press)[^\"']{0,60})[\"']/i);\nconst contactPath = cM ? cM[1] : '';\n\nconst base = $('Extract Steam Data').first().json.publisher_website || '';\nconst makeAbs = p => {\n  if (!p) return '';\n  if (p.startsWith('http')) return p;\n  if (p.startsWith('//')) return 'https:' + p;\n  const b = base.endsWith('/') ? base.slice(0, -1) : base;\n  return b + (p.startsWith('/') ? p : '/' + p);\n};\n\nreturn [{ json: {\n  scraped_emails:     emails,\n  scraped_best_email: emails[0] || '',\n  scraped_twitter:    tw ? '@' + tw : '',\n  scraped_linkedin:   li ? 'https://linkedin.com/company/' + li : '',\n  scraped_discord:    dc ? 'https://discord.gg/' + dc : '',\n  contact_page_url:   makeAbs(contactPath)\n}}];"
+      },
+      "id": "37fdd486-2fe3-4471-aa50-22377f43680a",
+      "name": "Scrape Website",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [10560, 1536]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Scrape Website').first().json.contact_page_url || $('Extract Steam Data').first().json.publisher_website + '/contact' || 'https://httpbin.org/status/204' }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "2f09987b-0561-4f6e-ab76-9667e64c7d65",
+      "name": "Fetch Contact Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [10784, 1536],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "let html = '';\ntry {\n  const r = $input.first().json;\n  html = (typeof r === 'string') ? r : (r.data || r.body || r.text || '');\n  if (typeof html !== 'string') html = '';\n} catch(e) { html = ''; }\nconst SKIP = ['sentry','example','noreply','no-reply','@2x','steam','donotreply'];\nconst raw  = html.match(/[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}/g) || [];\nconst emails = [...new Set(raw)].filter(e =>\n  !SKIP.some(x => e.toLowerCase().includes(x)) && e.length < 60\n);\nreturn [{ json: { contact_page_best_email: emails[0] || '', contact_page_emails: emails } }];"
+      },
+      "id": "3592ddea-0347-4554-9c6b-76bb65781799",
+      "name": "Scrape Contact Page",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [11008, 1536]
+    },
+    {
+      "parameters": {
+        "jsCode": "const steam  = $('Extract Steam Data').first().json;\nconst serper = $('Serper: Combined Search').first().json;\nconst scrW   = $('Scrape Website').first().json;\nconst scrC   = $('Scrape Contact Page').first().json;\n\nlet whoisEmail = '', whoisName = '';\ntry {\n  const reg = ($('WHOIS Lookup').first().json || {}).registrant || {};\n  whoisEmail = (reg.email || '').trim();\n  whoisName  = (reg.name  || '').trim();\n} catch(e) {}\n\nconst snips = (serper.organic || []).slice(0, 8)\n  .map(r => '[' + r.title + '] ' + r.snippet + ' (' + r.link + ')').join('\\n');\n\nconst allText = snips;\nconst eRaw = allText.match(/[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}/g) || [];\nconst sEmails = [...new Set(eRaw)].filter(e =>\n  !['sentry','example','steam','@2x'].some(x => e.toLowerCase().includes(x)) && e.length < 60\n);\n\nlet website = steam.publisher_website || '';\nif (!website && (serper.organic || []).length) {\n  const f = (serper.organic[0].link || '');\n  if (!['steampowered','wikipedia','youtube','twitter','x.com'].some(x => f.includes(x))) website = f;\n}\n\nlet contactEmail = '', contactSource = 'not_found';\nif      (steam.support_email)          { contactEmail = steam.support_email;          contactSource = 'steam_api';           }\nelse if (scrC.contact_page_best_email) { contactEmail = scrC.contact_page_best_email; contactSource = 'contact_page_scrape'; }\nelse if (scrW.scraped_best_email)      { contactEmail = scrW.scraped_best_email;       contactSource = 'website_scrape';      }\nelse if (sEmails.length)               { contactEmail = sEmails[0];                    contactSource = 'serper_search';       }\nelse if (whoisEmail)                   { contactEmail = whoisEmail;                    contactSource = 'whois';               }\n\nconst allEmails = [...new Set([\n  steam.support_email, scrC.contact_page_best_email,\n  ...(scrW.scraped_emails || []), ...sEmails, whoisEmail\n].filter(Boolean))];\n\nreturn [{ json: {\n  ...steam,\n  publisher_website:      website,\n  contact_email:          contactEmail,\n  contact_email_all:      allEmails.join(', '),\n  contact_source:         contactSource,\n  whois_registrant_email: whoisEmail,\n  whois_registrant_name:  whoisName,\n  twitter_handle:         scrW.scraped_twitter   || '',\n  linkedin_company_url:   scrW.scraped_linkedin  || '',\n  discord_url:            scrW.scraped_discord   || '',\n  search_snippets:        snips\n}}];"
+      },
+      "id": "74d83420-6d25-4f79-9201-ee679d7626b6",
+      "name": "Merge All Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [11232, 1536]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nlet score = 0;\nif (d.has_online_pvp)                  score += 25;\nif (d.has_steam_leaderboards)          score += 20;\nif (d.has_steam_workshop)             score += 15;\nif (d.has_multi_player)               score += 10;\nif (d.has_online_coop)                score += 5;\nif (d.coming_soon)                    score += 15;\nif (d.game_phase === 'just-launched') score += 10;\nif (d.game_phase === 'growth')        score += 8;\nif (d.game_phase === 'sunset')        score -= 20;\nif (d.game_phase === 'unknown')       score -= 5;\nif (d.contact_email)                  score += 5;\nif (d.total_reviews < 50)             score -= 10;\nif (d.total_reviews >= 500)           score += 5;\n\nlet outreach_tier;\nif      (score >= 60) outreach_tier = 'A';\nelse if (score >= 30) outreach_tier = 'B';\nelse if (score >= 10) outreach_tier = 'C';\nelse                  outreach_tier = 'skip';\n\nreturn [{ json: { ...d, pre_score: score, outreach_tier } }];"
+      },
+      "id": "ced64434-1e1d-46d9-a324-6fad3fd46ee8",
+      "name": "Score Relevance",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [11456, 1536]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst d      = $input.item.json;\nconst models = d.free_models || [];\nconst model   = models[Math.floor(Date.now() / 1000) % models.length];\nif (!models || !models.length) throw new Error('No free models from OpenRouter.');\n\nconst bestUgcApp = (d.has_online_pvp || d.has_multi_player)\n  ? 'Grudge Goblin (grudgegoblin.com)'\n  : 'Tournament Garden';\nconst pitchAngle = (d.game_phase === 'pre-launch' || d.game_phase === 'just-launched')\n  ? 'launch-amplification'\n  : 'revitalization';\n\nconst CAG = `=== GAMERSLAB PRODUCT BRIEF ===\nLoad this context before scoring or drafting. Every claim below is real.\n\n--- WHAT IT IS ---\n\nGamersLab is the permissioned data layer linking games and UGC apps.\nStudios integrate once via a lightweight SDK. Game data flows OUT to app builders\nwho create leaderboards, rival trackers, tournament sites, stat dashboards,\nDiscord bots, and companion apps — all without touching the game's code.\nNothing flows back in. Zero write access. Zero risk to the game.\n\nOne-liner: \"Studios publish once, players consent once, builders integrate once.\nEvery UGC app speaks the same language.\"\n\n--- THE PROBLEM IT SOLVES ---\n\nToday, every UGC app reinvents the wheel:\n1. SCRAPED & BRITTLE — builders rely on screen scraping and reverse-engineered\n   endpoints that break every patch\n2. NO PERMISSIONS — players can't grant or revoke access to their own data,\n   studios can't enforce policy\n3. STUDIO BOTTLENECK — every partnership is a bespoke integration, months of\n   engineering for one feature\n4. FRAGMENTED IDENTITY — same player, ten accounts, zero unified history\n\nGamersLab solves all four in one integration.\n\n--- REAL NUMBERS (use these, no others) ---\n\nUGC-enabled games outperform standard games:\n- Revenue: +31% after year 5\n- DLC Revenue: +105% after year 5\n- Console Players: +20% after year 1\n- CCU: +115% after year 5\n\nUGC market size: $10B+\n- Roblox UGC payout 2024-2025: $1B+\n- Fortnite UEFN payout 2024-2025: $900M+\n- Overwolf payout 2024-2025: $300M+\n\nCurrent traction:\n- 6 early games on platform\n- 5 UGC apps in development\n- First app: 35k+ players\n- Discord community: 68k\n- Twitter/X following: 55k\n\n--- CURRENT GAMES ON PLATFORM ---\nUse these as peer references when targeting similar genres:\n\n1. Maelstrom — Naval Battle Royale (Gunpowder Games) → best peer for PvP/competitive\n2. NightSpawn — Horror Survival → best peer for survival/horror\n3. Masks of the Void: Infinity — Action Roguelite (Epic Games Store) → best peer for roguelite/action\n4. Dark Table CCG — Card Game → best peer for card games/strategy\n5. Bug & Seek — Casual Collection → best peer for casual/collection\n6. Mullet Cop — Idle Sim Manager (itch.io) → best peer for idle/sim\n\n--- LIVE UGC APPS (built on GamersLab) ---\n\nGRUDGE GOBLIN (grudgegoblin.com) — THE KEY PITCH TOOL FOR MULTIPLAYER GAMES\nA rival tracker for multiplayer games. Watches every kill, remembers every foe,\npings players when rivals/prey queue up. Currently tracking Maelstrom.\n- Free for players. No install. Runs in browser.\n- Free for studios. No revenue share. No per-seat fees.\n- Real pitch hook: \"Hand your players a reason to come back — without building any of it.\"\n- Best used for: any game with PvP, kill tracking, competitive play, online multiplayer\n- Lead with Grudge Goblin when pitching multiplayer games. It is LIVE, REAL, and FREE.\n\nTOURNAMENT GARDEN — Turn any single or multiplayer game into a tournament or leaderboard.\n12 tournaments growing this week. Best pitch for: competitive games, esports adjacent titles.\n\nGAMERS LAB PLUS — Cloud save & minimal live-ops. Best pitch for: studios with no backend.\n\nBUG & SEEK COMPANION — Rolling leaderboard, stats tracker, custom questing system.\nBest pitch for: casual/collection games with daily active communities.\n\n--- TWO PITCH ANGLES — CHOOSE BASED ON GAME PHASE ---\n\nPITCH A: ESTABLISHED GAMES (mature/growth phase, past peak CCU)\nHook: \"Your community is already building workarounds with screen scrapers.\nGamersLab makes that official — and gives you the analytics layer.\"\nKey stat to use: +31% revenue after year 5, +115% CCU after year 5\nLead app: Grudge Goblin (if multiplayer) or Tournament Garden (if competitive)\nFrame: Revitalization without engineering investment.\n\nPITCH B: NEW / UPCOMING GAMES (pre-launch, early access, just-launched <6 months)\nHook: \"Launch with a community data layer already in place — signal to players\nfrom day one that you're community-forward.\"\nKey stat to use: +20% console players after year 1, +115% CCU after year 5\nLead app: Tournament Garden (instant tournament infra from launch)\nFrame: Launch amplification. Get the ecosystem before the game ships.\n\n--- THREE OBJECTIONS TO PRE-DISSOLVE IN EVERY EMAIL ---\n\n1. \"Is it IN my game?\" → NO. UGC apps live OUTSIDE the game. Nothing runs inside\n   the game. Data only flows out from the game server. Builders cannot touch the game.\n\n2. \"How much does it cost? What's the catch?\" → FREE for studios.\n   App builders consume data free, supported by ads — but ads are NEVER inside the game.\n   Studio integration is free. No revenue share. No per-seat fees.\n\n3. \"How long does it take? I have no time.\" → 2 afternoons to integrate.\n   Upsell/lock-in: GamersLab gives studios a FREE analytics dashboard.\n   Many studios don't even have basic analytics — this alone is worth the integration.\n\nPick the ONE objection most relevant to this publisher's likely hesitation and dissolve\nit preemptively in the email. Do not list all three.\n\n--- SDK & INTEGRATION ---\n\nWorks with: Unity, Unreal, iOS, Android, PlayStation, Xbox, Ethereum, Sequence, Thirdweb.\nAI-ready: Plug & play MCP servers, LLM-ready schemas, consistent structured data across all games.\nServer-side only: Studios push events via SDK → GamersLab → builders read via API.\n\n--- BEST FIT PUBLISHER PROFILE ---\n\nSTRONG FIT:\n- Has online PvP, leaderboards, kill tracking, or competitive play (→ pitch Grudge Goblin)\n- Has active player community asking for companion tools\n- Team of 1–15 people who can't build UGC tooling themselves\n- Game in growth or just-launched phase (actively thinking about retention)\n- Pre-launch game (publisher in active BD mode, thinking about day-one community)\n- Has Steam Workshop (already UGC-aware, easier conversation)\n- Card games, survival, battle royale, roguelite, sports, racing, fighting, strategy\n\nPOOR FIT (do not draft, archive):\n- Single-player narrative game with no replayability signal\n- Game with <100 reviews and no community activity\n- Major publisher (Valve, EA, Ubisoft, Activision etc.) — too slow to act\n- Sunset game: released 3+ years ago, avg_playtime_2weeks = 0\n\n--- CONTACT & CTA ---\n\nGamersLab contact: contact@gamerslab.gg\nCEO Telegram: @ericvanderwal\nWebsite: www.gamerslab.gg\nIntegration page: www.gamerslab.gg/early-access\n\nCTA for email: ONE soft question only. Never a link dump. Never \"let me know if interested.\"\nBest CTAs:\n- \"Would Grudge Goblin be a fit for [game name]'s player community?\"\n- \"Is the team thinking about companion apps for [game name]'s launch?\"\n- \"Would a 20-min call with our CBO Ryan Waller be worth your time?\"\n\nPS line (always include): \"PS — Full integration docs and examples from similar titles:\nhttps://www.gamerslab.gg/early-access\"\n\n--- TEAM (use if relevant for credibility) ---\n\nEric Vander Wal — CEO, 20+ years developer & product, former dept head at Mantle, Oasys & Nervos\nRyan Waller — CBO, 20+ years entertainment executive, 50+ games published, deep game industry connections\nDr. Joon Yoon PhD — CDO, Stanford Economics PhD, former Nexon Studio, economy & data science at scale\n\nMention Ryan Waller (CBO) specifically when addressing publishers — 50+ games published is\nthe most relevant credibility signal for a studio BD contact.\n\n--- BANNED PHRASES & FALSE CLAIMS ---\n\nNEVER say:\n- \"synergy\", \"circle back\", \"touch base\", \"game-changing\", \"seamless\", \"at scale\"\n- \"I hope this email finds you well\"\n- \"I came across your game\"\n- \"I wanted to reach out\"\n- \"I'd love to connect\"\n- Any claim about numbers not listed above\n- Anything about blockchain (unless publisher specifically works in Web3)\n- \"revolutionize\", \"disrupt\", \"paradigm\"\n\nNEVER: attach the deck to the email. Link only in PS.\nNEVER: use more than one stat in the email body.\nNEVER: make the email longer than 130 words in the body.\nNEVER: end with multiple CTAs — one question only.\n\n=== END GAMERSLAB BRIEF ===`;\n\nconst isSkip = d.outreach_tier === 'skip' || d.outreach_tier === 'C';\n\nconst prompt = isSkip\n  ? `Extract publisher intel. Return ONLY valid JSON, no markdown.\n\nPUBLISHER: ${d.publisher_name}\nGAME: ${d.game_name}\nSEARCH RESULTS:\n${d.search_snippets}\n\nReturn:\n{\n  \"publisher_website\": \"URL or empty\",\n  \"contact_name\": \"name or empty\",\n  \"contact_role\": \"role or empty\",\n  \"founder_name\": \"name or empty\",\n  \"founder_quote\": \"quote or empty\",\n  \"founder_quote_source\": \"URL or empty\",\n  \"twitter_handle\": \"@handle or empty\",\n  \"linkedin_company_url\": \"URL or empty\",\n  \"pain_signal\": \"1 sentence\",\n  \"intel_summary\": \"2 sentences\",\n  \"intel_quality\": \"gold|silver|bronze|no_signal\",\n  \"fit_score\": 0,\n  \"score_rationale\": \"low priority target\",\n  \"gamerslab_hook\": \"\",\n  \"ugc_app_pitch\": \"\",\n  \"peer_publisher_ref\": \"\",\n  \"draft_subject\": \"\",\n  \"draft_body\": \"\",\n  \"recommended_action\": \"archive\"\n}`\n  : CAG + `\n\nPUBLISHER: ${d.publisher_name}\nDEVELOPER: ${d.developer_name}\nGAME: ${d.game_name}\nGENRE: ${d.primary_genre}\nTAGS: ${d.steam_tags}\nDESCRIPTION: ${d.steam_description}\nRELEASE: ${d.release_date || 'Coming Soon'} — phase: ${d.game_phase}\nCOMING SOON: ${d.coming_soon}\nREVIEWS: ${d.review_score}% from ${d.total_reviews} reviews\nOWNERS: ${d.owners_estimate}\nPRICE: ${d.is_free ? 'Free' : '$' + d.price_usd}\nSIGNALS: pvp=${d.has_online_pvp} leaderboards=${d.has_steam_leaderboards} workshop=${d.has_steam_workshop} multiplayer=${d.has_multi_player}\nPRE-SCORE: ${d.pre_score}/100 tier: ${d.outreach_tier}\nPITCH ANGLE: ${pitchAngle}\nBEST UGC APP: ${bestUgcApp}\nCONTACT: ${d.contact_email || 'not found'} (${d.contact_source})\nCONTACT NAME: ${d.contact_name || 'unknown'}\nSEARCH RESULTS:\n${d.search_snippets}\n\nTASK: Extract intel AND draft a cold email. Return ONLY valid JSON, no markdown:\n{\n  \"publisher_website\": \"URL or empty\",\n  \"contact_name\": \"name or empty\",\n  \"contact_role\": \"role or empty\",\n  \"founder_name\": \"name or empty\",\n  \"founder_quote\": \"verbatim quote or empty\",\n  \"founder_quote_source\": \"URL or empty\",\n  \"twitter_handle\": \"@handle or empty\",\n  \"linkedin_company_url\": \"URL or empty\",\n  \"pain_signal\": \"1 sentence pain point\",\n  \"intel_summary\": \"2 sentences about publisher\",\n  \"intel_quality\": \"gold|silver|bronze|no_signal\",\n  \"fit_score\": <0-100>,\n  \"score_rationale\": \"2 sentences\",\n  \"gamerslab_hook\": \"1 sentence why GamersLab fits\",\n  \"ugc_app_pitch\": \"which app and why\",\n  \"peer_publisher_ref\": \"most similar GamersLab game\",\n  \"draft_subject\": \"game name + claim, max 10 words, no exclamation marks\",\n  \"draft_body\": \"100-130 words. Specific opener. Name game and UGC app. Dissolve one objection. One real stat. One CTA question.\",\n  \"draft_ps\": \"PS — Full integration docs: https://www.gamerslab.gg/early-access\",\n  \"recommended_action\": \"advance|warm_queue|archive\"\n}`;\n\nreturn { json: {\n  _source:       d,\n  _pitch_angle:  pitchAngle,\n  _best_ugc_app: bestUgcApp,\n  _payload:      JSON.stringify({ model, max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })\n}};",
+        "mode": "runOnceForEachItem"
+      },
+      "id": "ce2411f9-4f42-4ce7-aaa3-649e3fa531e2",
+      "name": "Prepare LLM Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [11696, 1536]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json._payload }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "52226c4b-6dd9-4350-a8cc-ac73687370bb",
+      "name": "LLM: Intel + Draft (All Models)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [11952, 1536],
+      "credentials": {
+        "openRouterApi": {
+          "id": "IagcDRWeKjcBlMEk",
+          "name": "OpenRouter account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst meta  = $('Prepare LLM Items').first().json;\n\nfor (const item of items) {\n  const llm = item.json;\n  if (!llm.choices || !llm.choices[0] || !llm.choices[0].message) continue;\n  const msg = llm.choices[0].message;\n  const raw = (typeof msg.content === 'string' && msg.content.trim())\n    ? msg.content\n    : (typeof msg.reasoning === 'string' ? msg.reasoning : '');\n  if (!raw || llm.choices[0].finish_reason === 'length') continue;\n  const start = raw.indexOf('{');\n  const end   = raw.lastIndexOf('}');\n  if (start === -1 || end <= start) continue;\n  try {\n    const parsed = JSON.parse(raw.substring(start, end + 1));\n    if (!parsed.intel_summary && !parsed.pain_signal && !parsed.draft_body) continue;\n    return [{ json: {\n      _parsed:        parsed,\n      _model_used:    llm.model            || 'unknown',\n      _source:        meta._source         || {},\n      _pitch_angle:   meta._pitch_angle    || '',\n      _best_ugc_app:  meta._best_ugc_app   || '',\n      _pre_score:     meta._source ? (meta._source.pre_score    || 0)      : 0,\n      _outreach_tier: meta._source ? (meta._source.outreach_tier || 'skip') : 'skip'\n    }}];\n  } catch(e) { continue; }\n}\n\nreturn [{ json: {\n  _parsed:        { intel_quality: 'no_signal', fit_score: 0, recommended_action: 'archive' },\n  _model_used:    'none',\n  _source:        meta._source         || {},\n  _pitch_angle:   meta._pitch_angle    || '',\n  _best_ugc_app:  meta._best_ugc_app   || '',\n  _pre_score:     meta._source ? (meta._source.pre_score    || 0)      : 0,\n  _outreach_tier: meta._source ? (meta._source.outreach_tier || 'skip') : 'skip'\n}}];"
+      },
+      "id": "5369e39b-10fd-4623-a7a3-f357a9cc451c",
+      "name": "Pick Best LLM Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [12208, 1536]
+    },
+    {
+      "parameters": {
+        "jsCode": "const r   = $input.first().json;\nconst p   = r._parsed   || {};\nconst src = r._source   || {};\n\nconst steam_app_id = src.steam_app_id || '';\nif (!steam_app_id) throw new Error('steam_app_id missing from _source');\n\nconst fullBody = ((p.draft_body || '') + (p.draft_ps ? '\\n\\n' + p.draft_ps : '')).trim();\n\nlet intel_quality = p.intel_quality || 'no_signal';\nif (!p.intel_quality) {\n  if      (p.founder_quote && p.founder_quote.length > 20) intel_quality = 'gold';\n  else if (p.pain_signal   && p.pain_signal.length   > 10) intel_quality = 'silver';\n  else if (src.contact_email)                               intel_quality = 'bronze';\n}\n\nconst pre_score     = r._pre_score     !== undefined ? r._pre_score     : (src.pre_score     || 0);\nconst outreach_tier = r._outreach_tier                                   || (src.outreach_tier || 'skip');\nconst pitch_angle   = r._pitch_angle                                     || (src.pitch_angle   || '');\nconst best_ugc_app  = r._best_ugc_app                                    || (src.best_ugc_app  || '');\n\nreturn [{ json: {\n  steam_app_id,\n  game_name:              src.game_name              || '',\n  publisher_name:         src.publisher_name         || '',\n  developer_name:         src.developer_name         || '',\n  primary_genre:          src.primary_genre          || '',\n  steam_tags:             src.steam_tags             || '',\n  steam_description:      src.steam_description      || '',\n  review_score:           src.review_score           || 0,\n  total_reviews:          src.total_reviews          || 0,\n  owners_estimate:        src.owners_estimate        || '',\n  avg_playtime_2weeks:    src.avg_playtime_2weeks     || 0,\n  release_date:           src.release_date           || '',\n  coming_soon:            src.coming_soon            || false,\n  game_phase:             src.game_phase             || '',\n  is_free:                src.is_free                || false,\n  price_usd:              src.price_usd              || 0,\n  has_multi_player:       src.has_multi_player       || false,\n  has_online_pvp:         src.has_online_pvp         || false,\n  has_steam_leaderboards: src.has_steam_leaderboards || false,\n  has_steam_workshop:     src.has_steam_workshop     || false,\n  has_online_coop:        src.has_online_coop        || false,\n  publisher_website:      p.publisher_website        || src.publisher_website    || '',\n  support_email:          src.support_email          || '',\n  contact_email:          src.contact_email          || '',\n  contact_email_all:      src.contact_email_all      || '',\n  contact_source:         src.contact_source         || '',\n  contact_name:           p.contact_name             || src.contact_name         || '',\n  contact_role:           p.contact_role             || src.contact_role         || '',\n  whois_registrant_email: src.whois_registrant_email || '',\n  whois_registrant_name:  src.whois_registrant_name  || '',\n  twitter_handle:         p.twitter_handle           || src.twitter_handle       || '',\n  linkedin_company_url:   p.linkedin_company_url     || src.linkedin_company_url || '',\n  discord_url:            src.discord_url            || '',\n  founder_name:           p.founder_name             || '',\n  founder_quote:          p.founder_quote            || '',\n  founder_quote_source:   p.founder_quote_source     || '',\n  pain_signal:            p.pain_signal              || '',\n  intel_summary:          p.intel_summary            || '',\n  intel_quality,\n  pre_score,\n  outreach_tier,\n  fit_score:              typeof p.fit_score === 'number' ? p.fit_score : 0,\n  score_rationale:        p.score_rationale          || '',\n  pitch_angle,\n  best_ugc_app,\n  gamerslab_hook:         p.gamerslab_hook           || '',\n  ugc_app_pitch:          p.ugc_app_pitch            || '',\n  peer_publisher_ref:     p.peer_publisher_ref       || '',\n  draft_subject:          p.draft_subject            || '',\n  draft_body:             fullBody,\n  recommended_action:     p.recommended_action       || 'archive',\n  model_used:             r._model_used              || '',\n  pipeline_status:        outreach_tier === 'skip' ? 'skip' : 'draft'\n}}];"
+      },
+      "id": "6490cce9-a4f2-47d9-96f3-f30f15153e7c",
+      "name": "Build Final Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [12464, 1536]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "publishers",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "steam_app_id": "={{ $json.steam_app_id }}",
+            "game_name": "={{ $json.game_name }}",
+            "publisher_name": "={{ $json.publisher_name }}",
+            "developer_name": "={{ $json.developer_name }}",
+            "primary_genre": "={{ $json.primary_genre }}",
+            "steam_tags": "={{ $json.steam_tags }}",
+            "steam_description": "={{ $json.steam_description }}",
+            "review_score": "={{ $json.review_score }}",
+            "total_reviews": "={{ $json.total_reviews }}",
+            "owners_estimate": "={{ $json.owners_estimate }}",
+            "avg_playtime_2weeks": "={{ $json.avg_playtime_2weeks }}",
+            "release_date": "={{ $json.release_date }}",
+            "coming_soon": "={{ $json.coming_soon }}",
+            "game_phase": "={{ $json.game_phase }}",
+            "is_free": "={{ $json.is_free }}",
+            "price_usd": "={{ $json.price_usd }}",
+            "has_multi_player": "={{ $json.has_multi_player }}",
+            "has_online_pvp": "={{ $json.has_online_pvp }}",
+            "has_steam_leaderboards": "={{ $json.has_steam_leaderboards }}",
+            "has_steam_workshop": "={{ $json.has_steam_workshop }}",
+            "has_online_coop": "={{ $json.has_online_coop }}",
+            "publisher_website": "={{ $json.publisher_website }}",
+            "support_email": "={{ $json.support_email }}",
+            "contact_email": "={{ $json.contact_email }}",
+            "contact_email_all": "={{ $json.contact_email_all }}",
+            "contact_source": "={{ $json.contact_source }}",
+            "contact_name": "={{ $json.contact_name }}",
+            "contact_role": "={{ $json.contact_role }}",
+            "whois_registrant_email": "={{ $json.whois_registrant_email }}",
+            "whois_registrant_name": "={{ $json.whois_registrant_name }}",
+            "twitter_handle": "={{ $json.twitter_handle }}",
+            "linkedin_company_url": "={{ $json.linkedin_company_url }}",
+            "discord_url": "={{ $json.discord_url }}",
+            "founder_name": "={{ $json.founder_name }}",
+            "founder_quote": "={{ $json.founder_quote }}",
+            "founder_quote_source": "={{ $json.founder_quote_source }}",
+            "pain_signal": "={{ $json.pain_signal }}",
+            "intel_summary": "={{ $json.intel_summary }}",
+            "intel_quality": "={{ $json.intel_quality }}",
+            "pre_score": "={{ $json.pre_score }}",
+            "outreach_tier": "={{ $json.outreach_tier }}",
+            "fit_score": "={{ $json.fit_score }}",
+            "score_rationale": "={{ $json.score_rationale }}",
+            "pitch_angle": "={{ $json.pitch_angle }}",
+            "best_ugc_app": "={{ $json.best_ugc_app }}",
+            "gamerslab_hook": "={{ $json.gamerslab_hook }}",
+            "ugc_app_pitch": "={{ $json.ugc_app_pitch }}",
+            "peer_publisher_ref": "={{ $json.peer_publisher_ref }}",
+            "draft_subject": "={{ $json.draft_subject }}",
+            "draft_body": "={{ $json.draft_body }}",
+            "recommended_action": "={{ $json.recommended_action }}",
+            "model_used": "={{ $json.model_used }}",
+            "pipeline_status": "={{ $json.pipeline_status }}"
+          },
+          "matchingColumns": ["steam_app_id"],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "steam_app_id",
+              "displayName": "steam_app_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "game_name",
+              "displayName": "game_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "publisher_name",
+              "displayName": "publisher_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "developer_name",
+              "displayName": "developer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "primary_genre",
+              "displayName": "primary_genre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "steam_tags",
+              "displayName": "steam_tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "steam_description",
+              "displayName": "steam_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "review_score",
+              "displayName": "review_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "total_reviews",
+              "displayName": "total_reviews",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "owners_estimate",
+              "displayName": "owners_estimate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "avg_playtime_2weeks",
+              "displayName": "avg_playtime_2weeks",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "release_date",
+              "displayName": "release_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "coming_soon",
+              "displayName": "coming_soon",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "game_phase",
+              "displayName": "game_phase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "is_free",
+              "displayName": "is_free",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "price_usd",
+              "displayName": "price_usd",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "has_multi_player",
+              "displayName": "has_multi_player",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "has_online_pvp",
+              "displayName": "has_online_pvp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "has_steam_leaderboards",
+              "displayName": "has_steam_leaderboards",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "has_steam_workshop",
+              "displayName": "has_steam_workshop",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "has_online_coop",
+              "displayName": "has_online_coop",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "publisher_website",
+              "displayName": "publisher_website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "support_email",
+              "displayName": "support_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "contact_email",
+              "displayName": "contact_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "contact_email_all",
+              "displayName": "contact_email_all",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "contact_source",
+              "displayName": "contact_source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "contact_name",
+              "displayName": "contact_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "contact_role",
+              "displayName": "contact_role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "whois_registrant_email",
+              "displayName": "whois_registrant_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "whois_registrant_name",
+              "displayName": "whois_registrant_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "twitter_handle",
+              "displayName": "twitter_handle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "linkedin_company_url",
+              "displayName": "linkedin_company_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "discord_url",
+              "displayName": "discord_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "founder_name",
+              "displayName": "founder_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "founder_quote",
+              "displayName": "founder_quote",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "founder_quote_source",
+              "displayName": "founder_quote_source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "pain_signal",
+              "displayName": "pain_signal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "intel_summary",
+              "displayName": "intel_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "intel_quality",
+              "displayName": "intel_quality",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "pre_score",
+              "displayName": "pre_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "outreach_tier",
+              "displayName": "outreach_tier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "fit_score",
+              "displayName": "fit_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "score_rationale",
+              "displayName": "score_rationale",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "pitch_angle",
+              "displayName": "pitch_angle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "best_ugc_app",
+              "displayName": "best_ugc_app",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "gamerslab_hook",
+              "displayName": "gamerslab_hook",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "ugc_app_pitch",
+              "displayName": "ugc_app_pitch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "peer_publisher_ref",
+              "displayName": "peer_publisher_ref",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "draft_subject",
+              "displayName": "draft_subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "draft_body",
+              "displayName": "draft_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "recommended_action",
+              "displayName": "recommended_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "model_used",
+              "displayName": "model_used",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "pipeline_status",
+              "displayName": "pipeline_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "reviewed_by",
+              "displayName": "reviewed_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "reviewed_at",
+              "displayName": "reviewed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "reject_reason",
+              "displayName": "reject_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "approved_subject",
+              "displayName": "approved_subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "approved_body",
+              "displayName": "approved_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "sent_at",
+              "displayName": "sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "replied_at",
+              "displayName": "replied_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "sequence_status",
+              "displayName": "sequence_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "3b56c2a9-a09f-4ddc-9589-a2dcabf85039",
+      "name": "Upsert to Supabase",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [12768, 1712],
+      "credentials": {
+        "postgres": {
+          "id": "7OchEBXvkmRfMDeG",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "unit": "seconds",
+        "amount": 1
+      },
+      "id": "gl-wait-steam",
+      "name": "Wait: Steam Rate Limit",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1480, 300],
+      "webhookId": "steam-rate-limit-wait"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch OpenRouter Free Models",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch OpenRouter Free Models": {
+      "main": [
+        [
+          {
+            "node": "Filter Free Models",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Free Models": {
+      "main": [
+        [
+          {
+            "node": "Fetch SteamSpy Games",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch SteamSpy Games": {
+      "main": [
+        [
+          {
+            "node": "Pick 100 Publishers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick 100 Publishers": {
+      "main": [
+        [
+          {
+            "node": "Wait: Steam Rate Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Steam App Details": {
+      "main": [
+        [
+          {
+            "node": "Extract Steam Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Steam Data": {
+      "main": [
+        [
+          {
+            "node": "Filter Valid Games",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Valid Games": {
+      "main": [
+        [
+          {
+            "node": "Batch for Serper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Batch for Serper": {
+      "main": [
+        [
+          {
+            "node": "Serper: Combined Search",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Serper: Combined Search": {
+      "main": [
+        [
+          {
+            "node": "WHOIS Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WHOIS Lookup": {
+      "main": [
+        [
+          {
+            "node": "Fetch Publisher Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Publisher Website": {
+      "main": [
+        [
+          {
+            "node": "Scrape Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Website": {
+      "main": [
+        [
+          {
+            "node": "Fetch Contact Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Contact Page": {
+      "main": [
+        [
+          {
+            "node": "Scrape Contact Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Contact Page": {
+      "main": [
+        [
+          {
+            "node": "Merge All Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Data": {
+      "main": [
+        [
+          {
+            "node": "Score Relevance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Relevance": {
+      "main": [
+        [
+          {
+            "node": "Prepare LLM Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare LLM Items": {
+      "main": [
+        [
+          {
+            "node": "LLM: Intel + Draft (All Models)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM: Intel + Draft (All Models)": {
+      "main": [
+        [
+          {
+            "node": "Pick Best LLM Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick Best LLM Response": {
+      "main": [
+        [
+          {
+            "node": "Build Final Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Final Record": {
+      "main": [
+        [
+          {
+            "node": "Upsert to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Batch for Serper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Steam Rate Limit": {
+      "main": [
+        [
+          {
+            "node": "Get Steam App Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "b084093d-7539-4e4c-ac7c-40889ac86535",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b77ce31e344450acd6ad20bd6cde79f46c1e07d55921483122bfba86e8350352"
+  },
+  "id": "bGxcwlp3VRL8jT9r-Mm_h",
+  "tags": []
+}
