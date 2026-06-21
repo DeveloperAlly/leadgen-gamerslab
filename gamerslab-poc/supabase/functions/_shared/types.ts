@@ -1,7 +1,7 @@
 /**
  * UI contract types — the shape the React app expects.
  *
- * These mirror `ui-design/lead-pipeline/src/data/types.ts` EXACTLY. The integration
+ * These mirror `poc/ui/src/data/types.ts` EXACTLY. The integration
  * layer's only job is to map GamersLab's `publishers` rows onto these shapes, so the UI
  * runs on real data without a single component change. When v2 (whitelabel) swaps the
  * backend, it implements this same contract — the UI never knows which backend answered.

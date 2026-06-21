@@ -27,7 +27,7 @@ Five runtime components, each independently buildable behind a contract:
 
 | # | Component | Tech | Responsibility |
 |---|-----------|------|----------------|
-| C1 | **Web app** | React + Vite (existing design system in `ui-design/lead-pipeline`) | the 10 screens; calls C2 only |
+| C1 | **Web app** | React + Vite (existing design system in `poc/ui`) | the 10 screens; calls C2 only |
 | C2 | **API / integration layer** | Supabase Edge Functions (Deno) | implements the `/api/*` contract; only holder of secrets; brokers C3/C4/C5 |
 | C3 | **Data plane** | Supabase Postgres 15+ (pgvector), Storage | tables, RLS, vectors, files, jobs |
 | C4 | **Discovery orchestrator** | n8n (self-host) — a **new v2 workflow** | long-running discover→enrich→verify→score→draft job |
@@ -46,7 +46,7 @@ and policies are written now so nothing is retrofitted.
 
 ```
 v2-lead-pipeline/
-├── web/                      # C1 — React app (reuse ui-design/lead-pipeline)
+├── web/                      # C1 — React app (reuse poc/ui)
 │   └── src/data/api.ts       #   replaces leadService fixtures with fetch()
 ├── api/                      # C2 — Supabase Edge Functions (one dir per function)
 │   └── functions/{sources,understanding,discovery,leads,outreach,insights,tenant,keys,exa-callback}

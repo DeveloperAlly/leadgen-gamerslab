@@ -2,12 +2,12 @@
 
 The integration layer between the **n8n v10 workflow**, the **`publishers`** Supabase table,
 and the **Lead Pipeline UI**. It implements the UI's `leadService` contract
-(`ui-design/lead-pipeline/docs/ENDPOINTS.md`) as Supabase Edge Functions, mapping GamersLab's
+(`poc/ui/docs/ENDPOINTS.md`) as Supabase Edge Functions, mapping GamersLab's
 single `publishers` table onto the UI's generic Lead/Outreach model.
 
 This is **v1 (GamersLab)**. v2 (whitelabel) keeps this exact function surface and swaps the
 backend underneath (Exa/OpenRouter/generic schema) — the UI never changes. See
-`Gamers Lab Lead Gen Pipeline/how/architecture_spec_M2_DRAFT.md`.
+`how/architecture_spec_M2_DRAFT.md`.
 
 ## Layout
 
@@ -40,6 +40,9 @@ sources, intake, venues, understanding, insights. These become real per-tenant r
 ## Deploy (target project: `ccmwksmgoisijvyovgko`)
 
 ```bash
+# 0. Run all supabase commands from the gamerslab-poc/ dir (the CLI resolves ./supabase):
+cd gamerslab-poc
+
 # 1. Link (one-time). Uses the supabase CLI via npx — no global install needed.
 npx supabase login                       # the account that owns ccmwksmgoisijvyovgko
 npx supabase link --project-ref ccmwksmgoisijvyovgko
@@ -55,7 +58,7 @@ for fn in tenant sources intake venues understanding discovery n8n-status leads 
   npx supabase functions deploy "$fn" --no-verify-jwt --project-ref ccmwksmgoisijvyovgko
 done
 
-# 5. Point the UI at it (ui-design/lead-pipeline/.env.local):
+# 5. Point the UI at it (poc/ui/.env.local):
 #   VITE_API_BASE=https://ccmwksmgoisijvyovgko.supabase.co/functions/v1
 #   VITE_API_BEARER=<same as API_BEARER secret>
 #   VITE_USE_FIXTURES=false

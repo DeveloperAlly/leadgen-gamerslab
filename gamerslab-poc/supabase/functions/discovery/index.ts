@@ -10,7 +10,7 @@
  * discover→enrich→draft job and posts progress back to the `n8n-status` function. n8n has
  * no REST execute endpoint, so a Webhook Trigger is the entry point (architecture spec §6).
  *
- * Contract: ui-design/lead-pipeline/docs/ENDPOINTS.md §6.
+ * Contract: poc/ui/docs/ENDPOINTS.md §6.
  */
 
 import { admin, errBody, json, lastSegment, preflight, requireBearer } from "../_shared/http.ts";

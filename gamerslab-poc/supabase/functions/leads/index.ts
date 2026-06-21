@@ -6,7 +6,7 @@
  *   PATCH  /leads/:id   { status }          -> Lead
  *   POST   /leads/export   { ids[] }        -> { url }   (CSV data URL in v1)
  *
- * Contract: ui-design/lead-pipeline/docs/ENDPOINTS.md §6.
+ * Contract: poc/ui/docs/ENDPOINTS.md §6.
  */
 
 import { admin, errBody, json, lastSegment, preflight, requireBearer } from "../_shared/http.ts";

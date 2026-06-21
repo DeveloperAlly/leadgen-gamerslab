@@ -6,7 +6,7 @@
 
 **Created:** 2026-06-21 · **Owner:** Ally.
 
-**Premise:** v2 wraps the **already-built UI** (`GamersLab/ui-design/lead-pipeline/`, 10 screens,
+**Premise:** v2 wraps the **already-built UI** (`GamersLab/poc/ui/`, 10 screens,
 `leadService.ts` contract) around the **v9 engine**, via the integration layer. The UI is done and
 runs on fixtures; **the work is making each fixture real, endpoint by endpoint.** Phases are
 ordered so each one ships something usable and unlocks the next.
