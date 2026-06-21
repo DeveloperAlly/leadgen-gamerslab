@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:poc": "vite --mode poc",
     "build": "tsc --noEmit && vite build",
+    "build:poc": "tsc --noEmit && vite build --mode poc",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },

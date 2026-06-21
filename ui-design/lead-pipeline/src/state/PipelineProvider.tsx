@@ -20,6 +20,7 @@ import {
   seedVenues,
 } from "../data/fixtures/seed";
 import { discoveryStatusLines } from "../data/fixtures/copy";
+import { appConfig } from "../config/appConfig";
 import type {
   DashboardInsights,
   GateFieldKey,
@@ -45,7 +46,7 @@ const clone = <T,>(v: T): T =>
  */
 const initialState: PipelineState = {
   mode: "customers",
-  screen: "signin",
+  screen: appConfig.requireSignin ? "signin" : appConfig.postLoginScreen,
   email: "",
   signinState: "idle",
   sources: clone(seedSources),
@@ -165,7 +166,7 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
           return;
         }
         dispatch({ type: "SET_SIGNIN_STATE", state: "loading" });
-        setTimeout(() => dispatch({ type: "GO", screen: "context" }), 850);
+        setTimeout(() => dispatch({ type: "GO", screen: appConfig.postLoginScreen }), 850);
       },
       addSource,
       removeSource: (id) => {
@@ -215,6 +216,11 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
       },
       cancelEdit: () => dispatch({ type: "CANCEL_EDIT" }),
       startDiscovery: () => {
+        // PoC build runs no fake discovery loader; leads are already present.
+        if (!appConfig.enableDiscoveryLoader) {
+          showToast("Discovery refreshed");
+          return;
+        }
         dispatch({ type: "GO", screen: "loading" });
         dispatch({ type: "SET_LOADING", pct: 0, msgIdx: 0 });
         void leadService.runDiscovery(stateRef.current.mode).then((result) => {

@@ -1,13 +1,15 @@
 /**
- * Data-access seam.
+ * Data-access seam — the ONLY module the UI talks to for data.
  *
- * This is the ONLY module the UI talks to for data. Today it resolves from local
- * fixtures so the app runs with no backend. To go live, replace each method body
- * with a `fetch` to the matching endpoint in docs/ENDPOINTS.md — the return types
- * are unchanged, so no component or store code has to change.
+ * v1 wiring: each method calls the matching Edge Function (see docs/ENDPOINTS.md and
+ * supabase/functions/*). Return types are unchanged, so no component or store code
+ * changes. When `VITE_USE_FIXTURES === "true"` (or no API base is configured) it falls
+ * back to the original local fixtures, so the prototype still runs with no backend.
  *
- * Every method is async on purpose: it models the real network boundary even while
- * backed by fixtures, so swapping in HTTP later is a body-only change.
+ * Config (Vite env):
+ *   VITE_API_BASE     e.g. https://<project>.functions.supabase.co   (no trailing slash)
+ *   VITE_API_BEARER   the static API_BEARER the Edge Functions expect
+ *   VITE_USE_FIXTURES "true" to force fixtures
  */
 
 import { tenant, usage } from "./fixtures/tenant";
@@ -33,109 +35,172 @@ import type {
   Venue,
 } from "./types";
 
-/** Simulated network latency for the fixture backend (ms). Set 0 to disable. */
-const LATENCY = 0;
+export interface DiscoveryResult {
+  leads: Lead[];
+  foundCount: number;
+}
+
+/* ------------------------------------------------------------------ config */
+
+const API_BASE = (import.meta.env.VITE_API_BASE ?? "").replace(/\/+$/, "");
+const API_BEARER = import.meta.env.VITE_API_BEARER ?? "";
+const USE_FIXTURES = import.meta.env.VITE_USE_FIXTURES === "true" || API_BASE === "";
+
+/* ----------------------------------------------------------- fixture seam */
 
 const clone = <T>(value: T): T =>
   typeof structuredClone === "function"
     ? structuredClone(value)
     : (JSON.parse(JSON.stringify(value)) as T);
 
-const resolve = <T>(value: T): Promise<T> =>
-  new Promise((res) => setTimeout(() => res(clone(value)), LATENCY));
+const resolve = <T>(value: T): Promise<T> => Promise.resolve(clone(value));
 
 let idSeq = 0;
-const nextId = (prefix: string): string => {
-  idSeq += 1;
-  return `${prefix}-${idSeq}`;
+const nextId = (prefix: string): string => `${prefix}-${(idSeq += 1)}`;
+
+/* --------------------------------------------------------------- http seam */
+
+const req = async <T>(path: string, init?: RequestInit): Promise<T> => {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${API_BEARER}`,
+      ...(init?.headers ?? {}),
+    },
+  });
+  if (!res.ok) {
+    let detail = "";
+    try {
+      detail = JSON.stringify(await res.json());
+    } catch { /* ignore */ }
+    throw new Error(`${init?.method ?? "GET"} ${path} -> ${res.status} ${detail}`);
+  }
+  if (res.status === 204) return undefined as T;
+  return (await res.json()) as T;
 };
 
-export interface DiscoveryResult {
-  leads: Lead[];
-  foundCount: number;
-}
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/* ----------------------------------------------------------------- service */
 
 export const leadService = {
   /* ---- Bootstrap ---- */
-
-  /** GET /api/tenant — tenant config + usage. */
-  getTenant: () => resolve({ tenant, usage }),
+  getTenant: () =>
+    USE_FIXTURES
+      ? resolve({ tenant, usage })
+      : req<{ tenant: typeof tenant; usage: typeof usage }>("/tenant"),
 
   /* ---- Onboarding ---- */
+  getSources: (): Promise<Source[]> =>
+    USE_FIXTURES ? resolve(seedSources) : req<Source[]>("/sources"),
 
-  /** GET /api/sources — already-ingested context sources. */
-  getSources: (): Promise<Source[]> => resolve(seedSources),
-
-  /**
-   * POST /api/sources — register a new context source. The backend kicks off a
-   * parse/index job; the UI shows the parsing state until {@link getSource} reports done.
-   */
   addSource: (type: SourceType, label: string): Promise<Source> =>
-    resolve<Source>({ id: nextId("src"), type, label, parsing: true, done: false }),
+    USE_FIXTURES
+      ? resolve<Source>({ id: nextId("src"), type, label, parsing: true, done: false })
+      : req<Source>("/sources", { method: "POST", body: JSON.stringify({ type, label }) }),
 
-  /** DELETE /api/sources/:id */
-  removeSource: (_id: string): Promise<void> => resolve(undefined),
+  removeSource: (id: string): Promise<void> =>
+    USE_FIXTURES ? resolve(undefined) : req<void>(`/sources/${id}`, { method: "DELETE" }),
 
-  /** GET /api/intake — saved guided-intake answers. */
-  getIntake: (): Promise<Intake> => resolve(seedIntake),
+  getIntake: (): Promise<Intake> =>
+    USE_FIXTURES ? resolve(seedIntake) : req<Intake>("/intake"),
 
-  /** PUT /api/intake — persist intake answers. */
-  saveIntake: (intake: Intake): Promise<Intake> => resolve(intake),
+  saveIntake: (intake: Intake): Promise<Intake> =>
+    USE_FIXTURES
+      ? resolve(intake)
+      : req<Intake>("/intake", { method: "PUT", body: JSON.stringify(intake) }),
 
-  /** GET /api/venues — suggested + confirmed search venues. */
-  getVenues: (): Promise<Venue[]> => resolve(seedVenues),
+  getVenues: (): Promise<Venue[]> =>
+    USE_FIXTURES ? resolve(seedVenues) : req<Venue[]>("/venues"),
 
-  /** PATCH /api/venues — persist the enabled venue set + custom venues. */
-  saveVenues: (venues: Venue[]): Promise<Venue[]> => resolve(venues),
+  saveVenues: (venues: Venue[]): Promise<Venue[]> =>
+    USE_FIXTURES
+      ? resolve(venues)
+      : req<Venue[]>("/venues", { method: "PATCH", body: JSON.stringify(venues) }),
 
   /* ---- Gate A: understanding ---- */
+  getGateFields: (): Promise<GateFields> =>
+    USE_FIXTURES ? resolve(seedGateFields) : req<GateFields>("/understanding"),
 
-  /** GET /api/understanding — the AI's editable understanding of the business. */
-  getGateFields: (): Promise<GateFields> => resolve(seedGateFields),
-
-  /** PUT /api/understanding — persist edited understanding fields. */
-  saveGateFields: (fields: GateFields): Promise<GateFields> => resolve(fields),
+  saveGateFields: (fields: GateFields): Promise<GateFields> =>
+    USE_FIXTURES
+      ? resolve(fields)
+      : req<GateFields>("/understanding", { method: "PUT", body: JSON.stringify(fields) }),
 
   /* ---- Discovery + Gate B ---- */
-
   /**
-   * POST /api/discovery/run — start the long-running discovery + verification job.
-   * Production: returns a job id to poll/stream. Fixtures resolve immediately with
-   * the seed leads; the progress animation is driven client-side.
+   * Starts the real discovery run and polls until done, then returns the leads. Keeps the
+   * original signature so DiscoveryScreen is unchanged. Fixtures resolve immediately.
    */
-  runDiscovery: (_mode: Mode): Promise<DiscoveryResult> =>
-    resolve({ leads: seedLeads, foundCount: seedFoundCount }),
+  runDiscovery: async (mode: Mode): Promise<DiscoveryResult> => {
+    if (USE_FIXTURES) return resolve({ leads: seedLeads, foundCount: seedFoundCount });
+    const { jobId } = await req<{ jobId: string }>("/discovery/run", {
+      method: "POST",
+      body: JSON.stringify({ mode }),
+    });
+    // Poll up to ~10 minutes (discovery is minutes-long; architecture spec §13).
+    for (let i = 0; i < 200; i++) {
+      const s = await req<
+        | { status: "running"; pct: number; stage: string }
+        | { status: "failed"; pct: number; error?: string }
+        | { status: "done"; pct: number; result: DiscoveryResult }
+      >(`/discovery/${jobId}`);
+      if (s.status === "done") return s.result;
+      if (s.status === "failed") throw new Error(s.error ?? "Discovery failed");
+      await sleep(3000);
+    }
+    throw new Error("Discovery timed out");
+  },
 
-  /** GET /api/leads — discovered leads with evidence + two-sided scores. */
-  getLeads: (): Promise<Lead[]> => resolve(seedLeads),
+  getLeads: (): Promise<Lead[]> =>
+    USE_FIXTURES
+      ? resolve(seedLeads)
+      : req<{ leads: Lead[]; foundCount: number }>("/leads").then((r) => r.leads),
 
-  /** PATCH /api/leads/:id — approve / reject / reset a lead. */
-  setLeadStatus: (_id: string, _status: Lead["status"]): Promise<void> => resolve(undefined),
+  setLeadStatus: (id: string, status: Lead["status"]): Promise<void> =>
+    USE_FIXTURES
+      ? resolve(undefined)
+      : req<unknown>(`/leads/${id}`, { method: "PATCH", body: JSON.stringify({ status }) })
+        .then(() => undefined),
 
-  /** POST /api/leads/export — export approved leads (returns a file/url in prod). */
-  exportApproved: (_ids: string[]): Promise<void> => resolve(undefined),
+  exportApproved: (ids: string[]): Promise<void> =>
+    USE_FIXTURES
+      ? resolve(undefined)
+      : req<{ url: string }>("/leads/export", { method: "POST", body: JSON.stringify({ ids }) })
+        .then(({ url }) => {
+          // Trigger a browser download of the returned CSV URL.
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "leads.csv";
+          a.click();
+        }),
 
-  /** POST /api/crm/sync — push approved leads to the connected CRM. */
+  // v1: no CRM connected. Kept as a no-op so the Gate B button resolves cleanly.
   sendToCrm: (_ids: string[]): Promise<void> => resolve(undefined),
 
   /* ---- Gate C: outreach ---- */
+  getOutreach: (): Promise<OutreachItem[]> =>
+    USE_FIXTURES ? resolve(seedOutreach) : req<OutreachItem[]>("/outreach"),
 
-  /** GET /api/outreach — prospects across the board + drafts awaiting approval. */
-  getOutreach: (): Promise<OutreachItem[]> => resolve(seedOutreach),
+  approveOutreach: (id: string): Promise<void> =>
+    USE_FIXTURES
+      ? resolve(undefined)
+      : req<unknown>(`/outreach/${id}/approve`, { method: "POST" }).then(() => undefined),
 
-  /** POST /api/outreach/:id/approve — approve & send a drafted message. */
-  approveOutreach: (_id: string): Promise<void> => resolve(undefined),
-
-  /** POST /api/outreach/:id/skip — skip a draft (moves prospect to Lost). */
-  skipOutreach: (_id: string): Promise<void> => resolve(undefined),
+  skipOutreach: (id: string): Promise<void> =>
+    USE_FIXTURES
+      ? resolve(undefined)
+      : req<unknown>(`/outreach/${id}/skip`, { method: "POST" }).then(() => undefined),
 
   /* ---- Learn & iterate ---- */
+  getDashboardInsights: (): Promise<DashboardInsights> =>
+    USE_FIXTURES ? resolve(seedDashboardInsights) : req<DashboardInsights>("/insights"),
 
-  /** GET /api/insights — conversion factors + suggested refinement. */
-  getDashboardInsights: (): Promise<DashboardInsights> => resolve(seedDashboardInsights),
-
-  /** POST /api/insights/refinement/apply — apply the suggested scoring refinement. */
-  applyRefinement: (): Promise<void> => resolve(undefined),
+  applyRefinement: (): Promise<void> =>
+    USE_FIXTURES
+      ? resolve(undefined)
+      : req<void>("/insights/refinement/apply", { method: "POST" }).then(() => undefined),
 };
 
 export type LeadService = typeof leadService;

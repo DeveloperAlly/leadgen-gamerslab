@@ -2,6 +2,7 @@ import { ThemeProvider } from "./theme/ThemeProvider";
 import { PipelineProvider, usePipeline } from "./state/PipelineProvider";
 import { Toast } from "./components/ui/Toast";
 import { PrototypeControls } from "./components/PrototypeControls";
+import { appConfig, isScreenEnabled } from "./config/appConfig";
 import { tenant } from "./data/fixtures/tenant";
 import type { ScreenKey } from "./data/types";
 
@@ -33,7 +34,11 @@ const screens: Record<ScreenKey, () => JSX.Element> = {
 
 function Router() {
   const { state } = usePipeline();
-  const Screen = screens[state.screen] ?? SignInScreen;
+  // Disabled screens (e.g. onboarding in the PoC build) fall back to the landing screen.
+  const screen: ScreenKey = isScreenEnabled(state.screen)
+    ? state.screen
+    : appConfig.postLoginScreen;
+  const Screen = screens[screen] ?? SignInScreen;
   return <Screen />;
 }
 
@@ -43,7 +48,7 @@ function Chrome() {
     <>
       <Router />
       <Toast message={state.toast} />
-      <PrototypeControls />
+      {appConfig.showThemeControls && <PrototypeControls />}
     </>
   );
 }

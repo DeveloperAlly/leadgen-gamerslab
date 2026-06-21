@@ -4,6 +4,7 @@ import { Input } from "../components/ui/Input";
 import { useTheme } from "../theme/ThemeProvider";
 import { themeSwatches } from "../theme/tokens";
 import { space } from "../theme/tokens";
+import { appConfig } from "../config/appConfig";
 
 export function SettingsScreen() {
   const { theme, setTheme } = useTheme();
@@ -12,10 +13,13 @@ export function SettingsScreen() {
     <AppShell maxWidth={720}>
       <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Settings</h1>
       <p style={{ margin: "0 0 22px", fontSize: 15, color: "var(--text-secondary)" }}>
-        Theme and model configuration for this workspace.
+        {appConfig.showThemeControls
+          ? "Theme and model configuration for this workspace."
+          : "Model configuration for this workspace."}
       </p>
 
       {/* Theme */}
+      {appConfig.showThemeControls && (
       <Card style={{ marginBottom: space.lg }}>
         <Eyebrow>Theme</Eyebrow>
         <p style={{ margin: "2px 0 14px", fontSize: 14, color: "var(--text-secondary)" }}>
@@ -56,6 +60,7 @@ export function SettingsScreen() {
           })}
         </div>
       </Card>
+      )}
 
       {/* Model keys */}
       <Card>
