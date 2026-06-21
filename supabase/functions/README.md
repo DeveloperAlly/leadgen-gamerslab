@@ -68,29 +68,36 @@ done
 - **N8N_WEBHOOK_URL / N8N_WEBHOOK_SECRET** — set after the webhook node is added (below).
 - **N8N_STATUS_SECRET** — any random string; also set on the workflow's status nodes.
 
-## n8n v10 webhook (PENDING — not yet applied to the live workflow)
+## n8n v10 webhook (APPLIED — live on `GamersLab Publisher Outreach v10`, id `MouIeDmDAAHKIpDn`)
 
-The live `GamersLab Publisher Outreach v10` (id `MouIeDmDAAHKIpDn`) has only a Schedule
-Trigger → `Get Drafted IDs`. To let the UI start a run, add a parallel webhook entry. n8n has
-no REST execute endpoint, so a Webhook Trigger is the entry point (architecture spec §6, §10 C1).
+Four nodes were added (32 → 36) alongside the existing Schedule Trigger; the daily schedule
+path is untouched. n8n has no REST execute endpoint, so a Webhook Trigger is the entry point
+(architecture spec §6, §10 C1).
 
-**Minimal change (low risk):**
-1. **Discovery Webhook** node — `n8n-nodes-base.webhook`, `httpMethod: POST`,
-   `path: gamerslab-discovery`, **explicit `webhookId`**, Header Auth (`N8N_WEBHOOK_SECRET`),
-   `responseMode: onReceived`, `responseCode: 202`. Connect `Discovery Webhook → Get Drafted IDs`
-   (converges with the Schedule path; the daily schedule run is unaffected).
-   → Production URL becomes `https://n8n-j39n.sliplane.app/webhook/<webhookId>` = `N8N_WEBHOOK_URL`.
+- **Discovery Webhook** (`n8n-nodes-base.webhook`, POST, `path: gamerslab-discovery`,
+  `authentication: none`, `responseMode: onReceived`, responseCode **202**)
+  → connects to `Get Drafted IDs` (converges with the schedule path).
+  **Production URL = `https://n8n-j39n.sliplane.app/webhook/gamerslab-discovery`** → set this as
+  `N8N_WEBHOOK_URL` on the Edge Functions.
+- **Status: Running** — parallel off the webhook → `POST {n8n-status}` `{run_id, status:"running",
+  progress:5}`, header `x-status-secret: {{ $env.N8N_STATUS_SECRET }}`.
+- **Resolve Run Context** (Code) + **Status: Completed** — hang off `Batch for Web Search`'s
+  "done" output; the Code node resolves `run_id` via `$('Discovery Webhook').first().json.body.run_id`
+  (try/catch → returns `[]` on scheduled runs, so the post is skipped). On a webhook run it posts
+  `{run_id, status:"completed", progress:100}`.
 
-**Progress callback (so the UI poll completes):**
-2. Status posts to the `n8n-status` function carry `run_id` via a cross-node reference
-   `={{ $('Discovery Webhook').first().json.body.run_id }}` — immune to n8n's field-stripping.
-   - **Start:** HTTP node between `Discovery Webhook` and `Get Drafted IDs` →
-     `POST {n8n-status}` `{run_id, status:"running", progress:5}` (header `x-status-secret`).
-   - **Done:** at the SplitInBatches "done" output, a Code node resolves `run_id` (try/catch →
-     "" on schedule runs) → IF `run_id` non-empty → HTTP `POST {n8n-status}`
-     `{run_id, status:"completed", progress:100, counts}`. The IF guard keeps the scheduled
-     run untouched.
+**Set `N8N_STATUS_SECRET` in the n8n instance env** (same pattern as `SERPER_API_KEY`) — the status
+nodes read it via `{{ $env.N8N_STATUS_SECRET }}`. Use the SAME value as the `N8N_STATUS_SECRET`
+Edge Function secret.
 
-Apply via the n8n MCP (`update_workflow`) then `validate_workflow` before publishing — do NOT
-hand-edit the live JSON. This is the only step that mutates live production, so it is gated on
-explicit go.
+**Webhook security:** path-based (`authentication: none`, per n8n's default guidance — the path is
+the shared secret). Optional hardening: create an `httpHeaderAuth` credential in the n8n UI and
+switch the webhook to Header Auth.
+
+**If the webhook 404s on first call:** toggle the workflow active off→on in n8n once to register
+the new webhook node.
+
+**Edge case:** completion is posted from the enrich path's "done" output. A run where every
+candidate routes to backlog (no enrich items) won't post `completed`; the UI poll then relies on
+its timeout. Normal runs (draft budget 35) always hit the enrich path. Harden later if needed by
+also posting completion from the `Upsert Backlog` terminal.

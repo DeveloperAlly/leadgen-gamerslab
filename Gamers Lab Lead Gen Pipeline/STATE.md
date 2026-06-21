@@ -26,7 +26,9 @@
 | Competitor research | Agent (done) | `what/research/competitor_analysis.md` | ✅ |
 | Pipeline critique | Agent (done) | `how/pipeline_critique.md` | ✅ |
 | POC→prod plan | Agent (done) | `how/plan_poc_to_production.md` | ✅ |
-| Architecture visual | Agent (done) | Rendered in chat (Mermaid/SVG) | ✅ |
+| Business process model (the WHAT) | Agent (done) | `what/business_process_model_DRAFT.md` (+ embedded `business_process_diagram.svg`) | ✅ v10 |
+| Infra stack & layers (the HOW) | Agent (done) | `how/infra_stack_and_layers_DRAFT.md` (+ embedded `infra_stack_diagram.svg`) | ✅ v10 |
+| v9 pipeline reconciliation | Agent (done) | Both docs §v10; aDNA tag `v9` | ✅ |
 | Requirements specs (M1) | Pending Ally go | — | ⏸ awaiting next session |
 | Verified architecture (M2) | Pending M1 | — | ⏸ |
 | UI design (M3) | Pending M2 | — | ⏸ |

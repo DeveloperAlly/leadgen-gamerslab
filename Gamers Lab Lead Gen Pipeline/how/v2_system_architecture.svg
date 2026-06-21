@@ -1,0 +1,95 @@
+<svg viewBox="0 0 1200 760" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" role="img" aria-label="v2 system architecture">
+<title>v2 Lead-Gen Pipeline — System &amp; Integration Architecture (greenfield)</title>
+<rect x="0" y="0" width="1200" height="760" fill="#ffffff"/>
+<style>
+.t{fill:#1f1d1a}.s{fill:#6b6660}.i{fill:#3552a4}.m{fill:#9a968e}
+.band{fill:#f4f3ef;stroke:#d8d4ca;stroke-width:1.5}
+.intband{fill:#efeaf9;stroke:#c3b6e6;stroke-width:1.5}
+.svc{fill:#ffffff;stroke:#d8d4ca;stroke-width:1.5}
+.ext{fill:#f3f6f4;stroke:#9bb8ad;stroke-width:1.4}
+.chip{fill:#ffffff;stroke:#e0dccf;stroke-width:1}
+.def{fill:#f7f6f3;stroke:#cfc8ba;stroke-width:1.2;stroke-dasharray:5 3}
+.h{font-size:12.5px;font-weight:700}.lbl{font-size:11px;font-weight:600}.sub{font-size:9.6px}.tag{font-size:9.4px;font-weight:700}
+.ar{stroke:#8aa0d8;stroke-width:1.7;fill:none}
+</style>
+<defs><marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#8aa0d8"/></marker></defs>
+
+<text x="32" y="28" class="t h" font-size="16">v2 Lead-Gen Pipeline — System &amp; Integration Architecture (built from scratch)</text>
+<text x="32" y="46" class="s sub" font-size="10.5">C1 UI → C2 API/integration (only secret holder) → C3 data · C4 discovery · C5 model router. Embeddings in-Edge (free). Every row carries tenant_id. Auth deferred (POC).</text>
+
+<!-- C1 -->
+<rect x="32" y="58" width="1136" height="84" rx="10" class="band"/>
+<text x="46" y="78" class="t h">C1 · Web app (React + Vite · reuses ui-design/lead-pipeline · data seam = api.ts)</text>
+<g class="chip">
+<rect x="46" y="88" width="214" height="22" rx="6"/><rect x="268" y="88" width="214" height="22" rx="6"/><rect x="490" y="88" width="214" height="22" rx="6"/><rect x="712" y="88" width="214" height="22" rx="6"/><rect x="934" y="88" width="220" height="22" rx="6"/>
+<rect x="46" y="114" width="214" height="22" rx="6"/><rect x="268" y="114" width="214" height="22" rx="6"/><rect x="490" y="114" width="214" height="22" rx="6"/><rect x="712" y="114" width="214" height="22" rx="6"/><rect x="934" y="114" width="220" height="22" rx="6"/>
+</g>
+<g class="t sub"><text x="58" y="103">1 Sign in</text><text x="280" y="103">2 Context drop</text><text x="502" y="103">3 Intake</text><text x="724" y="103">4 Venue map</text><text x="946" y="103">5 Gate A summary</text>
+<text x="58" y="129">6 Discovery (loading)</text><text x="280" y="129">7 Gate B leads</text><text x="502" y="129">8 Dashboard</text><text x="724" y="129">9 Sources</text><text x="946" y="129">10 Prospect · Gate C</text></g>
+
+<path d="M600,142 L600,166" class="ar" marker-end="url(#a)"/><text x="610" y="160" class="i tag">HTTPS /api/* (bearer → tenant_id)</text>
+
+<!-- C2 -->
+<rect x="32" y="170" width="1136" height="118" rx="10" class="intband"/>
+<text x="46" y="190" class="i h">C2 · API / Integration layer — Supabase Edge Functions (Deno) · validates caller → scopes tenant_id · sole secret holder</text>
+<g class="chip">
+<rect x="46" y="200" width="172" height="76" rx="7"/><rect x="226" y="200" width="160" height="76" rx="7"/><rect x="394" y="200" width="176" height="76" rx="7"/><rect x="578" y="200" width="170" height="76" rx="7"/><rect x="756" y="200" width="186" height="76" rx="7"/><rect x="950" y="200" width="204" height="76" rx="7"/>
+</g>
+<g><text x="56" y="218" class="t lbl">sources</text><text x="56" y="233" class="s sub">upload · ingest</text><text x="56" y="247" class="s sub">→ Storage + Exa</text><text x="56" y="261" class="s sub">→ embed (C5)</text></g>
+<g><text x="236" y="218" class="t lbl">understanding</text><text x="236" y="233" class="i sub" font-weight="700">Gate A</text><text x="236" y="247" class="s sub">RAG → C5 chat</text><text x="236" y="261" class="s sub">→ summary</text></g>
+<g><text x="404" y="218" class="t lbl">discovery</text><text x="404" y="233" class="i sub" font-weight="700">Gate B</text><text x="404" y="247" class="s sub">/run → C4 webhook</text><text x="404" y="261" class="s sub">/runs poll · leads</text></g>
+<g><text x="588" y="218" class="t lbl">outreach</text><text x="588" y="233" class="i sub" font-weight="700">Gate C</text><text x="588" y="247" class="s sub">approve · skip</text><text x="588" y="261" class="m sub">(send=later)</text></g>
+<g><text x="766" y="218" class="t lbl">leads · export · crm</text><text x="766" y="233" class="s sub">read (RLS) · status</text><text x="766" y="247" class="s sub">CSV signed URL</text><text x="766" y="261" class="s sub">crm sync</text></g>
+<g><text x="960" y="218" class="t lbl">tenant · keys · insights</text><text x="960" y="233" class="s sub">settings → Vault</text><text x="960" y="247" class="s sub">insights · usage</text><text x="960" y="261" class="s sub">exa-callback · n8n-status</text></g>
+
+<g class="ar" marker-end="url(#a)"><path d="M130,288 L130,360"/><path d="M470,288 L470,360"/><path d="M470,288 C470,330 760,330 760,360"/><path d="M1050,288 L1050,360"/></g>
+
+<!-- services -->
+<text x="46" y="350" class="s tag">DATA · ENGINES · EXTERNALS</text>
+<rect x="32" y="360" width="280" height="160" rx="9" class="svc"/>
+<text x="46" y="380" class="t lbl">C3 · Supabase (data plane)</text>
+<text x="46" y="398" class="s sub">Postgres + pgvector (HNSW, 384d)</text>
+<text x="46" y="414" class="s sub">Storage · RLS · tenant_id everywhere</text>
+<text x="46" y="430" class="s sub">tables: tenant, source, document,</text>
+<text x="46" y="444" class="s sub">intake, venue, business_summary,</text>
+<text x="46" y="458" class="s sub">lead, evidence, run, outreach,</text>
+<text x="46" y="472" class="s sub">outcome, model_call_log</text>
+<rect x="46" y="486" width="170" height="20" rx="5" class="def"/><text x="56" y="500" class="m sub">Auth — deferred (later phase)</text>
+
+<rect x="324" y="360" width="250" height="160" rx="9" class="svc"/>
+<text x="338" y="380" class="t lbl">C5 · Model Router</text>
+<text x="338" y="398" class="s sub">Edge Fn · only key holder</text>
+<text x="338" y="414" class="s sub">Vault BYOK → OpenRouter :free</text>
+<text x="338" y="430" class="s sub">dynamic free-model discovery</text>
+<text x="338" y="446" class="s sub">multi-model → pick best</text>
+<text x="338" y="462" class="s sub">embeddings: gte-small (free)</text>
+<text x="338" y="478" class="s sub">→ model_call_log</text>
+
+<rect x="586" y="360" width="300" height="160" rx="9" class="svc"/>
+<text x="600" y="380" class="t lbl">C4 · Discovery orchestrator (n8n v2)</text>
+<text x="600" y="398" class="s sub">trigger: Webhook (header auth) ← C2</text>
+<text x="600" y="414" class="s sub">venue adapters: exa_web · steam · reddit…</text>
+<text x="600" y="430" class="s sub">Exa discover + enrich + evaluations→evidence</text>
+<text x="600" y="446" class="s sub">pre-score gate → two-sided score</text>
+<text x="600" y="462" class="s sub">email verify · dedup · multi-model draft</text>
+<text x="600" y="478" class="s sub">→ upsert lead (tenant_id) · POST /api/n8n-status</text>
+<text x="600" y="496" class="m sub">run state: queued→running→completed/failed</text>
+
+<rect x="898" y="360" width="270" height="160" rx="9" class="ext"/>
+<text x="912" y="380" class="t lbl">External services</text>
+<text x="912" y="400" class="s sub">Exa — Websets (criteria, hop,</text>
+<text x="912" y="414" class="s sub">  enrich, webhooks) + Contents</text>
+<text x="912" y="434" class="s sub">OpenRouter — chat (:free / BYOK)</text>
+<text x="912" y="454" class="s sub">  models list fetched at runtime</text>
+<text x="912" y="478" class="m sub">embeddings stay in-Edge (free)</text>
+
+<g class="ar" marker-end="url(#a)">
+<path d="M736,520 C736,540 1010,540 1010,520"/>
+<path d="M574,440 L584,440"/>
+<path d="M449,398 C470,398 470,398 458,398" opacity="0"/>
+</g>
+<text x="690" y="538" class="s sub" font-size="9">C4 ⟷ Exa · C4 ⟶ C3 upsert · C4 ⟷ C5 drafts · C2 ⟷ all</text>
+
+<text x="32" y="600" class="s sub" font-size="10">Greenfield: no v1 reuse. Long work lives in C4 (n8n) — C2 Edge Functions return 202+run_id and the UI polls /api/runs/:id (Edge timeout 150/400s; discovery takes minutes).</text>
+<text x="32" y="618" class="s sub" font-size="10">All external calls verified vs 2026 docs (spec §10). Secrets only in Vault / function env — never in the web app.</text>
+</svg>

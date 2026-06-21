@@ -58,7 +58,11 @@ build-once-sell-many wedge that doesn't require us to own data or burn sending d
 | Competitor analysis (Task 2) | `what/research/competitor_analysis.md` | ✅ Draft |
 | Pipeline critique + gaps (Task 3) | `how/pipeline_critique.md` | ✅ Draft |
 | POC→prod plan & tasklist (Task 4) | `how/plan_poc_to_production.md` | ✅ Draft |
-| Architecture visual | Chat (Mermaid + SVG) | ✅ |
+| **Business process model (the WHAT)** | `what/business_process_model_DRAFT.md` | ✅ Draft v10 |
+| Business-process diagram | `what/business_process_diagram.svg` (embedded) | ✅ |
+| **Infra stack & layers (the HOW)** | `how/infra_stack_and_layers_DRAFT.md` | ✅ Draft v10 |
+| Infra-stack diagram | `how/infra_stack_diagram.svg` (embedded) | ✅ |
+| UI design brief (M3) | `how/ui_design_prompt.md` | ✅ Draft |
 | Product requirements spec | `what/research/` (M1) | ⬜ |
 | GamersLab requirements spec | `what/research/` (M1) | ⬜ |
 | Verified architecture spec | `how/` (M2) | ⬜ |

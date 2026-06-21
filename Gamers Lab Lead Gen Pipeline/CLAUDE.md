@@ -28,6 +28,17 @@ is designed from day one to be lifted out and re-used for any client.
 7. **Modular mandate is law.** If a design decision couples the POC to "Gamers Lab" in a way
    that can't be cleanly re-templated, it is wrong. Front end included.
 8. **Free for Ally first.** The POC must run on free tiers / the client's own keys. No spend by Ally to prove it.
+9. **Business process before technical — always.** Model the business process / value flow first
+   (the WHAT and WHY: actors, real-world steps, decisions, the actual work being done) and get it
+   confirmed **before** designing any technical stack, tooling, or architecture. Leading with a
+   technical/infra spec before a confirmed business-process model is a defined failure mode. Never
+   collapse distinct business steps into one tech layer; surface every step, then map tech to it.
+10. **Permission-first execution. Never act without express approval and a defined task.** Before
+   ANY action or deliverable: (a) state the specific task you will do, in one line; (b) ask; (c) wait
+   for a clear "yes". No assuming intent, no proceeding on ambiguous instructions (incl. ambiguous
+   shorthand like "M2" — confirm meaning first), no bundling unrequested extra actions, no
+   regenerating anything that already exists. When in doubt, ask before doing. Acting without a
+   confirmed, defined task is a defined failure mode.
 
 ## The gate we are at
 
@@ -43,13 +54,18 @@ gamers_lab_lead_gen/
 ├── who/AGENTS.md                   ← people / orgs / actors
 ├── what/
 │   ├── AGENTS.md
-│   ├── campaign_master.md          ← north star, scope, success criteria, artifacts index
+│   ├── campaign_master.md             ← north star, scope, success criteria, artifacts index
+│   ├── business_process_model_DRAFT.md ← THE WHAT (read before any HOW, doctrine #9): 5-stage flow + v9
+│   ├── business_process_diagram.svg   ← 5-stage diagram (embedded in the doc above)
 │   └── research/
-│       └── competitor_analysis.md  ← Task 2: deep+broad market scan, who's winning + why
+│       └── competitor_analysis.md     ← Task 2: deep+broad market scan, who's winning + why
 └── how/
     ├── AGENTS.md
-    ├── pipeline_critique.md        ← Task 3: critique of the proposed pipeline + gaps
-    └── plan_poc_to_production.md   ← Task 4: phased plan + tasklist (POC = template)
+    ├── pipeline_critique.md           ← Task 3: critique of the proposed pipeline + gaps
+    ├── plan_poc_to_production.md      ← Task 4: phased plan + tasklist (POC = template)
+    ├── infra_stack_and_layers_DRAFT.md ← THE HOW: per-layer infra stack, verified APIs, v9 folded in
+    ├── infra_stack_diagram.svg        ← foundations + spine diagram (embedded in the doc above)
+    └── ui_design_prompt.md            ← Mission M3 UI design brief
 ```
 
 ## Persistence

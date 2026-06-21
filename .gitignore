@@ -10,3 +10,6 @@ dist/
 # OS / editor
 .DS_Store
 *.log
+
+# Binary design archives — keep on disk, out of git
+*.zip

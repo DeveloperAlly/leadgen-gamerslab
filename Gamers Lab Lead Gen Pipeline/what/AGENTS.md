@@ -6,8 +6,12 @@ definition, research, decisions, and (later) requirements specs.
 ## Contents
 
 - `campaign_master.md` — north star, scope, constraints, success criteria, artifacts index.
+- `business_process_model_DRAFT.md` — **the WHAT (read before any technical doc, per doctrine #9):**
+  the tool-agnostic 5-stage business/value flow, reconciled against the live v9 pipeline.
+  Embeds `business_process_diagram.svg`.
+- `business_process_diagram.svg` — the 5-stage business-process diagram (embedded in the doc above).
 - `research/competitor_analysis.md` — deep+broad market scan of lead-gen pipeline products
   (customer-finding AND fundraising), the union of all features, and who is winning + why.
 - `research/` will also hold (gated mission M1) the requirements specs once approved to start.
 
-Read `campaign_master.md` first for the frame.
+Read `campaign_master.md` first for the frame, then `business_process_model_DRAFT.md` for the WHAT.

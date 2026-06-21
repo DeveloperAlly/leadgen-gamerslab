@@ -1,0 +1,62 @@
+<svg viewBox="0 0 1200 880" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" role="img" aria-label="Product v2 sequence diagram">
+<title>Product v2 sequence — Gate A, Gate B, Gate C (real leadService endpoints)</title>
+<rect x="0" y="0" width="1200" height="880" fill="#ffffff"/>
+<style>
+.t{fill:#1f1d1a}.s{fill:#6b6660}.i{fill:#3552a4}.m{fill:#9a968e}
+.head{fill:#f4f3ef;stroke:#d8d4ca;stroke-width:1.5}
+.inthead{fill:#efeaf9;stroke:#c3b6e6;stroke-width:1.5}
+.life{stroke:#cfc8ba;stroke-width:1;stroke-dasharray:4 4}
+.msg{stroke:#3552a4;stroke-width:1.4;fill:none}
+.ret{stroke:#9a968e;stroke-width:1.3;fill:none;stroke-dasharray:5 3}
+.lbl{font-size:9.6px}.hd{font-size:11px;font-weight:700}.band{font-size:11px;font-weight:700;fill:#3552a4}
+</style>
+<defs>
+<marker id="r" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#3552a4"/></marker>
+<marker id="g" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9a968e"/></marker>
+</defs>
+
+<text x="24" y="26" class="t hd" font-size="15">Product v2 — sequence across the three gates (endpoints = leadService.ts contract)</text>
+<text x="24" y="44" class="s lbl" font-size="10">Integration layer = Edge Functions (only secret holder). Simple reads go UI→Supabase via RLS. Auth deferred. All external calls verified vs 2026 docs.</text>
+
+<g>
+<rect x="50" y="56" width="100" height="30" rx="6" class="head"/><text x="100" y="76" class="t hd" text-anchor="middle">UI</text>
+<rect x="262" y="56" width="116" height="30" rx="6" class="inthead"/><text x="320" y="76" class="i hd" text-anchor="middle">Integration</text>
+<rect x="492" y="56" width="96" height="30" rx="6" class="head"/><text x="540" y="76" class="t hd" text-anchor="middle">Supabase</text>
+<rect x="676" y="56" width="108" height="30" rx="6" class="head"/><text x="730" y="76" class="t hd" text-anchor="middle">ModelRouter</text>
+<rect x="876" y="56" width="88" height="30" rx="6" class="head"/><text x="920" y="76" class="t hd" text-anchor="middle">n8n (v9)</text>
+<rect x="1050" y="56" width="80" height="30" rx="6" class="head"/><text x="1090" y="76" class="t hd" text-anchor="middle">Exa</text>
+</g>
+<g class="life">
+<line x1="100" y1="86" x2="100" y2="858"/><line x1="320" y1="86" x2="320" y2="858"/><line x1="540" y1="86" x2="540" y2="858"/>
+<line x1="730" y1="86" x2="730" y2="858"/><line x1="920" y1="86" x2="920" y2="858"/><line x1="1090" y1="86" x2="1090" y2="858"/>
+</g>
+
+<rect x="24" y="98" width="220" height="20" rx="5" fill="#eef1fb"/><text x="34" y="112" class="band">FLOW A · Onboarding → GATE A (summary)</text>
+<line x1="100" y1="136" x2="320" y2="136" class="msg" marker-end="url(#r)"/><text x="210" y="130" class="t lbl" text-anchor="middle">POST /api/sources (files · url · social)</text>
+<line x1="320" y1="166" x2="1090" y2="166" class="msg" marker-end="url(#r)"/><text x="700" y="160" class="t lbl" text-anchor="middle">Exa Contents fetch (subpages → markdown)</text>
+<line x1="320" y1="196" x2="540" y2="196" class="msg" marker-end="url(#r)"/><text x="430" y="190" class="t lbl" text-anchor="middle">embed gte-small → documents</text>
+<line x1="100" y1="226" x2="320" y2="226" class="msg" marker-end="url(#r)"/><text x="210" y="220" class="t lbl" text-anchor="middle">POST /api/intake · PATCH /api/venues</text>
+<line x1="100" y1="256" x2="320" y2="256" class="msg" marker-end="url(#r)"/><text x="210" y="250" class="t lbl" text-anchor="middle">POST /api/understanding</text>
+<line x1="320" y1="286" x2="730" y2="286" class="msg" marker-end="url(#r)"/><text x="525" y="280" class="t lbl" text-anchor="middle">summarise (RAG) → summary + venue_map</text>
+<line x1="320" y1="316" x2="540" y2="316" class="msg" marker-end="url(#r)"/><text x="430" y="310" class="t lbl" text-anchor="middle">write business_summary, venue_map</text>
+<line x1="540" y1="346" x2="100" y2="346" class="ret" marker-end="url(#g)"/><text x="320" y="340" class="i lbl" text-anchor="middle">GET (RLS) → GATE A: human edits → PUT /api/understanding</text>
+
+<rect x="24" y="368" width="220" height="20" rx="5" fill="#eef1fb"/><text x="34" y="382" class="band">FLOW B · Discovery → GATE B (leads)</text>
+<line x1="100" y1="406" x2="320" y2="406" class="msg" marker-end="url(#r)"/><text x="210" y="400" class="t lbl" text-anchor="middle">POST /api/discovery/run</text>
+<line x1="320" y1="436" x2="920" y2="436" class="msg" marker-end="url(#r)"/><text x="620" y="430" class="t lbl" text-anchor="middle">n8n webhook trigger (tenant_id, summary, venue_map)</text>
+<line x1="920" y1="466" x2="1090" y2="466" class="msg" marker-end="url(#r)"/><text x="1005" y="460" class="t lbl" text-anchor="middle">Steam mine +</text><text x="1005" y="474" class="s lbl" text-anchor="middle">Exa discover/verify</text>
+<line x1="920" y1="500" x2="540" y2="500" class="msg" marker-end="url(#r)"/><text x="730" y="494" class="t lbl" text-anchor="middle">upsert leads (tenant_id, idempotent)</text>
+<line x1="920" y1="530" x2="320" y2="530" class="msg" marker-end="url(#r)"/><text x="620" y="524" class="t lbl" text-anchor="middle">/n8n-status · Exa → /exa-callback (signed)</text>
+<line x1="540" y1="560" x2="100" y2="560" class="ret" marker-end="url(#g)"/><text x="320" y="554" class="i lbl" text-anchor="middle">GET /api/leads (RLS) → GATE B: approve/reject → PATCH /api/leads/:id</text>
+<line x1="100" y1="590" x2="320" y2="590" class="msg" marker-end="url(#r)"/><text x="210" y="584" class="t lbl" text-anchor="middle">POST /api/leads/export · /crm/sync</text>
+
+<rect x="24" y="612" width="220" height="20" rx="5" fill="#eef1fb"/><text x="34" y="626" class="band">FLOW C · Outreach → GATE C (approve send)</text>
+<line x1="100" y1="650" x2="320" y2="650" class="msg" marker-end="url(#r)"/><text x="210" y="644" class="t lbl" text-anchor="middle">GET /api/outreach (drafts awaiting)</text>
+<line x1="320" y1="680" x2="730" y2="680" class="msg" marker-end="url(#r)"/><text x="525" y="674" class="t lbl" text-anchor="middle">draft grounded message (multi-model → pick best)</text>
+<line x1="540" y1="710" x2="100" y2="710" class="ret" marker-end="url(#g)"/><text x="320" y="704" class="i lbl" text-anchor="middle">GET (RLS) → GATE C: human approves each message</text>
+<line x1="100" y1="740" x2="320" y2="740" class="msg" marker-end="url(#r)"/><text x="240" y="734" class="t lbl" text-anchor="middle">POST /api/outreach/:id/approve</text>
+<text x="470" y="744" class="m lbl">→ actual SEND = later phase (not in POC)</text>
+
+<text x="24" y="800" class="s lbl" font-size="9.5">Secrets (model keys, Exa key, n8n URL) live only in the Integration Edge Functions / Vault. n8n carries tenant_id on every payload (no native multi-tenancy).</text>
+<text x="24" y="818" class="s lbl" font-size="9.5">POC scope = Flows A + B + draft side of C; auth + actual message send are later phases. Endpoints exactly match leadService.ts so the UI wires in body-only.</text>
+</svg>
