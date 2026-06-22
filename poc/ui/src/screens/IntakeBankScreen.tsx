@@ -4,8 +4,8 @@ import { AppShell } from "../layout/AppShell";
 import { Card, Eyebrow } from "../components/ui/Card";
 import { Textarea } from "../components/ui/Textarea";
 import { Button } from "../components/ui/Button";
-import { leadService } from "../data/leadService";
-import { space } from "../theme/tokens";
+import { leadService, type IntakeSuggestion } from "../data/leadService";
+import { radius, space } from "../theme/tokens";
 
 /** The white-label question bank (catalog). Same questions for every client; only answers
  *  change. Each key maps to a section of the composed CAG (see client_intake_design_DRAFT). */
@@ -55,6 +55,7 @@ export function IntakeBankScreen() {
   const { actions } = usePipeline();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState<Record<string, string>>({});
+  const [suggestions, setSuggestions] = useState<IntakeSuggestion[]>([]);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error" | "saving">("loading");
   const [open, setOpen] = useState<Record<string, boolean>>({ A: true, B: true });
@@ -65,14 +66,28 @@ export function IntakeBankScreen() {
     loadedOnce.current = true;
     leadService
       .getIntakeBank()
-      .then(({ answers, updatedAt }) => {
-        setAnswers(answers);
-        setSaved(answers);
-        setUpdatedAt(updatedAt);
+      .then((bank) => {
+        setAnswers(bank.answers);
+        setSaved(bank.answers);
+        setSuggestions(bank.suggestions ?? []);
+        setUpdatedAt(bank.updatedAt);
         setStatus("ready");
       })
       .catch(() => setStatus("error"));
   }, []);
+
+  const acceptSuggestion = (s: IntakeSuggestion) => {
+    leadService.acceptSuggestion(s.id).then((bank) => {
+      setAnswers(bank.answers);
+      setSaved(bank.answers);
+      setSuggestions(bank.suggestions ?? []);
+      setUpdatedAt(bank.updatedAt);
+      actions.notify("Suggestion applied — context rebuilding");
+    });
+  };
+  const dismissSuggestion = (s: IntakeSuggestion) => {
+    leadService.dismissSuggestion(s.id).then((bank) => setSuggestions(bank.suggestions ?? []));
+  };
 
   const dirty = JSON.stringify(answers) !== JSON.stringify(saved);
   const set = (key: string, value: string) => setAnswers((a) => ({ ...a, [key]: value }));
@@ -81,10 +96,11 @@ export function IntakeBankScreen() {
     setStatus("saving");
     leadService
       .saveIntakeBank(answers)
-      .then(({ answers, updatedAt }) => {
-        setAnswers(answers);
-        setSaved(answers);
-        setUpdatedAt(updatedAt);
+      .then((bank) => {
+        setAnswers(bank.answers);
+        setSaved(bank.answers);
+        setSuggestions(bank.suggestions ?? []);
+        setUpdatedAt(bank.updatedAt);
         setStatus("ready");
         actions.notify("Intake saved — context is rebuilding");
       })
@@ -147,6 +163,16 @@ export function IntakeBankScreen() {
                         onChange={(e) => set(q.key, e.target.value)}
                         style={{ minHeight: 64 }}
                       />
+                      {suggestions
+                        .filter((s) => s.question_key === q.key)
+                        .map((s) => (
+                          <SuggestionChip
+                            key={s.id}
+                            suggestion={s}
+                            onAccept={() => acceptSuggestion(s)}
+                            onDismiss={() => dismissSuggestion(s)}
+                          />
+                        ))}
                     </div>
                   ))}
                 </div>
@@ -167,5 +193,49 @@ export function IntakeBankScreen() {
         </div>
       )}
     </AppShell>
+  );
+}
+
+/** A source-derived suggestion for an already-answered question (the INFORM layer). */
+function SuggestionChip({
+  suggestion,
+  onAccept,
+  onDismiss,
+}: {
+  suggestion: IntakeSuggestion;
+  onAccept: () => void;
+  onDismiss: () => void;
+}) {
+  return (
+    <div
+      style={{
+        marginTop: 8,
+        border: "1px solid var(--highlight)",
+        background: "var(--highlight-soft)",
+        borderRadius: radius.md,
+        padding: "10px 12px",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: "var(--highlight-ink)", textTransform: "uppercase", letterSpacing: ".04em" }}>
+          Suggested from {suggestion.source_label ?? "a source"}
+        </span>
+        {suggestion.confidence && (
+          <span style={{ fontSize: 11, color: "var(--text-muted)" }}>· {suggestion.confidence} confidence</span>
+        )}
+      </div>
+      <div style={{ fontSize: 13.5, color: "var(--text-primary)", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+        {suggestion.suggested_answer}
+      </div>
+      {suggestion.quote && (
+        <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 5, fontStyle: "italic" }}>
+          “{suggestion.quote}”
+        </div>
+      )}
+      <div style={{ display: "flex", gap: space.sm, marginTop: 10 }}>
+        <Button onClick={onAccept}>Accept</Button>
+        <Button variant="ghost" onClick={onDismiss}>Dismiss</Button>
+      </div>
+    </div>
   );
 }

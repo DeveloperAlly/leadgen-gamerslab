@@ -52,6 +52,7 @@ const full: AppConfig = {
     "profile",
     "cag",
     "outreach",
+    "email",
     "settings",
   ],
   enableOnboarding: true,
@@ -66,7 +67,7 @@ const poc: AppConfig = {
   gatePassword: "Er1cVanderW@l",
   postLoginScreen: "dashboard",
   // No onboarding, no discovery loader. Keep a connectable context page (Sources).
-  enabledScreens: ["signin", "dashboard", "gateB", "outreach", "sources", "profile", "cag", "settings"],
+  enabledScreens: ["signin", "dashboard", "gateB", "outreach", "sources", "profile", "cag", "email", "settings"],
   enableOnboarding: false,
   enableDiscoveryLoader: false,
   showThemeControls: false,

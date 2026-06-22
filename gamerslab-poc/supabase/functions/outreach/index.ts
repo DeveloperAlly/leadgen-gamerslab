@@ -2,11 +2,13 @@
  * outreach — Gate C board. Drafts and prospect states from `publishers`.
  *
  *   GET   /outreach              -> OutreachItem[]
- *   POST  /outreach/:id/approve  -> OutreachItem   (v1: approves the draft, no send)
+ *   POST  /outreach/:id/approve  -> OutreachItem   (approves the draft; fires the n8n send)
  *   POST  /outreach/:id/skip     -> OutreachItem   (moves to lost)
  *
- * v1 never sends email (the pipeline drafts only). Approve marks the draft approved;
- * a later phase wires an actual send + reply tracking. Contract: ENDPOINTS.md §7.
+ * Approve marks the draft approved and, when an inbox is connected and N8N_SEND_WEBHOOK_URL
+ * is set, fires the n8n Send workflow (which reads the per-tenant token, sends, and stamps
+ * sent_at). The fire is non-fatal: if n8n is unreachable the row stays 'approved' and can be
+ * retried. Send + reply tracking design: how/email_send_pipeline_DRAFT.md. Contract: ENDPOINTS.md §7.
  */
 
 import { admin, errBody, json, preflight, requireBearer } from "../_shared/http.ts";
@@ -63,6 +65,27 @@ Deno.serve(async (req) => {
       .select(PUBLISHER_SELECT)
       .single();
     if (error) return errBody("db_error", error.message, error.code === "PGRST116" ? 404 : 500);
+
+    // On approve, fire the n8n Send workflow (non-fatal). It reads the connected inbox's
+    // token, sends, and stamps sent_at. If unreachable, the row stays 'approved' for retry.
+    if (action === "approve") {
+      const sendUrl = Deno.env.get("N8N_SEND_WEBHOOK_URL");
+      if (sendUrl) {
+        const secret = Deno.env.get("N8N_WEBHOOK_SECRET");
+        try {
+          await fetch(sendUrl, {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              ...(secret ? { "x-webhook-secret": secret } : {}),
+            },
+            body: JSON.stringify({ publisher_id: id }),
+          });
+        } catch (_e) {
+          // Swallowed by design — approval succeeds even if the send fire fails.
+        }
+      }
+    }
 
     return json(toOutreachItem(data as unknown as PublisherRow));
   }

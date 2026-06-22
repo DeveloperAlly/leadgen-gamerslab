@@ -19,6 +19,7 @@ export type ScreenKey =
   | "profile"
   | "cag"
   | "outreach"
+  | "email"
   | "settings";
 
 export type SourceType = "file" | "url" | "social";
@@ -135,6 +136,21 @@ export interface OutreachItem {
   draft?: string;
   /** Last-event label once the prospect has moved past awaiting. */
   last?: string;
+}
+
+/** The inbox a tenant has connected to send outreach from (Gmail/Outlook OAuth). */
+export interface EmailAccount {
+  connected: boolean;
+  provider?: "google" | "microsoft";
+  /** The address outreach sends as. */
+  fromEmail?: string;
+  displayName?: string;
+  /** Provider daily-send ceiling (~500 free Gmail, ~2000 Workspace, ~10000 M365). */
+  dailyCap?: number;
+  /** Sends counted against the cap today. */
+  sentToday?: number;
+  scopes?: string[];
+  status?: "connected" | "expired" | "revoked";
 }
 
 /** A "what's converting" bar on the Learn & iterate panel. */

@@ -140,3 +140,37 @@ ALTER TABLE publishers ADD COLUMN IF NOT EXISTS risk_flags            JSONB DEFA
 ALTER TABLE publishers ADD COLUMN IF NOT EXISTS reject_reason_code    TEXT;                       -- N1: bad_fit|wrong_contact|weak_evidence|bad_timing|already_customer|other
 CREATE INDEX IF NOT EXISTS idx_publishers_evidence_strength  ON publishers(evidence_strength);
 CREATE INDEX IF NOT EXISTS idx_publishers_reject_reason_code ON publishers(reject_reason_code);
+
+-- ─────────────────────────────────────────────
+-- EMAIL_ACCOUNTS (migration 0005, applied live 2026-06-22)
+-- The inbox a tenant connects (Gmail/Outlook OAuth) to send approved outreach from.
+-- WHO sends (this table) is split from HOW it sends (n8n reads the token per-send).
+-- Design: how/email_send_pipeline_DRAFT.md. Refresh token stored AES-256-GCM by the
+-- Edge Function; RLS on + no policy = service-role-only access (matches `runs`).
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.email_accounts (
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  tenant_id          UUID,                              -- v2-ready; v1 publishers flow is single-tenant
+  provider           TEXT NOT NULL,                     -- google | microsoft
+  from_email         TEXT NOT NULL,
+  display_name       TEXT,
+  refresh_token_enc  TEXT,                              -- AES-256-GCM ciphertext; server-side only, never returned to browser
+  scopes             TEXT[] NOT NULL DEFAULT '{}',
+  daily_cap          INT NOT NULL DEFAULT 500,          -- ~500 free Gmail, ~2000 Workspace, ~10000 M365
+  sent_today         INT NOT NULL DEFAULT 0,
+  sent_today_date    DATE,
+  status             TEXT NOT NULL DEFAULT 'connected', -- connected | expired | revoked
+  connected_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_used_at       TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_email_accounts_one_active
+  ON public.email_accounts (COALESCE(tenant_id, '00000000-0000-0000-0000-000000000000'::uuid))
+  WHERE status <> 'revoked';
+CREATE INDEX IF NOT EXISTS idx_email_accounts_status ON public.email_accounts(status);
+ALTER TABLE public.email_accounts ENABLE ROW LEVEL SECURITY;
+DROP TRIGGER IF EXISTS email_accounts_updated_at ON public.email_accounts;
+CREATE TRIGGER email_accounts_updated_at
+  BEFORE UPDATE ON public.email_accounts
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();

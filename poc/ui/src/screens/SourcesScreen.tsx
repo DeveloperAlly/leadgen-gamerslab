@@ -4,7 +4,7 @@ import { Card } from "../components/ui/Card";
 import { Dropzone } from "../components/ui/Dropzone";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
-import { AtIcon, FileIcon, GlobeIcon, XIcon } from "../components/icons";
+import { AtIcon, FileIcon, GlobeIcon, PlusIcon, XIcon } from "../components/icons";
 import { radius, space } from "../theme/tokens";
 import type { SourceType } from "../data/types";
 
@@ -48,15 +48,22 @@ export function SourcesScreen() {
             leadingIcon={<GlobeIcon size={16} strokeWidth={2} />}
             onChange={(e) => actions.setWebsiteInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && actions.addWebsite()}
+            trailing={<AddBtn onClick={actions.addWebsite} />}
           />
           <Input
             value={state.socialInput}
-            placeholder="Add a social handle…"
+            placeholder="Add your X / Twitter handle…"
             leadingIcon={<AtIcon size={16} strokeWidth={2} />}
             onChange={(e) => actions.setSocialInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && actions.addSocial()}
+            trailing={<AddBtn onClick={actions.addSocial} />}
           />
         </div>
+        <p style={{ margin: `${space.md}px 0 0`, fontSize: 12, color: "var(--text-muted)", lineHeight: 1.5 }}>
+          Documents and websites are read into your intake (they sit as <b>Queued</b> until the ingestion
+          pipeline processes them). X / Twitter is stored as a reference for now and ingested once you connect
+          a key — LinkedIn and Discord aren't supported as sources.
+        </p>
       </Card>
 
       <div style={{ margin: `${space.xl}px 0 ${space.md}px`, fontSize: 14, fontWeight: 600 }}>
@@ -128,5 +135,30 @@ export function SourcesScreen() {
         </Button>
       </div>
     </AppShell>
+  );
+}
+
+/** Inline add button for the website / social inputs (also addable via Enter). */
+function AddBtn({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label="Add source"
+      style={{
+        display: "flex",
+        flex: "none",
+        width: 30,
+        height: 30,
+        borderRadius: 8,
+        border: "none",
+        background: "var(--accent-soft)",
+        color: "var(--accent)",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+      }}
+    >
+      <PlusIcon size={18} strokeWidth={2.2} />
+    </button>
   );
 }

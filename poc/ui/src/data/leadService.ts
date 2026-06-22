@@ -25,6 +25,7 @@ import {
 } from "./fixtures/seed";
 import type {
   DashboardInsights,
+  EmailAccount,
   GateFields,
   Intake,
   Lead,
@@ -46,8 +47,18 @@ export interface TenantContext {
   updatedAt: string | null;
 }
 
+export interface IntakeSuggestion {
+  id: string;
+  question_key: string;
+  suggested_answer: string;
+  source_label: string | null;
+  confidence: string | null;
+  quote: string | null;
+}
+
 export interface IntakeBank {
   answers: Record<string, string>;
+  suggestions: IntakeSuggestion[];
   updatedAt: string | null;
 }
 
@@ -73,6 +84,40 @@ const seedCagBlock =
 const API_BASE = (import.meta.env.VITE_API_BASE ?? "").replace(/\/+$/, "");
 const API_BEARER = import.meta.env.VITE_API_BEARER ?? "";
 const USE_FIXTURES = import.meta.env.VITE_USE_FIXTURES === "true" || API_BASE === "";
+
+/**
+ * Fixture-mode email account, persisted in localStorage so the Connect-email screen
+ * demos end-to-end (connect → connected → disconnect) with no backend. Live mode talks
+ * to the email-* Edge Functions instead.
+ */
+const EMAIL_STORE = "gl.emailAccount";
+const loadEmailFixture = (): EmailAccount => {
+  try {
+    const raw = localStorage.getItem(EMAIL_STORE);
+    if (raw) return JSON.parse(raw) as EmailAccount;
+  } catch {
+    /* ignore */
+  }
+  return { connected: false };
+};
+const saveEmailFixture = (provider: "google" | "microsoft"): EmailAccount => {
+  const account: EmailAccount = {
+    connected: true,
+    provider,
+    fromEmail: provider === "google" ? "ally@gamerslab.com" : "ally@gamerslab.onmicrosoft.com",
+    displayName: provider === "google" ? "Google Workspace" : "Microsoft 365",
+    dailyCap: provider === "google" ? 2000 : 10000,
+    sentToday: 18,
+    scopes: provider === "google" ? ["gmail.send", "gmail.readonly"] : ["Mail.Send", "Mail.Read"],
+    status: "connected",
+  };
+  try {
+    localStorage.setItem(EMAIL_STORE, JSON.stringify(account));
+  } catch {
+    /* ignore */
+  }
+  return account;
+};
 
 /* ----------------------------------------------------------- fixture seam */
 
@@ -228,6 +273,42 @@ export const leadService = {
       ? resolve(undefined)
       : req<unknown>(`/outreach/${id}/skip`, { method: "POST" }).then(() => undefined),
 
+  /* ---- Email send identity (the inbox outreach sends from) ---- */
+  getEmailAccount: (): Promise<EmailAccount> =>
+    USE_FIXTURES ? resolve(loadEmailFixture()) : req<EmailAccount>("/email-account"),
+
+  /**
+   * Begin connecting an inbox. Live mode returns the provider consent URL to redirect
+   * the browser to; fixtures simulate a successful connect locally and return no url.
+   */
+  startEmailConnect: (provider: "google" | "microsoft"): Promise<{ url: string }> => {
+    if (USE_FIXTURES) {
+      saveEmailFixture(provider);
+      return resolve({ url: "" });
+    }
+    return req<{ url: string }>("/email-oauth/start", {
+      method: "POST",
+      body: JSON.stringify({ provider }),
+    });
+  },
+
+  disconnectEmail: (): Promise<void> => {
+    if (USE_FIXTURES) {
+      try {
+        localStorage.removeItem(EMAIL_STORE);
+      } catch {
+        /* ignore */
+      }
+      return resolve(undefined);
+    }
+    return req<void>("/email-account", { method: "DELETE" });
+  },
+
+  sendTestEmail: (): Promise<void> =>
+    USE_FIXTURES
+      ? resolve(undefined)
+      : req<unknown>("/email-test-send", { method: "POST" }).then(() => undefined),
+
   /* ---- Learn & iterate ---- */
   getDashboardInsights: (): Promise<DashboardInsights> =>
     USE_FIXTURES ? resolve(seedDashboardInsights) : req<DashboardInsights>("/insights"),
@@ -240,13 +321,23 @@ export const leadService = {
   /* ---- Intake answer bank (structured questions; composed into the CAG) ---- */
   getIntakeBank: (): Promise<IntakeBank> =>
     USE_FIXTURES
-      ? resolve({ answers: seedIntakeBank, updatedAt: null })
+      ? resolve({ answers: seedIntakeBank, suggestions: [], updatedAt: null })
       : req<IntakeBank>("/intake-bank"),
 
   saveIntakeBank: (answers: Record<string, string>): Promise<IntakeBank> =>
     USE_FIXTURES
-      ? resolve({ answers, updatedAt: new Date().toISOString() })
+      ? resolve({ answers, suggestions: [], updatedAt: new Date().toISOString() })
       : req<IntakeBank>("/intake-bank", { method: "PUT", body: JSON.stringify({ answers }) }),
+
+  acceptSuggestion: (id: string): Promise<IntakeBank> =>
+    USE_FIXTURES
+      ? resolve({ answers: seedIntakeBank, suggestions: [], updatedAt: new Date().toISOString() })
+      : req<IntakeBank>("/intake-bank/accept", { method: "POST", body: JSON.stringify({ id }) }),
+
+  dismissSuggestion: (id: string): Promise<IntakeBank> =>
+    USE_FIXTURES
+      ? resolve({ answers: seedIntakeBank, suggestions: [], updatedAt: new Date().toISOString() })
+      : req<IntakeBank>("/intake-bank/dismiss", { method: "POST", body: JSON.stringify({ id }) }),
 
   /* ---- Business context (the editable CAG block the pipeline reads each run) ---- */
   getContext: (): Promise<TenantContext> =>

@@ -30,6 +30,7 @@
 | Infra stack & layers (the HOW) | Agent (done) | `how/infra_stack_and_layers_DRAFT.md` (+ embedded `infra_stack_diagram.svg`) | ✅ v10 |
 | v9 pipeline reconciliation | Agent (done) | Both docs §v10; aDNA tag `v9` | ✅ |
 | Pipeline critique v2 — Tier 1 (POC) | Live + verified | `gamerslab-poc/workflow/v10-live-edits/` | ✅ n8n (I1/I6/D1/N5/N9 + prompt) · DB migration · `leads` Edge v3 · UI badges/reason picker — all live & verified |
+| Email send pipeline (identity + delivery) | Design (Claude) | `how/email_send_pipeline_DRAFT.md` (+ `email_send_architecture.svg`, `email_connect_screen_mock.svg`) | 🟡 DRAFT pre-gate — fills the deferred send layer; separate n8n workflows + `email_accounts` + Connect-email UI. Provider endpoints to verify at M2 |
 | Requirements specs (M1) | Pending Ally go | — | ⏸ awaiting next session |
 | Verified architecture (M2) | Pending M1 | — | ⏸ |
 | UI design (M3) | Pending M2 | — | ⏸ |
