@@ -125,3 +125,18 @@ ALTER TABLE publishers ADD COLUMN IF NOT EXISTS publisher_key         TEXT;
 ALTER TABLE publishers ADD COLUMN IF NOT EXISTS publisher_other_games TEXT;
 CREATE INDEX IF NOT EXISTS idx_publishers_email_valid   ON publishers(email_valid);
 CREATE INDEX IF NOT EXISTS idx_publishers_publisher_key ON publishers(publisher_key);
+
+-- ─────────────────────────────────────────────
+-- Pipeline Critique v2 — Tier 1 (migration `tier1_evidence_riskflags_decay_rejectcode`,
+-- applied live 2026-06-22). D1 evidence rubric, N5 anti-fit flags, N9 recency decay,
+-- N1 structured reject reason. See how/pipeline_critique_v2.md §9.
+-- ─────────────────────────────────────────────
+ALTER TABLE publishers ADD COLUMN IF NOT EXISTS evidence_strength     TEXT;                       -- D1: explicit | inferred | none
+ALTER TABLE publishers ADD COLUMN IF NOT EXISTS evidence_quote        TEXT;                       -- D1: painpoint evidence quote
+ALTER TABLE publishers ADD COLUMN IF NOT EXISTS evidence_sources      JSONB DEFAULT '[]'::jsonb;  -- D1: cited source urls
+ALTER TABLE publishers ADD COLUMN IF NOT EXISTS evidence_as_of        DATE;                       -- D1/N9: date the evidence is from
+ALTER TABLE publishers ADD COLUMN IF NOT EXISTS evidence_decay_weight NUMERIC;                    -- N9: exp(-age_days/halflife)
+ALTER TABLE publishers ADD COLUMN IF NOT EXISTS risk_flags            JSONB DEFAULT '[]'::jsonb;  -- N5: [{flag, evidence, source}] flag-not-suppress
+ALTER TABLE publishers ADD COLUMN IF NOT EXISTS reject_reason_code    TEXT;                       -- N1: bad_fit|wrong_contact|weak_evidence|bad_timing|already_customer|other
+CREATE INDEX IF NOT EXISTS idx_publishers_evidence_strength  ON publishers(evidence_strength);
+CREATE INDEX IF NOT EXISTS idx_publishers_reject_reason_code ON publishers(reject_reason_code);

@@ -140,8 +140,11 @@ mirror the UI controls: `?verified=true&sort=desc`.
 
 ### `PATCH /api/leads/:id`
 Approve / reject / reset a lead.
-- **Service:** `setLeadStatus(id, status)`  **Consumed by:** `GateBScreen`
-- **Body:** `{ "status": "approved"|"rejected"|"pending" }`  **200:** `Lead`
+- **Service:** `setLeadStatus(id, status, reasonCode?, reason?)`  **Consumed by:** `GateBScreen`
+- **Body:** `{ "status": "approved"|"rejected"|"pending", "reasonCode"?: RejectReasonCode, "reason"?: string }`
+- On `rejected`, the N1 `reasonCode` (`bad_fit|wrong_contact|weak_evidence|bad_timing|already_customer|other`)
+  and optional free-text `reason` persist to `reject_reason_code` / `reject_reason` (+ `reviewed_at`). **200:** `Lead`
+- `Lead` now includes optional `evidenceStrength` (D1: `explicit|inferred|none`) and `riskFlags[]` (N5).
 
 ### `POST /api/leads/export`
 Export approved leads (returns a file URL / signed download in production).

@@ -29,7 +29,7 @@
 | Business process model (the WHAT) | Agent (done) | `what/business_process_model_DRAFT.md` (+ embedded `business_process_diagram.svg`) | ✅ v10 |
 | Infra stack & layers (the HOW) | Agent (done) | `how/infra_stack_and_layers_DRAFT.md` (+ embedded `infra_stack_diagram.svg`) | ✅ v10 |
 | v9 pipeline reconciliation | Agent (done) | Both docs §v10; aDNA tag `v9` | ✅ |
-| Pipeline critique v2 — Tier 1 (POC) | Live edits applied | `gamerslab-poc/workflow/v10-live-edits/` | 🟢 backend live; UI pending |
+| Pipeline critique v2 — Tier 1 (POC) | Live + verified | `gamerslab-poc/workflow/v10-live-edits/` | ✅ n8n (I1/I6/D1/N5/N9 + prompt) · DB migration · `leads` Edge v3 · UI badges/reason picker — all live & verified |
 | Requirements specs (M1) | Pending Ally go | — | ⏸ awaiting next session |
 | Verified architecture (M2) | Pending M1 | — | ⏸ |
 | UI design (M3) | Pending M2 | — | ⏸ |
