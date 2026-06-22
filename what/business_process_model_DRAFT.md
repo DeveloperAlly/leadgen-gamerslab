@@ -203,8 +203,12 @@ login — drop the `.dc.html` into the folder or share a screenshot).
 
 1. **Venue adapters for the POC:** for GamersLab specifically, which venues are in scope first
    (Steam + web + Reddit?), and which are "find an alternative path" (no clean API)?
-2. **Painpoint evidence bar:** how strong must the evidence be to pass a lead? (e.g. explicit
-   public statement vs reasonable inference) — sets the precision/recall trade-off.
+2. **Painpoint evidence bar (RESOLVED — default):** a lead passes Stage 2.3 on **≥1 cited
+   *explicit* signal OR ≥2 corroborating *inferred* signals**; every lead is labelled
+   `explicit / inferred / unclear`, the basis is visible at Gate B, and the bar is tuned from
+   outcomes (Stage 5). Strict end = higher precision / fewer leads; loose end = higher recall /
+   more false positives that dilute the evidence-backed moat. See
+   [`client_intake_design_DRAFT.md`](client_intake_design_DRAFT.md) B3.32.
 3. **Two-sided score weighting:** is "value to client" or "prospect match" weighted higher, and
    does that differ for customer-finding vs fundraising mode?
 4. **Tracking ownership:** does the client update lead states manually in our UI, or do we sync

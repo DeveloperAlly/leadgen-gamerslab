@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { leadService } from "../data/leadService";
+import { tenant, usage } from "../data/fixtures/tenant";
 import {
   seedDashboardInsights,
   seedFoundCount,
@@ -27,6 +28,7 @@ import type {
   Intake,
   LeadStatus,
   Mode,
+  RejectReasonCode,
   ScreenKey,
   SourceType,
   VenueStrength,
@@ -48,7 +50,13 @@ const initialState: PipelineState = {
   mode: "customers",
   screen: appConfig.requireSignin ? "signin" : appConfig.postLoginScreen,
   email: "",
+  password: "",
   signinState: "idle",
+  tenant: clone(tenant),
+  usage: clone(usage),
+  insights: clone(seedDashboardInsights),
+  dataState: "idle",
+  dataError: null,
   sources: clone(seedSources),
   websiteInput: "",
   socialInput: "",
@@ -63,9 +71,12 @@ const initialState: PipelineState = {
   expandedLead: null,
   sortDesc: true,
   onlyVerified: false,
+  refinementDismissed: false,
   loadingPct: 0,
   loadingMsgIdx: 0,
   outreach: clone(seedOutreach),
+  editingOutreach: null,
+  outreachDraft: "",
   toast: null,
 };
 
@@ -73,7 +84,9 @@ export interface PipelineActions {
   go: (screen: ScreenKey) => void;
   setMode: (mode: Mode) => void;
   setEmail: (email: string) => void;
+  setPassword: (password: string) => void;
   signinContinue: () => void;
+  notify: (message: string) => void;
   addSource: (type: SourceType, label: string) => void;
   removeSource: (id: string) => void;
   setWebsiteInput: (value: string) => void;
@@ -89,7 +102,7 @@ export interface PipelineActions {
   saveField: (key: GateFieldKey) => void;
   cancelEdit: () => void;
   startDiscovery: () => void;
-  setLeadStatus: (id: string, status: LeadStatus) => void;
+  setLeadStatus: (id: string, status: LeadStatus, reasonCode?: RejectReasonCode) => void;
   toggleExpand: (id: string) => void;
   toggleSort: () => void;
   toggleVerified: () => void;
@@ -97,7 +110,12 @@ export interface PipelineActions {
   sendToCrm: () => void;
   approveOutreach: (id: string) => void;
   skipOutreach: (id: string) => void;
+  startEditOutreach: (id: string) => void;
+  setOutreachDraft: (value: string) => void;
+  saveOutreachDraft: () => void;
+  cancelEditOutreach: () => void;
   applyRefinement: () => void;
+  dismissRefinement: () => void;
   restart: () => void;
 }
 
@@ -145,14 +163,55 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
     toastTimer.current = setTimeout(() => dispatch({ type: "CLEAR_TOAST" }), 1900);
   }, []);
 
-  const insights = seedDashboardInsights;
+  // Hydrate the store from the data layer once on mount. With a live API this loads the
+  // real backend data; with fixtures it resolves the seed. Either way the UI shows what
+  // the data layer actually returns instead of a frozen client-side copy.
+  useEffect(() => {
+    let cancelled = false;
+    dispatch({ type: "SET_DATA_STATE", state: "loading" });
+    Promise.all([
+      leadService.getTenant(),
+      leadService.getSources(),
+      leadService.getLeads(),
+      leadService.getOutreach(),
+      leadService.getDashboardInsights(),
+    ])
+      .then(([tenantRes, sources, leads, outreach, insights]) => {
+        if (cancelled) return;
+        dispatch({
+          type: "HYDRATE",
+          payload: {
+            tenant: tenantRes.tenant,
+            usage: tenantRes.usage,
+            sources,
+            leads,
+            foundCount: leads.length,
+            outreach,
+            insights,
+          },
+        });
+        dispatch({ type: "SET_DATA_STATE", state: "ready" });
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        dispatch({
+          type: "SET_DATA_STATE",
+          state: "error",
+          error: err instanceof Error ? err.message : "Failed to load data",
+        });
+        showToast("Couldn't reach the backend — showing cached data");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showToast]);
 
   const actions = useMemo<PipelineActions>(() => {
     const addSource = (type: SourceType, label: string) => {
+      // Persists a real `source` row; it returns "queued" until the Context Builder
+      // workflow processes it (no fake parse timer — the status reflects the backend).
       void leadService.addSource(type, label).then((source) => {
         dispatch({ type: "ADD_SOURCE", source });
-        // The parse/index job completes asynchronously.
-        setTimeout(() => dispatch({ type: "MARK_SOURCE_DONE", id: source.id }), 1500);
       });
     };
 
@@ -160,8 +219,14 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
       go: (screen) => dispatch({ type: "GO", screen }),
       setMode: (mode) => dispatch({ type: "SET_MODE", mode }),
       setEmail: (email) => dispatch({ type: "SET_EMAIL", email }),
+      setPassword: (password) => dispatch({ type: "SET_PASSWORD", password }),
+      notify: (message) => showToast(message),
       signinContinue: () => {
-        if (!VALID_EMAIL.test(stateRef.current.email)) {
+        const ok =
+          appConfig.signinMode === "password"
+            ? stateRef.current.password === appConfig.gatePassword
+            : VALID_EMAIL.test(stateRef.current.email);
+        if (!ok) {
           dispatch({ type: "SET_SIGNIN_STATE", state: "error" });
           return;
         }
@@ -216,9 +281,19 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
       },
       cancelEdit: () => dispatch({ type: "CANCEL_EDIT" }),
       startDiscovery: () => {
-        // PoC build runs no fake discovery loader; leads are already present.
+        // PoC build runs no fake discovery loader: re-pull the latest leads + insights
+        // from the backend instead of pretending to run a minutes-long discovery job.
         if (!appConfig.enableDiscoveryLoader) {
-          showToast("Discovery refreshed");
+          void Promise.all([
+            leadService.getLeads(),
+            leadService.getDashboardInsights(),
+          ])
+            .then(([leads, insights]) => {
+              dispatch({ type: "SET_LEADS", leads, foundCount: leads.length });
+              dispatch({ type: "HYDRATE", payload: { insights } });
+              showToast("Pipeline refreshed");
+            })
+            .catch(() => showToast("Couldn't refresh — backend unreachable"));
           return;
         }
         dispatch({ type: "GO", screen: "loading" });
@@ -238,9 +313,9 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
           }
         }, 380);
       },
-      setLeadStatus: (id, status) => {
+      setLeadStatus: (id, status, reasonCode) => {
         dispatch({ type: "SET_LEAD_STATUS", id, status });
-        void leadService.setLeadStatus(id, status);
+        void leadService.setLeadStatus(id, status, reasonCode);
       },
       toggleExpand: (id) => dispatch({ type: "TOGGLE_EXPAND", id }),
       toggleSort: () => dispatch({ type: "TOGGLE_SORT" }),
@@ -256,18 +331,30 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
         showToast("Sent to CRM");
       },
       approveOutreach: (id) => {
-        dispatch({ type: "SET_OUTREACH_STAGE", id, stage: "contacted", last: "Sent just now" });
+        // The pipeline stages drafts for outreach; it does not auto-send (see spec §07).
+        dispatch({ type: "SET_OUTREACH_STAGE", id, stage: "contacted", last: "Approved for outreach" });
         void leadService.approveOutreach(id);
-        showToast("Message approved & sent");
+        showToast("Draft approved");
       },
       skipOutreach: (id) => {
         dispatch({ type: "SET_OUTREACH_STAGE", id, stage: "lost", last: "Skipped" });
         void leadService.skipOutreach(id);
       },
+      startEditOutreach: (id) => {
+        const item = stateRef.current.outreach.find((o) => o.id === id);
+        dispatch({ type: "START_EDIT_OUTREACH", id, draft: item?.draft ?? "" });
+      },
+      setOutreachDraft: (value) => dispatch({ type: "SET_OUTREACH_DRAFT", value }),
+      saveOutreachDraft: () => {
+        dispatch({ type: "SAVE_OUTREACH_DRAFT" });
+        showToast("Draft saved");
+      },
+      cancelEditOutreach: () => dispatch({ type: "CANCEL_EDIT_OUTREACH" }),
       applyRefinement: () => {
         void leadService.applyRefinement();
         showToast("Refinement applied — re-scoring future runs");
       },
+      dismissRefinement: () => dispatch({ type: "DISMISS_REFINEMENT" }),
       restart: () => {
         if (discoveryTimer.current) clearInterval(discoveryTimer.current);
         dispatch({ type: "RESET_SIGNIN" });
@@ -293,8 +380,8 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
   }, [state.leads, state.outreach, state.venues, state.foundCount]);
 
   const value = useMemo<PipelineContextValue>(
-    () => ({ state, actions, derived, insights }),
-    [state, actions, derived, insights],
+    () => ({ state, actions, derived, insights: state.insights }),
+    [state, actions, derived],
   );
 
   return <PipelineContext.Provider value={value}>{children}</PipelineContext.Provider>;

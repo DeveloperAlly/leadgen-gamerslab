@@ -1,4 +1,5 @@
 import type {
+  DashboardInsights,
   GateFieldKey,
   GateFields,
   Intake,
@@ -10,15 +11,30 @@ import type {
   Source,
   Venue,
 } from "../data/types";
+import type { TenantConfig } from "../data/fixtures/tenant";
 
 export type SigninState = "idle" | "loading" | "error";
+export type DataState = "idle" | "loading" | "ready" | "error";
+
+export interface Usage {
+  used: number;
+  total: number;
+}
 
 export interface PipelineState {
   mode: Mode;
   screen: ScreenKey;
 
   email: string;
+  password: string;
   signinState: SigninState;
+
+  /** Live bootstrap data (hydrated from the backend on mount; seeded for fixtures). */
+  tenant: TenantConfig;
+  usage: Usage;
+  insights: DashboardInsights;
+  dataState: DataState;
+  dataError: string | null;
 
   sources: Source[];
   websiteInput: string;
@@ -38,20 +54,38 @@ export interface PipelineState {
   expandedLead: string | null;
   sortDesc: boolean;
   onlyVerified: boolean;
+  refinementDismissed: boolean;
 
   loadingPct: number;
   loadingMsgIdx: number;
 
   outreach: OutreachItem[];
+  editingOutreach: string | null;
+  outreachDraft: string;
 
   toast: string | null;
 }
+
+export type HydratePayload = Partial<
+  Pick<
+    PipelineState,
+    "tenant" | "usage" | "insights" | "leads" | "foundCount" | "sources" | "outreach"
+  >
+>;
 
 export type PipelineAction =
   | { type: "GO"; screen: ScreenKey }
   | { type: "SET_MODE"; mode: Mode }
   | { type: "SET_EMAIL"; email: string }
+  | { type: "SET_PASSWORD"; password: string }
   | { type: "SET_SIGNIN_STATE"; state: SigninState }
+  | { type: "HYDRATE"; payload: HydratePayload }
+  | { type: "SET_DATA_STATE"; state: DataState; error?: string }
+  | { type: "DISMISS_REFINEMENT" }
+  | { type: "START_EDIT_OUTREACH"; id: string; draft: string }
+  | { type: "SET_OUTREACH_DRAFT"; value: string }
+  | { type: "SAVE_OUTREACH_DRAFT" }
+  | { type: "CANCEL_EDIT_OUTREACH" }
   | { type: "SET_SOURCES"; sources: Source[] }
   | { type: "ADD_SOURCE"; source: Source }
   | { type: "MARK_SOURCE_DONE"; id: string }
@@ -86,8 +120,30 @@ export function pipelineReducer(state: PipelineState, action: PipelineAction): P
       return { ...state, mode: action.mode };
     case "SET_EMAIL":
       return { ...state, email: action.email, signinState: "idle" };
+    case "SET_PASSWORD":
+      return { ...state, password: action.password, signinState: "idle" };
     case "SET_SIGNIN_STATE":
       return { ...state, signinState: action.state };
+    case "HYDRATE":
+      return { ...state, ...action.payload };
+    case "SET_DATA_STATE":
+      return { ...state, dataState: action.state, dataError: action.error ?? null };
+    case "DISMISS_REFINEMENT":
+      return { ...state, refinementDismissed: true };
+    case "START_EDIT_OUTREACH":
+      return { ...state, editingOutreach: action.id, outreachDraft: action.draft };
+    case "SET_OUTREACH_DRAFT":
+      return { ...state, outreachDraft: action.value };
+    case "SAVE_OUTREACH_DRAFT":
+      return {
+        ...state,
+        outreach: state.outreach.map((o) =>
+          o.id === state.editingOutreach ? { ...o, draft: state.outreachDraft } : o,
+        ),
+        editingOutreach: null,
+      };
+    case "CANCEL_EDIT_OUTREACH":
+      return { ...state, editingOutreach: null };
     case "SET_SOURCES":
       return { ...state, sources: action.sources };
     case "ADD_SOURCE":
@@ -164,7 +220,7 @@ export function pipelineReducer(state: PipelineState, action: PipelineAction): P
     case "CLEAR_TOAST":
       return { ...state, toast: null };
     case "RESET_SIGNIN":
-      return { ...state, screen: "signin", email: "", signinState: "idle" };
+      return { ...state, screen: "signin", email: "", password: "", signinState: "idle" };
     default:
       return state;
   }

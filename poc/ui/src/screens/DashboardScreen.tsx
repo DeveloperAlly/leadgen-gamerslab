@@ -12,6 +12,20 @@ import {
   TrendIcon,
 } from "../components/icons";
 import { space } from "../theme/tokens";
+import type { Source } from "../data/types";
+
+/** Human one-liner like "5 files · 1 site · 2 socials" derived from the real sources. */
+function sourcesSummary(sources: Source[]): string {
+  const n = (t: Source["type"]) => sources.filter((s) => s.type === t).length;
+  const parts: string[] = [];
+  const files = n("file");
+  const sites = n("url");
+  const socials = n("social");
+  if (files) parts.push(`${files} file${files > 1 ? "s" : ""}`);
+  if (sites) parts.push(`${sites} site${sites > 1 ? "s" : ""}`);
+  if (socials) parts.push(`${socials} social${socials > 1 ? "s" : ""}`);
+  return parts.length ? parts.join(" · ") : "No sources yet";
+}
 
 export function DashboardScreen() {
   const { state, actions, derived, insights } = usePipeline();
@@ -61,7 +75,7 @@ export function DashboardScreen() {
           <Eyebrow>Sources ingested</Eyebrow>
           <div style={{ fontSize: 20, fontWeight: 700 }}>{state.sources.length}</div>
           <div style={{ marginTop: 6, fontSize: 13, color: "var(--text-muted)" }}>
-            5 files · 1 site · 2 socials
+            {sourcesSummary(state.sources)}
           </div>
         </Card>
       </div>
@@ -103,11 +117,26 @@ export function DashboardScreen() {
             <Eyebrow>Next actions</Eyebrow>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 4 }}>
               {[
-                `Review ${derived.approvedCount} approved leads`,
-                `Approve ${derived.pendingApprovals} outreach messages`,
-                "Add your latest pitch deck",
-              ].map((label) => (
-                <div key={label} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14 }}>
+                { label: `Review ${derived.approvedCount} approved leads`, target: "gateB" as const },
+                { label: `Approve ${derived.pendingApprovals} outreach messages`, target: "outreach" as const },
+                { label: "Add more business context", target: "sources" as const },
+              ].map(({ label, target }) => (
+                <button
+                  key={label}
+                  onClick={() => actions.go(target)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    fontSize: 14,
+                    border: "none",
+                    background: "transparent",
+                    color: "var(--text-primary)",
+                    textAlign: "left",
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                >
                   <span
                     style={{
                       width: 18,
@@ -124,7 +153,7 @@ export function DashboardScreen() {
                     <CheckIcon size={13} strokeWidth={2.6} />
                   </span>
                   {label}
-                </div>
+                </button>
               ))}
             </div>
           </Card>
@@ -162,21 +191,30 @@ export function DashboardScreen() {
             </div>
           </div>
 
-          <Card style={{ background: "var(--highlight-soft)", border: "1px solid var(--highlight)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <GiftIcon size={15} strokeWidth={2} />
-              <span style={{ fontSize: 14, fontWeight: 700 }}>Suggested refinement</span>
-            </div>
-            <p style={{ margin: "0 0 14px", fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.55 }}>
-              {insights.refinement}
-            </p>
-            <div style={{ display: "flex", gap: space.sm }}>
-              <Button onClick={actions.applyRefinement}>Apply refinement</Button>
-              <Button variant="ghost" onClick={() => undefined}>
-                Dismiss
-              </Button>
-            </div>
-          </Card>
+          {state.refinementDismissed ? (
+            <Card>
+              <Eyebrow>Suggested refinement</Eyebrow>
+              <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--text-muted)" }}>
+                Dismissed. New suggestions appear here after the next run.
+              </p>
+            </Card>
+          ) : (
+            <Card style={{ background: "var(--highlight-soft)", border: "1px solid var(--highlight)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <GiftIcon size={15} strokeWidth={2} />
+                <span style={{ fontSize: 14, fontWeight: 700 }}>Suggested refinement</span>
+              </div>
+              <p style={{ margin: "0 0 14px", fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.55 }}>
+                {insights.refinement}
+              </p>
+              <div style={{ display: "flex", gap: space.sm }}>
+                <Button onClick={actions.applyRefinement}>Apply refinement</Button>
+                <Button variant="ghost" onClick={actions.dismissRefinement}>
+                  Dismiss
+                </Button>
+              </div>
+            </Card>
+          )}
         </div>
       </Card>
     </AppShell>

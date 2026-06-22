@@ -29,6 +29,7 @@
 | Business process model (the WHAT) | Agent (done) | `what/business_process_model_DRAFT.md` (+ embedded `business_process_diagram.svg`) | ✅ v10 |
 | Infra stack & layers (the HOW) | Agent (done) | `how/infra_stack_and_layers_DRAFT.md` (+ embedded `infra_stack_diagram.svg`) | ✅ v10 |
 | v9 pipeline reconciliation | Agent (done) | Both docs §v10; aDNA tag `v9` | ✅ |
+| Pipeline critique v2 — Tier 1 (POC) | Live edits applied | `gamerslab-poc/workflow/v10-live-edits/` | 🟢 backend live; UI pending |
 | Requirements specs (M1) | Pending Ally go | — | ⏸ awaiting next session |
 | Verified architecture (M2) | Pending M1 | — | ⏸ |
 | UI design (M3) | Pending M2 | — | ⏸ |
@@ -37,6 +38,26 @@
 
 Pick the next gated mission to run: **M1 (requirements specs)**, **M2 (verified architecture)**,
 or **M3 (UI design)** — recommended order is M1 → M2 → M3 → gate. See plan doc §"Sequenced missions".
+
+## POC volume / latency / SLA (critique v2 · D5)
+
+The numbers free-tier viability depends on. Defaults are the live workflow's; all are now
+configurable per run via the discovery webhook body (`target_count` / `draft_budget` / `score_floor`).
+
+| Metric | POC value | Source / constraint |
+|--------|-----------|---------------------|
+| Cadence | 1 run/day, 09:00 | Schedule Trigger (daily) |
+| Candidates mined / run | 100 (`target_count`) | `Pick N Publishers`, SteamSpy top-list |
+| Drafts (LLM calls) / run | ≤ 35 (`draft_budget`) | `Select & Split`; tier C+ only (`score_floor` ≥ 10) |
+| Model calls / day | ≤ 35 | **Binding ceiling: OpenRouter free = 50 req/day** (failed attempts count). One-time $10 → 1,000/day. 35 leaves ~15 for retries. |
+| Exa searches / run | ≤ 35 (1 per enriched lead) | Exa free **1,000 credits / 25 results**, auto-stop at 50× requested. SerpAPI is fallback only (I1). |
+| Email verifies / run | ≤ 35 | free MX-level check (`Verify Email`) |
+| Max run duration (target) | < 30 min | not yet measured; Steam rate-limit `Wait` + 35 enrich loops. Target, not SLA. |
+| Backlog (un-drafted) / run | ~65 | recorded free as `pipeline_status` rows; no spend |
+
+**Binding constraint:** OpenRouter free 50/day. At `draft_budget=35`/day the POC sits inside every
+free ceiling with headroom. Raising cadence or `draft_budget` requires the $10 OpenRouter top-up first.
+To-confirm: exact Exa credit cost per `/search` (the 1,000-credit ceiling is per the Websets product).
 
 ## Open questions logged (see `how/pipeline_critique.md` §Decisions)
 

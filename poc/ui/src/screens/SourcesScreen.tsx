@@ -39,6 +39,7 @@ export function SourcesScreen() {
           }
           hint="PDFs, decks, docs — anything that explains your business"
           onBrowse={() => actions.addSource("file", "research-notes.pdf")}
+          onFiles={(files) => Array.from(files).forEach((f) => actions.addSource("file", f.name))}
         />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: space.md, marginTop: space.lg }}>
           <Input
@@ -103,12 +104,12 @@ export function SourcesScreen() {
                 fontWeight: 600,
                 padding: "3px 10px",
                 borderRadius: radius.pill,
-                background: s.parsing ? "var(--bg-subtle)" : "var(--success-soft)",
-                color: s.parsing ? "var(--text-muted)" : "var(--success)",
+                background: s.done ? "var(--success-soft)" : "var(--bg-subtle)",
+                color: s.done ? "var(--success)" : "var(--text-muted)",
               }}
               className={s.parsing ? "shimmer" : undefined}
             >
-              {s.parsing ? "Parsing…" : "Indexed"}
+              {s.done ? "Indexed" : s.parsing ? "Parsing…" : "Queued"}
             </span>
             <button
               onClick={() => actions.removeSource(s.id)}

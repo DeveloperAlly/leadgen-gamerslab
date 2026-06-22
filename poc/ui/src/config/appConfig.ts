@@ -12,10 +12,16 @@ import type { ScreenKey } from "../data/types";
 
 export type AppMode = "poc" | "full";
 
+export type SigninMode = "email" | "password";
+
 export interface AppConfig {
   mode: AppMode;
   /** Gate the app behind the sign-in screen. */
   requireSignin: boolean;
+  /** How sign-in is gated: "email" (white-label) or a single shared "password" (PoC). */
+  signinMode: SigninMode;
+  /** Shared password for `signinMode: "password"` builds. */
+  gatePassword?: string;
   /** Where the user lands after sign-in (or on load when sign-in is off). */
   postLoginScreen: ScreenKey;
   /** Screens this build will render; anything else falls back to postLoginScreen. */
@@ -31,6 +37,7 @@ export interface AppConfig {
 const full: AppConfig = {
   mode: "full",
   requireSignin: true,
+  signinMode: "email",
   postLoginScreen: "context",
   enabledScreens: [
     "signin",
@@ -42,6 +49,8 @@ const full: AppConfig = {
     "gateB",
     "dashboard",
     "sources",
+    "profile",
+    "cag",
     "outreach",
     "settings",
   ],
@@ -53,9 +62,11 @@ const full: AppConfig = {
 const poc: AppConfig = {
   mode: "poc",
   requireSignin: true,
+  signinMode: "password",
+  gatePassword: "Er1cVanderW@l",
   postLoginScreen: "dashboard",
   // No onboarding, no discovery loader. Keep a connectable context page (Sources).
-  enabledScreens: ["signin", "dashboard", "gateB", "outreach", "sources", "settings"],
+  enabledScreens: ["signin", "dashboard", "gateB", "outreach", "sources", "profile", "cag", "settings"],
   enableOnboarding: false,
   enableDiscoveryLoader: false,
   showThemeControls: false,

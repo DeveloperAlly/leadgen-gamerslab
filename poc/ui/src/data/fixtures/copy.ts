@@ -41,6 +41,8 @@ export const copy = {
       "Set up your lead pipeline in a few calm steps. We'll handle the searching — you stay in control.",
     emailLabel: "Work email",
     emailError: "Enter a valid email to continue.",
+    passwordLabel: "Password",
+    passwordError: "Incorrect password.",
   },
   context: {
     heading: "Tell us about your business.",

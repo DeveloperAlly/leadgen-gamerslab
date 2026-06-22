@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
     const id = lastSegment(req.url);
     if (!id || id === "leads") return errBody("bad_request", "Missing lead id", 400);
 
-    let body: { status?: LeadStatus };
+    let body: { status?: LeadStatus; reasonCode?: string; reason?: string };
     try {
       body = await req.json();
     } catch {
@@ -64,9 +64,29 @@ Deno.serve(async (req) => {
     const target = body.status && STATUS_TO_DB[body.status];
     if (!target) return errBody("unprocessable", "status must be approved|rejected|pending", 422);
 
+    const update: Record<string, unknown> = { pipeline_status: target };
+    if (body.status === "rejected") {
+      // N1 — capture the structured Gate-B rejection reason (the Learn-loop signal).
+      const REASON_CODES = [
+        "bad_fit",
+        "wrong_contact",
+        "weak_evidence",
+        "bad_timing",
+        "already_customer",
+        "other",
+      ];
+      if (body.reasonCode && REASON_CODES.includes(body.reasonCode)) {
+        update.reject_reason_code = body.reasonCode;
+      }
+      if (typeof body.reason === "string" && body.reason.trim()) {
+        update.reject_reason = body.reason.trim().slice(0, 500);
+      }
+      update.reviewed_at = new Date().toISOString();
+    }
+
     const { data, error } = await db
       .from("publishers")
-      .update({ pipeline_status: target })
+      .update(update)
       .eq("id", id)
       .select(PUBLISHER_SELECT)
       .single();

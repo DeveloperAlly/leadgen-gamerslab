@@ -21,6 +21,8 @@ The UI never changes between v1 and v2 — that is the whole point of the modula
 | Data model (ERD) | [`../how/v2_data_model_erd.svg`](../how/v2_data_model_erd.svg) |
 | Phase roadmap | [`../how/v2_phase_roadmap.svg`](../how/v2_phase_roadmap.svg) |
 | Infra stack & layers | [`../how/infra_stack_and_layers_DRAFT.md`](../how/infra_stack_and_layers_DRAFT.md) |
+| Onboarding doc-first pre-fill (Stage 1) | [`../how/v2_onboarding_prefill_spec_DRAFT.md`](../how/v2_onboarding_prefill_spec_DRAFT.md) |
+| Client intake design (questions + doc pack) | [`../what/client_intake_design_DRAFT.md`](../what/client_intake_design_DRAFT.md) |
 | POC → production plan | [`../how/plan_poc_to_production.md`](../how/plan_poc_to_production.md) |
 | Product requirements | [`../what/research/product_requirements_DRAFT.md`](../what/research/product_requirements_DRAFT.md) |
 

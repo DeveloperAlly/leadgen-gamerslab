@@ -15,6 +15,8 @@ import { DiscoveryScreen } from "./screens/DiscoveryScreen";
 import { GateBScreen } from "./screens/GateBScreen";
 import { DashboardScreen } from "./screens/DashboardScreen";
 import { SourcesScreen } from "./screens/SourcesScreen";
+import { IntakeBankScreen } from "./screens/IntakeBankScreen";
+import { ContextScreen } from "./screens/ContextScreen";
 import { ProspectTrackingScreen } from "./screens/ProspectTrackingScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 
@@ -28,6 +30,8 @@ const screens: Record<ScreenKey, () => JSX.Element> = {
   gateB: GateBScreen,
   dashboard: DashboardScreen,
   sources: SourcesScreen,
+  profile: IntakeBankScreen,
+  cag: ContextScreen,
   outreach: ProspectTrackingScreen,
   settings: SettingsScreen,
 };

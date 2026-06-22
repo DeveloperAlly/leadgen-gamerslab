@@ -1,9 +1,11 @@
 import type { ScreenKey } from "../data/types";
 import {
+  EditIcon,
   FlowIcon,
   HomeIcon,
   LayersIcon,
   SlidersIcon,
+  SparkleIcon,
   UsersIcon,
 } from "../components/icons";
 
@@ -19,6 +21,8 @@ export const navItems: NavItem[] = [
   { label: "Pipeline", Icon: FlowIcon, target: "outreach" },
   { label: "Leads", Icon: UsersIcon, target: "gateB" },
   { label: "Sources", Icon: LayersIcon, target: "sources" },
+  { label: "Intake", Icon: EditIcon, target: "profile" },
+  { label: "Context", Icon: SparkleIcon, target: "cag" },
   { label: "Settings", Icon: SlidersIcon, target: "settings" },
 ];
 
@@ -28,6 +32,8 @@ export const activeNavForScreen: Partial<Record<ScreenKey, string>> = {
   outreach: "Pipeline",
   gateB: "Leads",
   sources: "Sources",
+  profile: "Intake",
+  cag: "Context",
   settings: "Settings",
 };
 
@@ -37,5 +43,7 @@ export const shellTitle: Partial<Record<ScreenKey, string>> = {
   outreach: "Prospect tracking",
   gateB: "Leads",
   sources: "Sources",
+  profile: "Business intake",
+  cag: "Business context",
   settings: "Settings",
 };

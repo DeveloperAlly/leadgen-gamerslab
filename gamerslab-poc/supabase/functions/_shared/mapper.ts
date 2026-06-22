@@ -15,6 +15,7 @@ import type {
   LeadStatus,
   OutreachItem,
   OutreachStage,
+  RiskFlag,
 } from "./types.ts";
 
 /** The columns of `publishers` this adapter reads. (Subset of supabase/schema.sql.) */
@@ -39,6 +40,12 @@ export interface PublisherRow {
   pain_signal: string | null;
   intel_summary: string | null;
   intel_quality: string | null; // gold | silver | bronze | no_signal
+
+  evidence_strength: string | null; // explicit | inferred | none (D1)
+  evidence_quote: string | null; // painpoint evidence quote (D1)
+  evidence_sources: unknown; // jsonb string[] of source urls (D1)
+  evidence_as_of: string | null; // date the evidence is from (D1/N9)
+  risk_flags: unknown; // jsonb RiskFlag[] (N5)
 
   pre_score: number | null;
   fit_score: number | null;
@@ -113,17 +120,37 @@ const outreachStageOf = (p: PublisherRow): OutreachStage => {
   }
 };
 
+/** jsonb columns arrive parsed; tolerate a stringified fallback. */
+const asArray = <T>(v: unknown): T[] => {
+  if (Array.isArray(v)) return v as T[];
+  if (typeof v === "string" && v.trim()) {
+    try {
+      const p = JSON.parse(v);
+      return Array.isArray(p) ? (p as T[]) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
 const evidenceOf = (p: PublisherRow): EvidenceItem[] => {
   const out: EvidenceItem[] = [];
-  const date = relDate(p.created_at);
-  if (p.founder_quote) {
+  // D1/N9: prefer the dated evidence date when present, else fall back to discovery date.
+  const date = (p.evidence_as_of && relDate(`${p.evidence_as_of}T00:00:00Z`)) || relDate(p.created_at);
+  const sources = asArray<string>(p.evidence_sources);
+  // D1: the structured painpoint-evidence quote leads the dossier when present.
+  if (p.evidence_quote) {
+    out.push({ q: p.evidence_quote, src: sources[0] || p.contact_source || "Evidence", date });
+  }
+  if (p.founder_quote && p.founder_quote !== p.evidence_quote) {
     out.push({
       q: p.founder_quote,
       src: p.founder_quote_source || "Founder",
-      date,
+      date: relDate(p.created_at),
     });
   }
-  if (p.pain_signal) {
+  if (p.pain_signal && p.pain_signal !== p.evidence_quote) {
     out.push({ q: p.pain_signal, src: "Pain signal", date });
   }
   if (p.intel_summary && out.length === 0) {
@@ -164,6 +191,12 @@ export function toLead(p: PublisherRow): Lead {
     meta: metaOf(p),
     venue: "Steam",
     evidence: evidenceOf(p),
+    // D1: overall evidence strength (only the three valid values pass through).
+    evidenceStrength: ["explicit", "inferred", "none"].includes(p.evidence_strength ?? "")
+      ? (p.evidence_strength as Lead["evidenceStrength"])
+      : undefined,
+    // N5: anti-fit warnings, surfaced — never used to drop the lead.
+    riskFlags: asArray<RiskFlag>(p.risk_flags).filter((f) => f && f.flag),
     status: leadStatusOf(p.pipeline_status),
   };
 }
@@ -195,6 +228,7 @@ export const PUBLISHER_SELECT =
   "id,steam_app_id,game_name,publisher_name,primary_genre," +
   "game_phase,owners_estimate,review_score,total_reviews,contact_email,contact_source," +
   "email_valid,email_status,founder_quote,founder_quote_source,pain_signal,intel_summary," +
-  "intel_quality,pre_score,fit_score,outreach_tier,score_rationale,gamerslab_hook," +
+  "intel_quality,evidence_strength,evidence_quote,evidence_sources,evidence_as_of,risk_flags," +
+  "pre_score,fit_score,outreach_tier,score_rationale,gamerslab_hook," +
   "draft_subject,draft_body,approved_subject,approved_body,pipeline_status,sent_at," +
   "replied_at,created_at";

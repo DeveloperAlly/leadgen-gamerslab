@@ -1,13 +1,39 @@
+import { useState } from "react";
 import { AppShell } from "../layout/AppShell";
 import { Card, Eyebrow } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
+import { Button } from "../components/ui/Button";
+import { usePipeline } from "../state/PipelineProvider";
 import { useTheme } from "../theme/ThemeProvider";
 import { themeSwatches } from "../theme/tokens";
 import { space } from "../theme/tokens";
 import { appConfig } from "../config/appConfig";
 
+const KEY_STORE = "gl.modelKeys";
+
+function loadKeys(): { anthropic: string; openai: string } {
+  try {
+    const raw = localStorage.getItem(KEY_STORE);
+    if (raw) return { anthropic: "", openai: "", ...JSON.parse(raw) };
+  } catch {
+    /* ignore */
+  }
+  return { anthropic: "", openai: "" };
+}
+
 export function SettingsScreen() {
   const { theme, setTheme } = useTheme();
+  const { actions } = usePipeline();
+  const [keys, setKeys] = useState(loadKeys);
+
+  const saveKeys = () => {
+    try {
+      localStorage.setItem(KEY_STORE, JSON.stringify(keys));
+      actions.notify("Model keys saved");
+    } catch {
+      actions.notify("Couldn't save keys in this browser");
+    }
+  };
 
   return (
     <AppShell maxWidth={720}>
@@ -72,11 +98,24 @@ export function SettingsScreen() {
         <div style={{ display: "flex", flexDirection: "column", gap: space.md }}>
           <div>
             <label style={{ display: "block", fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Anthropic API key</label>
-            <Input type="password" placeholder="sk-ant-…" />
+            <Input
+              type="password"
+              placeholder="sk-ant-…"
+              value={keys.anthropic}
+              onChange={(e) => setKeys((k) => ({ ...k, anthropic: e.target.value }))}
+            />
           </div>
           <div>
             <label style={{ display: "block", fontSize: 14, fontWeight: 600, marginBottom: 8 }}>OpenAI API key (optional)</label>
-            <Input type="password" placeholder="sk-…" />
+            <Input
+              type="password"
+              placeholder="sk-…"
+              value={keys.openai}
+              onChange={(e) => setKeys((k) => ({ ...k, openai: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Button onClick={saveKeys}>Save keys</Button>
           </div>
         </div>
       </Card>

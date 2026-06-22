@@ -1,9 +1,9 @@
 import { usePipeline } from "../state/PipelineProvider";
-import { Logo, MailIcon, AlertIcon } from "../components/icons";
+import { Logo, MailIcon, LockIcon, AlertIcon } from "../components/icons";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Card } from "../components/ui/Card";
-import { tenant } from "../data/fixtures/tenant";
+import { appConfig } from "../config/appConfig";
 import { copy } from "../data/fixtures/copy";
 import { space } from "../theme/tokens";
 
@@ -11,6 +11,8 @@ export function SignInScreen() {
   const { state, actions } = usePipeline();
   const loading = state.signinState === "loading";
   const error = state.signinState === "error";
+  const passwordMode = appConfig.signinMode === "password";
+  const tenant = state.tenant;
 
   return (
     <div
@@ -41,16 +43,28 @@ export function SignInScreen() {
 
         <Card padding={26}>
           <label style={{ display: "block", fontSize: 14, fontWeight: 600, marginBottom: 8 }}>
-            {copy.signin.emailLabel}
+            {passwordMode ? copy.signin.passwordLabel : copy.signin.emailLabel}
           </label>
-          <Input
-            type="email"
-            value={state.email}
-            placeholder="you@studio.com"
-            leadingIcon={<MailIcon size={18} strokeWidth={2} />}
-            onChange={(e) => actions.setEmail(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && actions.signinContinue()}
-          />
+          {passwordMode ? (
+            <Input
+              type="password"
+              value={state.password}
+              placeholder="Enter your password"
+              leadingIcon={<LockIcon size={18} strokeWidth={2} />}
+              autoFocus
+              onChange={(e) => actions.setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && actions.signinContinue()}
+            />
+          ) : (
+            <Input
+              type="email"
+              value={state.email}
+              placeholder="you@studio.com"
+              leadingIcon={<MailIcon size={18} strokeWidth={2} />}
+              onChange={(e) => actions.setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && actions.signinContinue()}
+            />
+          )}
 
           {error && (
             <div
@@ -65,7 +79,7 @@ export function SignInScreen() {
               }}
             >
               <AlertIcon size={15} strokeWidth={2} />
-              {copy.signin.emailError}
+              {passwordMode ? copy.signin.passwordError : copy.signin.emailError}
             </div>
           )}
 
@@ -76,24 +90,21 @@ export function SignInScreen() {
                   <Spinner />
                 </span>
               ) : (
-                "Continue with email"
+                "Continue"
               )}
             </Button>
           </div>
 
-          <Divider />
-
-          <Button size="lg" variant="secondary" fullWidth onClick={actions.signinContinue}>
-            <GoogleG />
-            Continue with Google
-          </Button>
+          {!passwordMode && (
+            <>
+              <Divider />
+              <Button size="lg" variant="secondary" fullWidth onClick={actions.signinContinue}>
+                <GoogleG />
+                Continue with Google
+              </Button>
+            </>
+          )}
         </Card>
-
-        <div style={{ textAlign: "center", marginTop: space.lg }}>
-          <a href="#" style={{ fontSize: 13, color: "var(--text-secondary)", textDecoration: "none" }}>
-            How it works ↗
-          </a>
-        </div>
       </div>
     </div>
   );

@@ -30,6 +30,7 @@ import type {
   Lead,
   Mode,
   OutreachItem,
+  RejectReasonCode,
   Source,
   SourceType,
   Venue,
@@ -39,6 +40,33 @@ export interface DiscoveryResult {
   leads: Lead[];
   foundCount: number;
 }
+
+export interface TenantContext {
+  cagBlock: string;
+  updatedAt: string | null;
+}
+
+export interface IntakeBank {
+  answers: Record<string, string>;
+  updatedAt: string | null;
+}
+
+/** Offline fallback for the intake bank (live values live in Supabase `intake_answer`). */
+const seedIntakeBank: Record<string, string> = {
+  offer: "A permissioned data layer + UGC app suite that lifts revenue, DLC and CCU for Steam titles.",
+  a1_oneliner: "GamersLab links games and UGC apps via one SDK. Data flows out to app builders; nothing flows back in.",
+  a2_problem: "UGC apps today are scraped & brittle, have no permissions, bottleneck on the studio, and fragment identity.",
+  a3_numbers: "+31% revenue, +115% CCU after year 5; +20% console players after year 1.",
+};
+
+/** Offline fallback for the business-context editor (the live value lives in Supabase). */
+const seedCagBlock =
+  "=== GAMERSLAB PRODUCT BRIEF ===\n" +
+  "GamersLab is the permissioned data layer linking games and UGC apps. Studios integrate " +
+  "once via a lightweight SDK; game data flows out to UGC app builders (Grudge Goblin, " +
+  "Tournament Garden). Free for studios, ~2 afternoons to integrate. Lead with Grudge Goblin " +
+  "for multiplayer/PvP titles. Keep emails under 130 words, one stat, one CTA question. " +
+  "Contact: contact@gamerslab.gg\n=== END GAMERSLAB BRIEF ===";
 
 /* ------------------------------------------------------------------ config */
 
@@ -158,11 +186,18 @@ export const leadService = {
       ? resolve(seedLeads)
       : req<{ leads: Lead[]; foundCount: number }>("/leads").then((r) => r.leads),
 
-  setLeadStatus: (id: string, status: Lead["status"]): Promise<void> =>
+  setLeadStatus: (
+    id: string,
+    status: Lead["status"],
+    reasonCode?: RejectReasonCode,
+    reason?: string,
+  ): Promise<void> =>
     USE_FIXTURES
       ? resolve(undefined)
-      : req<unknown>(`/leads/${id}`, { method: "PATCH", body: JSON.stringify({ status }) })
-        .then(() => undefined),
+      : req<unknown>(`/leads/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status, reasonCode, reason }),
+      }).then(() => undefined),
 
   exportApproved: (ids: string[]): Promise<void> =>
     USE_FIXTURES
@@ -201,6 +236,28 @@ export const leadService = {
     USE_FIXTURES
       ? resolve(undefined)
       : req<void>("/insights/refinement/apply", { method: "POST" }).then(() => undefined),
+
+  /* ---- Intake answer bank (structured questions; composed into the CAG) ---- */
+  getIntakeBank: (): Promise<IntakeBank> =>
+    USE_FIXTURES
+      ? resolve({ answers: seedIntakeBank, updatedAt: null })
+      : req<IntakeBank>("/intake-bank"),
+
+  saveIntakeBank: (answers: Record<string, string>): Promise<IntakeBank> =>
+    USE_FIXTURES
+      ? resolve({ answers, updatedAt: new Date().toISOString() })
+      : req<IntakeBank>("/intake-bank", { method: "PUT", body: JSON.stringify({ answers }) }),
+
+  /* ---- Business context (the editable CAG block the pipeline reads each run) ---- */
+  getContext: (): Promise<TenantContext> =>
+    USE_FIXTURES
+      ? resolve({ cagBlock: seedCagBlock, updatedAt: null })
+      : req<TenantContext>("/context"),
+
+  saveContext: (cagBlock: string): Promise<TenantContext> =>
+    USE_FIXTURES
+      ? resolve({ cagBlock, updatedAt: new Date().toISOString() })
+      : req<TenantContext>("/context", { method: "PUT", body: JSON.stringify({ cagBlock }) }),
 };
 
 export type LeadService = typeof leadService;

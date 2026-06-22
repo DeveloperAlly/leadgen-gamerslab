@@ -1,4 +1,5 @@
-import type { Lead } from "../../data/types";
+import { useState } from "react";
+import type { Lead, RejectReasonCode } from "../../data/types";
 import { radius, space } from "../../theme/tokens";
 import { ScoreBadge } from "./ScoreBadge";
 import { TwoSidedScore } from "./TwoSidedScore";
@@ -9,8 +10,39 @@ interface LeadRowProps {
   expanded: boolean;
   onToggle: () => void;
   onApprove: () => void;
-  onReject: () => void;
+  /** N1 — reason code captured when rejecting at Gate B. */
+  onReject: (reasonCode?: RejectReasonCode) => void;
 }
+
+// N1 — structured Gate-B rejection reasons (the richest Learn-loop signal).
+const REJECT_REASONS: { code: RejectReasonCode; label: string }[] = [
+  { code: "bad_fit", label: "Bad fit" },
+  { code: "wrong_contact", label: "Wrong contact" },
+  { code: "weak_evidence", label: "Weak evidence" },
+  { code: "bad_timing", label: "Bad timing" },
+  { code: "already_customer", label: "Already a customer" },
+  { code: "other", label: "Other" },
+];
+
+// D1 — evidence-strength badge styling.
+const STRENGTH_STYLE: Record<
+  NonNullable<Lead["evidenceStrength"]>,
+  { label: string; color: string }
+> = {
+  explicit: { label: "Explicit evidence", color: "var(--success)" },
+  inferred: { label: "Inferred evidence", color: "var(--warning)" },
+  none: { label: "No evidence", color: "var(--danger)" },
+};
+
+const pill: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 4,
+  fontSize: 11,
+  fontWeight: 600,
+  borderRadius: radius.pill,
+  padding: "2px 9px",
+};
 
 const actionBtn = (active: boolean, tone: "success" | "danger" | "muted"): React.CSSProperties => ({
   width: 34,
@@ -27,6 +59,7 @@ const actionBtn = (active: boolean, tone: "success" | "danger" | "muted"): React
 
 /** Lead row with verification pill, match reason, meta chips, two-sided score, and evidence dossier. */
 export function LeadRow({ lead, expanded, onToggle, onApprove, onReject }: LeadRowProps) {
+  const [picking, setPicking] = useState(false);
   const approved = lead.status === "approved";
   const rejected = lead.status === "rejected";
   const borderColor = approved
@@ -94,6 +127,18 @@ export function LeadRow({ lead, expanded, onToggle, onApprove, onReject }: LeadR
                 Verified
               </span>
             )}
+            {lead.evidenceStrength && (
+              <span
+                style={{
+                  ...pill,
+                  color: STRENGTH_STYLE[lead.evidenceStrength].color,
+                  background: "var(--bg-subtle)",
+                  border: `1px solid ${STRENGTH_STYLE[lead.evidenceStrength].color}`,
+                }}
+              >
+                {STRENGTH_STYLE[lead.evidenceStrength].label}
+              </span>
+            )}
           </div>
 
           <p style={{ margin: "5px 0 9px", fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.5 }}>
@@ -129,6 +174,25 @@ export function LeadRow({ lead, expanded, onToggle, onApprove, onReject }: LeadR
               </span>
             ))}
           </div>
+
+          {(lead.riskFlags?.length ?? 0) > 0 && (
+            <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap", marginTop: 9 }}>
+              {lead.riskFlags!.map((rf, i) => (
+                <span
+                  key={i}
+                  title={rf.evidence}
+                  style={{
+                    ...pill,
+                    color: "var(--warning)",
+                    background: "var(--bg-subtle)",
+                    border: "1px solid var(--warning)",
+                  }}
+                >
+                  ⚠ {rf.flag.replace(/_/g, " ")}
+                </span>
+              ))}
+            </div>
+          )}
 
           <button
             onClick={onToggle}
@@ -171,7 +235,11 @@ export function LeadRow({ lead, expanded, onToggle, onApprove, onReject }: LeadR
             ]}
           />
           <div style={{ display: "flex", gap: space.sm, justifyContent: "flex-end" }}>
-            <button onClick={onReject} aria-label="Reject lead" style={actionBtn(rejected, "danger")}>
+            <button
+              onClick={() => setPicking((v) => !v)}
+              aria-label="Reject lead"
+              style={actionBtn(rejected || picking, "danger")}
+            >
               <XIcon size={16} strokeWidth={2.4} />
             </button>
             <button onClick={onApprove} aria-label="Approve lead" style={actionBtn(approved, "success")}>
@@ -180,6 +248,47 @@ export function LeadRow({ lead, expanded, onToggle, onApprove, onReject }: LeadR
           </div>
         </div>
       </div>
+
+      {/* N1 — reason picker (opens when the reject button is pressed) */}
+      {picking && (
+        <div style={{ marginTop: space.md, paddingTop: space.md, borderTop: "1px dashed var(--border)" }}>
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: ".06em",
+              textTransform: "uppercase",
+              color: "var(--text-muted)",
+              marginBottom: 9,
+            }}
+          >
+            Why reject? — captured to sharpen scoring
+          </div>
+          <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
+            {REJECT_REASONS.map((r) => (
+              <button
+                key={r.code}
+                onClick={() => {
+                  onReject(r.code);
+                  setPicking(false);
+                }}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "var(--danger)",
+                  background: "var(--bg-surface)",
+                  border: "1px solid var(--danger)",
+                  borderRadius: radius.pill,
+                  padding: "6px 12px",
+                  cursor: "pointer",
+                }}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Evidence dossier */}
       {expanded && (

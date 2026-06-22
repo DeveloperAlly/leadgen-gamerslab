@@ -1,22 +1,17 @@
-# GamersLab CAG Block
 
-> Cache-Augmented Generation context for the `LLM: Intel + Draft` step — the product
-> brief the model uses to score publishers and draft emails.
->
-> **As-built (v10):** the live source of truth is now the `cag_context` table in Supabase,
-> edited in-app via the **Business context** page (`GET/PUT /functions/v1/context`). On each
-> run the `Get Drafted IDs` node reads `cag_block` and the `Apply CAG from DB` node swaps it
-> into the prompt. **Editing in the app changes the next run — no redeploy.**
->
-> This file is the canonical seed (the DB row was loaded byte-for-byte from the block below)
-> and the documented default; the `Prepare LLM Items` node keeps it as an inline fallback for
-> when the table is empty. To change the pitch: edit it in the app (preferred), or update this
-> file and paste it into the Business context editor.
+const d      = $input.item.json;
+const models = d.free_models || [];
+const model   = models[Math.floor(Date.now() / 1000) % models.length];
+if (!models || !models.length) throw new Error('No free models from OpenRouter.');
 
----
+const bestUgcApp = (d.has_online_pvp || d.has_multi_player)
+  ? 'Grudge Goblin (grudgegoblin.com)'
+  : 'Tournament Garden';
+const pitchAngle = (d.game_phase === 'pre-launch' || d.game_phase === 'just-launched')
+  ? 'launch-amplification'
+  : 'revitalization';
 
-```
-=== GAMERSLAB PRODUCT BRIEF ===
+const CAG = `=== GAMERSLAB PRODUCT BRIEF ===
 Load this context before scoring or drafting. Every claim below is real.
 
 --- WHAT IT IS ---
@@ -189,5 +184,97 @@ NEVER: use more than one stat in the email body.
 NEVER: make the email longer than 130 words in the body.
 NEVER: end with multiple CTAs — one question only.
 
-=== END GAMERSLAB BRIEF ===
-```
+=== END GAMERSLAB BRIEF ===`;
+
+const isSkip = d.outreach_tier === 'skip' || d.outreach_tier === 'C';
+
+const prompt = isSkip
+  ? `Extract publisher intel. Return ONLY valid JSON, no markdown.
+
+PUBLISHER: ${d.publisher_name}
+GAME: ${d.game_name}
+SEARCH RESULTS:
+${d.search_snippets}
+
+Return:
+{
+  "publisher_website": "URL or empty",
+  "contact_name": "name or empty",
+  "contact_role": "role or empty",
+  "founder_name": "name or empty",
+  "founder_quote": "quote or empty",
+  "founder_quote_source": "URL or empty",
+  "twitter_handle": "@handle or empty",
+  "linkedin_company_url": "URL or empty",
+  "pain_signal": "1 sentence",
+  "intel_summary": "2 sentences",
+  "intel_quality": "gold|silver|bronze|no_signal",
+  "fit_score": 0,
+  "score_rationale": "low priority target",
+  "gamerslab_hook": "",
+  "ugc_app_pitch": "",
+  "peer_publisher_ref": "",
+  "draft_subject": "",
+  "draft_body": "",
+  "recommended_action": "archive"
+}`
+  : CAG + `
+
+PUBLISHER: ${d.publisher_name}
+DEVELOPER: ${d.developer_name}
+GAME: ${d.game_name}
+GENRE: ${d.primary_genre}
+TAGS: ${d.steam_tags}
+DESCRIPTION: ${d.steam_description}
+RELEASE: ${d.release_date || 'Coming Soon'} — phase: ${d.game_phase}
+COMING SOON: ${d.coming_soon}
+REVIEWS: ${d.review_score}% from ${d.total_reviews} reviews
+OWNERS: ${d.owners_estimate}
+PRICE: ${d.is_free ? 'Free' : '$' + d.price_usd}
+SIGNALS: pvp=${d.has_online_pvp} leaderboards=${d.has_steam_leaderboards} workshop=${d.has_steam_workshop} multiplayer=${d.has_multi_player}
+PRE-SCORE: ${d.pre_score}/100 tier: ${d.outreach_tier}
+PITCH ANGLE: ${pitchAngle}
+BEST UGC APP: ${bestUgcApp}
+CONTACT: ${d.contact_email || 'not found'} (${d.contact_source})
+CONTACT NAME: ${d.contact_name || 'unknown'}
+SEARCH RESULTS:
+${d.search_snippets}
+
+TASK: Extract intel AND draft a cold email. Return ONLY valid JSON, no markdown.
+EVIDENCE RUBRIC (D1): set evidence_strength to "explicit" ONLY when a dated public source (statement, review, job post, talk) names the pain; "inferred" when circumstantial with cited reasoning; "none" when unsupported. Put the supporting quote in evidence_quote, its URL(s) in evidence_sources, and its date in evidence_as_of.
+ANTI-FIT (N5): list negative signals (bought a competitor, layoffs, churned, explicitly not our market, sunset/inactive) in risk_flags. FLAG only — do NOT lower fit_score for them; the human decides at review.
+JSON shape:
+{
+  "publisher_website": "URL or empty",
+  "contact_name": "name or empty",
+  "contact_role": "role or empty",
+  "founder_name": "name or empty",
+  "founder_quote": "verbatim quote or empty",
+  "founder_quote_source": "URL or empty",
+  "twitter_handle": "@handle or empty",
+  "linkedin_company_url": "URL or empty",
+  "pain_signal": "1 sentence pain point",
+  "intel_summary": "2 sentences about publisher",
+  "intel_quality": "gold|silver|bronze|no_signal",
+  "evidence_strength": "explicit|inferred|none",
+  "evidence_quote": "strongest DATED public statement/review/job-post showing the pain, verbatim, or empty",
+  "evidence_sources": ["source url"],
+  "evidence_as_of": "YYYY-MM-DD the evidence is dated, or empty",
+  "risk_flags": [{"flag": "competitor_locked|layoffs|churned|not_our_market|inactive", "evidence": "short phrase", "source": "url"}],
+  "fit_score": <0-100>,
+  "score_rationale": "2 sentences",
+  "gamerslab_hook": "1 sentence why GamersLab fits",
+  "ugc_app_pitch": "which app and why",
+  "peer_publisher_ref": "most similar GamersLab game",
+  "draft_subject": "game name + claim, max 10 words, no exclamation marks",
+  "draft_body": "100-130 words. Specific opener. Name game and UGC app. Dissolve one objection. One real stat. One CTA question.",
+  "draft_ps": "PS — Full integration docs: https://www.gamerslab.gg/early-access",
+  "recommended_action": "advance|warm_queue|archive"
+}`;
+
+return { json: {
+  _source:       d,
+  _pitch_angle:  pitchAngle,
+  _best_ugc_app: bestUgcApp,
+  _payload:      JSON.stringify({ model, max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })
+}};

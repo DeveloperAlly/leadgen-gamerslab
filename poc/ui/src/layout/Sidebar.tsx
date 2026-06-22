@@ -1,13 +1,13 @@
 import { usePipeline } from "../state/PipelineProvider";
 import { Logo } from "../components/icons";
 import { UsageMeter } from "../components/ui/UsageMeter";
-import { tenant, usage } from "../data/fixtures/tenant";
 import { activeNavForScreen, navItems } from "./nav";
 import { radius, space } from "../theme/tokens";
 
 /** Slim left nav: logo + tenant name, nav items, usage meter pinned to the bottom. */
 export function Sidebar() {
   const { state, actions } = usePipeline();
+  const { tenant, usage } = state;
   const active = activeNavForScreen[state.screen] ?? "Dashboard";
 
   return (

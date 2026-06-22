@@ -4,7 +4,8 @@ import { GateBanner } from "../components/ui/GateBanner";
 import { ProspectCard } from "../components/ui/ProspectCard";
 import { Button } from "../components/ui/Button";
 import { Card, Eyebrow } from "../components/ui/Card";
-import { BellIcon, SendIcon } from "../components/icons";
+import { Textarea } from "../components/ui/Textarea";
+import { BellIcon, CheckIcon, EditIcon } from "../components/icons";
 import { copy } from "../data/fixtures/copy";
 import { radius, space } from "../theme/tokens";
 import type { OutreachStage } from "../data/types";
@@ -84,32 +85,50 @@ export function ProspectTrackingScreen() {
                   </span>
                 </div>
 
-                <div
-                  style={{
-                    background: "var(--bg-subtle)",
-                    border: "1px solid var(--border)",
-                    borderRadius: radius.md,
-                    padding: "12px 14px",
-                    fontSize: 14,
-                    lineHeight: 1.55,
-                    color: "var(--text-primary)",
-                    marginBottom: space.md,
-                  }}
-                >
-                  {o.draft}
-                </div>
+                {state.editingOutreach === o.id ? (
+                  <Textarea
+                    value={state.outreachDraft}
+                    onChange={(e) => actions.setOutreachDraft(e.target.value)}
+                    style={{ minHeight: 120, marginBottom: space.md }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      background: "var(--bg-subtle)",
+                      border: "1px solid var(--border)",
+                      borderRadius: radius.md,
+                      padding: "12px 14px",
+                      fontSize: 14,
+                      lineHeight: 1.55,
+                      color: "var(--text-primary)",
+                      marginBottom: space.md,
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {o.draft}
+                  </div>
+                )}
 
-                <div style={{ display: "flex", gap: space.sm }}>
-                  <Button leadingIcon={<SendIcon size={16} strokeWidth={2.2} />} onClick={() => actions.approveOutreach(o.id)}>
-                    Approve &amp; send
-                  </Button>
-                  <Button variant="ghost" onClick={() => undefined}>
-                    Edit draft
-                  </Button>
-                  <Button variant="ghost" onClick={() => actions.skipOutreach(o.id)}>
-                    Skip
-                  </Button>
-                </div>
+                {state.editingOutreach === o.id ? (
+                  <div style={{ display: "flex", gap: space.sm }}>
+                    <Button onClick={actions.saveOutreachDraft}>Save draft</Button>
+                    <Button variant="ghost" onClick={actions.cancelEditOutreach}>
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", gap: space.sm }}>
+                    <Button leadingIcon={<CheckIcon size={16} strokeWidth={2.4} />} onClick={() => actions.approveOutreach(o.id)}>
+                      Approve draft
+                    </Button>
+                    <Button variant="ghost" leadingIcon={<EditIcon size={15} strokeWidth={2} />} onClick={() => actions.startEditOutreach(o.id)}>
+                      Edit draft
+                    </Button>
+                    <Button variant="ghost" onClick={() => actions.skipOutreach(o.id)}>
+                      Skip
+                    </Button>
+                  </div>
+                )}
               </Card>
             ))}
           </div>

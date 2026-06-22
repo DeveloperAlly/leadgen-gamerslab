@@ -16,6 +16,8 @@ export type ScreenKey =
   | "gateB"
   | "dashboard"
   | "sources"
+  | "profile"
+  | "cag"
   | "outreach"
   | "settings";
 
@@ -76,6 +78,22 @@ export interface EvidenceItem {
 
 export type LeadStatus = "pending" | "approved" | "rejected";
 
+/** N5 — an anti-fit signal. Surfaced as a warning; never auto-suppresses the lead. */
+export interface RiskFlag {
+  flag: string;
+  evidence: string;
+  source?: string;
+}
+
+/** N1 — structured Gate-B rejection reason (the Learn-loop signal). */
+export type RejectReasonCode =
+  | "bad_fit"
+  | "wrong_contact"
+  | "weak_evidence"
+  | "bad_timing"
+  | "already_customer"
+  | "other";
+
 export interface Lead {
   id: string;
   name: string;
@@ -92,6 +110,10 @@ export interface Lead {
   meta: string[];
   venue: string;
   evidence: EvidenceItem[];
+  /** D1 — overall painpoint evidence strength. */
+  evidenceStrength?: "explicit" | "inferred" | "none";
+  /** N5 — anti-fit signals, surfaced as warnings (never auto-suppressed). */
+  riskFlags?: RiskFlag[];
   status: LeadStatus;
 }
 

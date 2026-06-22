@@ -49,7 +49,7 @@ export function GateBScreen() {
             expanded={state.expandedLead === lead.id}
             onToggle={() => actions.toggleExpand(lead.id)}
             onApprove={() => actions.setLeadStatus(lead.id, "approved")}
-            onReject={() => actions.setLeadStatus(lead.id, "rejected")}
+            onReject={(code) => actions.setLeadStatus(lead.id, "rejected", code)}
           />
         ))}
       </div>

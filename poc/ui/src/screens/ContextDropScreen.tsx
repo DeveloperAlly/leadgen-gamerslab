@@ -56,6 +56,7 @@ export function ContextDropScreen() {
         }
         hint={copy.context.dropzone}
         onBrowse={() => actions.addSource("file", "pitch-deck-2026.pdf")}
+        onFiles={(files) => Array.from(files).forEach((f) => actions.addSource("file", f.name))}
       />
 
       {state.sources.length > 0 && (

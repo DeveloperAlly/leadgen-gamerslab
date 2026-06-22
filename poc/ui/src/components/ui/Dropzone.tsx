@@ -1,22 +1,30 @@
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { fontSize, radius, space } from "../../theme/tokens";
 import { UploadIcon } from "../icons";
 
 interface DropzoneProps {
   title: ReactNode;
   hint: string;
+  /** Fallback when no real file is chosen (and for builds without file access). */
   onBrowse: () => void;
+  /** Called with the chosen/dropped files. When provided, clicking opens a real picker. */
   onFiles?: (files: FileList) => void;
 }
 
-/** File dropzone: dashed border, hover highlights to accent. */
+/** File dropzone: dashed border, hover highlights to accent. Opens a real file picker. */
 export function Dropzone({ title, hint, onBrowse, onFiles }: DropzoneProps) {
   const [over, setOver] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const open = () => {
+    if (onFiles) inputRef.current?.click();
+    else onBrowse();
+  };
 
   return (
     <button
       type="button"
-      onClick={onBrowse}
+      onClick={open}
       onDragOver={(e) => {
         e.preventDefault();
         setOver(true);
@@ -42,6 +50,19 @@ export function Dropzone({ title, hint, onBrowse, onFiles }: DropzoneProps) {
         transition: "border-color .15s, background .15s",
       }}
     >
+      {onFiles && (
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          style={{ display: "none" }}
+          onClick={(e) => e.stopPropagation()}
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length) onFiles(e.target.files);
+            e.target.value = "";
+          }}
+        />
+      )}
       <span
         style={{
           width: 52,

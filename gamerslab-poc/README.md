@@ -5,6 +5,12 @@ publishers on behalf of GamersLab. The goal is precision, not volume — every d
 someone spent an hour on the publisher first. All output lands in Supabase for human review;
 **the pipeline never sends.**
 
+> **📍 Source of truth for the live system: [`SPEC.md`](SPEC.md).** This README's "Pipeline
+> overview" below has been updated to the live **v10** graph, but `SPEC.md` is the verified
+> as-built spec (UI ↔ Edge Functions ↔ n8n ↔ Supabase, with the full live schema). The live n8n
+> workflow is **v10** (`MouIeDmDAAHKIpDn` on Sliplane); the committed
+> `workflow/gamerslab-outreach-v9.json` is a **stale v9 export** kept only as a baseline.
+
 ## Where this sits
 
 This is the **GamersLab POC (v1)** — the built, Steam-specific outreach pipeline, one of three
@@ -47,6 +53,11 @@ instance environment.
 Run `supabase/schema.sql` in your Supabase SQL editor. This creates the `publishers` table with
 all required columns and indexes (upsert key: `steam_app_id`).
 
+> Note: the **live** Lead Gen project (`ccmwksmgoisijvyovgko`) has more than `publishers` — it
+> also has `cag_context` (the editable CAG brief), `runs` (discovery job state), `tenant`, and the
+> full generic multi-tenant schema provisioned for v2 (mostly empty). `publishers` already carries
+> `tenant_id`, `value_score`/`match_score`, and the evidence/risk columns. See [`SPEC.md`](SPEC.md) §4.
+
 Get your connection string from Supabase → Settings → Database → Connection pooling:
 ```
 postgresql://postgres.YOURREF:[PASSWORD]@aws-X-region.pooler.supabase.com:6543/postgres
@@ -78,8 +89,13 @@ n8n → Workflows → Import from file → select `workflow/gamerslab-outreach-v
 
 After import, repoint the credential-bound nodes to your own credentials:
 1. `Fetch OpenRouter Free Models` → your OpenRouter credential
-2. `LLM: Intel + Draft (All Models)` → your OpenRouter credential
+2. `LLM: Intel + Draft` → your OpenRouter credential
 3. `Get Drafted IDs`, `Upsert to Supabase`, `Upsert Backlog` → your Supabase Postgres credential
+
+> Note: this imports the **stale v9** graph. The live workflow is **v10** (`MouIeDmDAAHKIpDn`),
+> which adds the Discovery Webhook + status nodes, the Exa→SerpAPI fallback, and `Apply CAG from
+> DB`. There is no full v10 export committed; see `workflow/v10-live-edits/` for the deltas and
+> [`SPEC.md`](SPEC.md) for the live graph.
 
 ### 5. Run
 
@@ -87,43 +103,56 @@ The workflow has a **Schedule Trigger** set to run daily at 09:00. You can also 
 **Execute Workflow** to run on demand. A full run takes several minutes (100 Steam detail calls,
 rate-limited, plus per-publisher Serper + scraping + LLM calls).
 
-## Pipeline overview (v9)
+## Pipeline overview (live v10)
+
+Two entry points converge: the daily **Schedule Trigger** and a **Discovery Webhook** (the UI's
+`discovery` Edge Function POSTs to it; `Status: Running`/`Status: Completed` report progress back
+to the `n8n-status` function). See [`SPEC.md`](SPEC.md) §6 for full detail.
 
 ```
-Schedule Trigger (daily 09:00)
+Schedule Trigger (daily 09:00)  ┐
+Discovery Webhook (UI → 202)    ┘ → converge
   → Get Drafted IDs                 read already-drafted steam_app_ids from Supabase (dedup)
+                                    + read the CAG brief row (cag_context)
   → Fetch OpenRouter Free Models    live list of zero-cost models
   → Filter Free Models              keep only :free / $0 prompt+completion models
   → Fetch SteamSpy Games            pull one tag, rotated hourly across 8 genres
                                     (Roguelite, Card Game, Survival, Battle Royale,
                                      Racing, Fighting, Strategy, Sports)
-  → Pick 100 Publishers             drop blocked majors, score, return top 100
+  → Pick 100 Publishers             drop blocked majors, score, return top TARGET_COUNT (default 100)
   → Wait: Steam Rate Limit          throttle before the Steam API
   → Get Steam App Details           Steam API per game
   → Extract Steam Data              parse categories, signals, support_email, game_phase
   → Filter Valid Games              IF — skip delisted / no-data games
   → Pre-Score                       free Steam signals → pre_score + outreach_tier + publisher_key
-  → Select & Split                  per-publisher dedup; spend the daily draft budget (35) on
-                                    top candidates; route the rest to backlog
+  → Select & Split                  per-publisher dedup; spend the daily draft budget (default 35,
+                                    floor 10) on top candidates; route the rest to backlog
   → Route Enrich                    IF  ─ enrich path ─┐         └─ backlog path ─┐
                                                        │                          │
        enrich path (batched, one publisher at a time): │      Build Backlog Record│
-  → Batch for Serper                batchSize 1, loops │   →  Upsert Backlog        (parked, no draft)
-  → Serper: Combined Search         publisher contact + founder/intel in one search
+  → Batch for Web Search            batchSize 1, loops │   →  Upsert Backlog        (parked, no draft)
+  → Exa: Combined Search            publisher contact + founder/intel (primary search)
+  → Exa Has Results?                IF — empty / 429 → SerpAPI: Fallback Search → Normalise
   → WHOIS Lookup                    domain registrant email (continue on fail)
   → Fetch Publisher Website         raw HTML (continue on fail)
   → Scrape Website                  emails, social links, contact-page URL
   → Fetch Contact Page              /contact or /about (continue on fail)
   → Scrape Contact Page             extract emails
-  → Merge All Data                  email waterfall: steam → contact page → website → serper → whois
+  → Merge All Data                  email waterfall: steam → contact page → website → exa/serper → whois
   → Verify Email                    MX + known-provider check; pick a deliverable address (free)
   → Classify Email                  label the chosen email (role/personal/generic)
-  → Prepare LLM Items               load CAG brief; build one item per free model
-  → LLM: Intel + Draft (All Models) HTTP, one call per model
+  → Apply CAG from DB + Prepare LLM Items   inject the cag_context brief; build one item, one model
+  → LLM: Intel + Draft              HTTP, one model call per lead (no fan-out)
   → Pick Best LLM Response          first valid JSON response wins
-  → Build Final Record              assemble clean DB row
+  → Build Final Record              assemble DB row + evidence_strength/quote/sources/decay, risk_flags
   → Upsert to Supabase              upsert on steam_app_id → loops back to next batch
 ```
+
+> **Search:** Exa is the primary engine; **SerpAPI is a real fallback** (gated by `Exa Has
+> Results?`). The legacy WHOIS + website/contact scrape cluster still runs as a contact-harvest
+> fallback — see the enrichment-duplication note in [`../how/pipeline_critique_v2.md`](../how/pipeline_critique_v2.md) (I1/T1).
+> **CAG:** the brief is the editable `cag_context` DB row (UI "Business Context" page → `context`
+> Edge Function); editing it changes the next run's scoring + drafts.
 
 ## Outreach tiers
 

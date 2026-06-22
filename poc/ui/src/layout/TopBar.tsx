@@ -1,12 +1,12 @@
 import { usePipeline } from "../state/PipelineProvider";
 import { BellIcon } from "../components/icons";
-import { tenant } from "../data/fixtures/tenant";
 import { shellTitle } from "./nav";
 import { space } from "../theme/tokens";
 
 /** Top bar: screen title, notification bell with pending-approval count, tenant + avatar. */
 export function TopBar() {
   const { state, actions, derived } = usePipeline();
+  const tenant = state.tenant;
   const title = shellTitle[state.screen] ?? "Dashboard";
   const pending = derived.pendingApprovals;
 
@@ -68,11 +68,15 @@ export function TopBar() {
           {tenant.name}
         </span>
 
-        <span
+        <button
+          onClick={actions.restart}
+          title="Sign out"
+          aria-label="Sign out"
           style={{
             width: 32,
             height: 32,
             borderRadius: "50%",
+            border: "none",
             background: "var(--accent-soft)",
             color: "var(--accent)",
             display: "flex",
@@ -80,10 +84,11 @@ export function TopBar() {
             justifyContent: "center",
             fontSize: 14,
             fontWeight: 700,
+            cursor: "pointer",
           }}
         >
           {tenant.name.charAt(0)}
-        </span>
+        </button>
       </div>
     </header>
   );

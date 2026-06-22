@@ -210,6 +210,44 @@ the raw key — return a masked suffix only.
 
 ---
 
+## 10. Business intake — the structured answer bank
+
+The questions whose answers compose the CAG. Stored in Supabase (`intake_answer`, keyed by
+question). On save, the `intake-bank` function pings the n8n **Context Builder** webhook,
+which recomposes the CAG from the answers and writes `cag_context`.
+
+### `GET /intake-bank`
+- **Service:** `getIntakeBank()`  **Consumed by:** `Business intake` screen
+- **200:** `{ "answers": { "[key]": string }, "updatedAt": string | null }`
+
+### `PUT /intake-bank`
+Upsert answers; triggers a CAG recompose. Takes effect on the next discovery run.
+- **Service:** `saveIntakeBank(answers)`  **Consumed by:** `Business intake` screen
+- **Body:** `{ "answers": { "[key]": string } }`
+- **200:** `{ "answers": { "[key]": string }, "updatedAt": string }`
+
+---
+
+## 11. Business context — the editable CAG block
+
+The live business brief the outreach pipeline reads on every run to score publishers and
+draft emails. Stored in Supabase (`cag_context`); the n8n v10 workflow reads it via the
+`Get Drafted IDs` query and injects it in the `Apply CAG from DB` node. The block is
+**composed** by the Context Builder from the intake bank (§10) — it is generated, not
+hand-authored, though it remains directly editable here as an override.
+
+### `GET /context`
+- **Service:** `getContext()`  **Consumed by:** `Business context` screen
+- **200:** `{ "cagBlock": string, "updatedAt": string | null }`
+
+### `PUT /context`
+Replace the context block. Takes effect on the next discovery run.
+- **Service:** `saveContext(cagBlock)`  **Consumed by:** `Business context` screen
+- **Body:** `{ "cagBlock": string }`  (rejected `422` if empty/blank)
+- **200:** `{ "cagBlock": string, "updatedAt": string }`
+
+---
+
 ## Endpoint → screen matrix
 
 | Endpoint | Screen(s) |

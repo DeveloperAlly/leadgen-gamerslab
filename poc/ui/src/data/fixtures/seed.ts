@@ -78,6 +78,7 @@ export const seedLeads: Lead[] = [
     meta: ["14 people", "Seattle", "38k wishlists"],
     venue: "Steam",
     status: "pending",
+    evidenceStrength: "explicit",
     evidence: [
       { q: "We just hired our first UX person and we’re building research from scratch.", src: "Founder · LinkedIn", date: "3d ago" },
       { q: "$2.1M seed round announced, led by a dedicated gaming fund.", src: "TechCrunch", date: "1w ago" },
@@ -97,6 +98,7 @@ export const seedLeads: Lead[] = [
     meta: ["9 people", "Remote", "Pre-launch"],
     venue: "Reddit",
     status: "pending",
+    evidenceStrength: "inferred",
     evidence: [
       { q: "Honestly flying blind on playtest data right now — it’s all vibes.", src: "Founder · X", date: "2d ago" },
       { q: "Wishlist velocity up 3× this month.", src: "Steam", date: "5d ago" },
@@ -168,6 +170,10 @@ export const seedLeads: Lead[] = [
     meta: ["4 people", "Remote"],
     venue: "X",
     status: "pending",
+    evidenceStrength: "none",
+    riskFlags: [
+      { flag: "early_stage", evidence: "Pre-vertical-slice prototype; timing likely too early", source: "itch.io" },
+    ],
     evidence: [
       { q: "Posted an early prototype gif — pre-vertical-slice.", src: "itch.io", date: "1w ago" },
     ],
