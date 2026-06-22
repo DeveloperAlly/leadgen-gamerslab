@@ -193,6 +193,15 @@ export interface EmailAccount {
   status?: "connected" | "expired" | "revoked";
 }
 
+/** One message in a prospect's email thread (sent or received), from the live Gmail thread. */
+export interface ThreadMessage {
+  from: string;
+  date: string;
+  body: string;
+  /** True when sent from the connected inbox (vs. a reply from the prospect). */
+  fromMe: boolean;
+}
+
 /** A "what's converting" bar on the Learn & iterate panel. */
 export interface ConversionFactor {
   label: string;

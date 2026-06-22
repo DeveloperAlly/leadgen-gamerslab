@@ -5,9 +5,10 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { Textarea } from "../components/ui/Textarea";
-import { AlertIcon, ArrowRightIcon, CheckIcon, EditIcon, MailIcon, ReplyIcon, SendIcon, XIcon } from "../components/icons";
+import { AlertIcon, ArrowRightIcon, CheckIcon, ChevronIcon, EditIcon, MailIcon, ReplyIcon, SendIcon, XIcon } from "../components/icons";
+import { leadService } from "../data/leadService";
 import { radius, space } from "../theme/tokens";
-import type { EmailAccount, OutreachItem, OutreachStage, OutreachVariant } from "../data/types";
+import type { EmailAccount, OutreachItem, OutreachStage, OutreachVariant, ThreadMessage } from "../data/types";
 
 /** ~200 sends/variant is the floor for a meaningful cold-email A/B read (see research). */
 const AB_MIN_PER_VARIANT = 200;
@@ -166,6 +167,19 @@ function StageCard({
   actions: ReturnType<typeof usePipeline>["actions"];
 }) {
   const pill = stagePill(item.stage);
+  const [open, setOpen] = useState(false);
+  const [thread, setThread] = useState<ThreadMessage[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const toggleThread = () => {
+    const next = !open;
+    setOpen(next);
+    if (next && thread === null && !loading) {
+      setLoading(true);
+      leadService.getThread(item.id).then(setThread).catch(() => setThread([])).finally(() => setLoading(false));
+    }
+  };
+
   return (
     <Card>
       <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 10 }}>
@@ -226,6 +240,32 @@ function StageCard({
         </div>
       )}
 
+      {/* Collapsible live conversation (sent + replies, pulled from the Gmail thread). */}
+      <div style={{ marginBottom: space.md }}>
+        <button
+          onClick={toggleThread}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 5,
+            fontSize: 12.5, fontWeight: 600, color: "var(--accent)",
+            background: "none", border: "none", cursor: "pointer", padding: 0,
+          }}
+        >
+          <span style={{ display: "inline-flex", transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform .15s" }}>
+            <ChevronIcon size={14} strokeWidth={2.4} />
+          </span>
+          {open ? "Hide conversation" : "View conversation"}
+        </button>
+        {open && (
+          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+            {loading && <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Loading conversation…</div>}
+            {!loading && thread && thread.length === 0 && (
+              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>No messages in this thread yet.</div>
+            )}
+            {!loading && thread?.map((m, i) => <ThreadBubble key={i} m={m} />)}
+          </div>
+        )}
+      </div>
+
       {item.stage === "replied" && (
         <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
           <Button leadingIcon={<CheckIcon size={16} strokeWidth={2.4} />} onClick={() => actions.markWon(item.id)}>
@@ -253,6 +293,31 @@ function StageCard({
         </div>
       )}
     </Card>
+  );
+}
+
+/** One message in the conversation panel. Sent (you) accents in --accent; replies in --success. */
+function ThreadBubble({ m }: { m: ThreadMessage }) {
+  const accent = m.fromMe ? "var(--accent)" : "var(--success)";
+  const when = (() => {
+    const d = new Date(m.date);
+    return Number.isNaN(d.getTime()) ? "" : d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  })();
+  return (
+    <div
+      style={{
+        borderLeft: `3px solid ${accent}`,
+        borderRadius: 0,
+        background: "var(--bg-subtle)",
+        padding: "9px 12px",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: accent }}>{m.fromMe ? "You" : m.from}</span>
+        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{when}</span>
+      </div>
+      <div style={{ fontSize: 13.5, lineHeight: 1.5, color: "var(--text-primary)", whiteSpace: "pre-wrap" }}>{m.body}</div>
+    </div>
   );
 }
 

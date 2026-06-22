@@ -34,6 +34,7 @@ import type {
   RejectReasonCode,
   Source,
   SourceType,
+  ThreadMessage,
   Venue,
 } from "./types";
 
@@ -310,6 +311,12 @@ export const leadService = {
     USE_FIXTURES
       ? resolve(undefined)
       : req<unknown>(`/outreach/${id}/follow-up`, { method: "POST" }).then(() => undefined),
+
+  /** The live Gmail conversation (sent + replies) for a prospect. */
+  getThread: (publisherId: string): Promise<ThreadMessage[]> =>
+    USE_FIXTURES
+      ? resolve([])
+      : req<{ messages: ThreadMessage[] }>(`/email-thread?publisher_id=${publisherId}`).then((r) => r.messages),
 
   /* ---- Email send identity (the inbox outreach sends from) ---- */
   getEmailAccount: (): Promise<EmailAccount> =>
