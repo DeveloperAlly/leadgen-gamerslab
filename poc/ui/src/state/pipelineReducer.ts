@@ -61,7 +61,8 @@ export interface PipelineState {
 
   outreach: OutreachItem[];
   editingOutreach: string | null;
-  outreachDraft: string;
+  outreachSubject: string;
+  outreachBody: string;
 
   toast: string | null;
 }
@@ -82,8 +83,9 @@ export type PipelineAction =
   | { type: "HYDRATE"; payload: HydratePayload }
   | { type: "SET_DATA_STATE"; state: DataState; error?: string }
   | { type: "DISMISS_REFINEMENT" }
-  | { type: "START_EDIT_OUTREACH"; id: string; draft: string }
-  | { type: "SET_OUTREACH_DRAFT"; value: string }
+  | { type: "START_EDIT_OUTREACH"; id: string; subject: string; body: string }
+  | { type: "SET_OUTREACH_SUBJECT"; value: string }
+  | { type: "SET_OUTREACH_BODY"; value: string }
   | { type: "SAVE_OUTREACH_DRAFT" }
   | { type: "CANCEL_EDIT_OUTREACH" }
   | { type: "SET_SOURCES"; sources: Source[] }
@@ -131,14 +133,23 @@ export function pipelineReducer(state: PipelineState, action: PipelineAction): P
     case "DISMISS_REFINEMENT":
       return { ...state, refinementDismissed: true };
     case "START_EDIT_OUTREACH":
-      return { ...state, editingOutreach: action.id, outreachDraft: action.draft };
-    case "SET_OUTREACH_DRAFT":
-      return { ...state, outreachDraft: action.value };
+      return {
+        ...state,
+        editingOutreach: action.id,
+        outreachSubject: action.subject,
+        outreachBody: action.body,
+      };
+    case "SET_OUTREACH_SUBJECT":
+      return { ...state, outreachSubject: action.value };
+    case "SET_OUTREACH_BODY":
+      return { ...state, outreachBody: action.value };
     case "SAVE_OUTREACH_DRAFT":
       return {
         ...state,
         outreach: state.outreach.map((o) =>
-          o.id === state.editingOutreach ? { ...o, draft: state.outreachDraft } : o,
+          o.id === state.editingOutreach
+            ? { ...o, subject: state.outreachSubject, body: state.outreachBody }
+            : o,
         ),
         editingOutreach: null,
       };

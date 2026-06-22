@@ -198,8 +198,8 @@ export const seedLeads: Lead[] = [
 ];
 
 export const seedOutreach: OutreachItem[] = [
-  { id: "out-1", name: "Pixel Forge Studios", initials: "PF", channel: "Warm intro", stage: "awaiting", draft: "Hi Maya — huge congrats on the seed. Saw you’re standing up a UX research function. We help studios run structured playtests and turn the data into clear design calls before launch. Worth a 20-min look next week?" },
-  { id: "out-2", name: "Hollow Oak Interactive", initials: "HO", channel: "Cold email", stage: "awaiting", draft: "Hi — noticed wishlists climbing on your next title. We help small teams turn scattered playtest feedback into shippable design decisions, fast. Open to a quick intro this week?" },
+  { id: "out-1", name: "Pixel Forge Studios", initials: "PF", channel: "Warm intro", stage: "awaiting", subject: "Pixel Forge playtests, structured before launch", body: "Hi Maya, huge congrats on the seed. Saw you’re standing up a UX research function. We help studios run structured playtests and turn the data into clear design calls before launch. Worth a 20-min look next week?" },
+  { id: "out-2", name: "Hollow Oak Interactive", initials: "HO", channel: "Cold email", stage: "awaiting", subject: "Turning playtest feedback into shippable calls", body: "Hi, noticed wishlists climbing on your next title. We help small teams turn scattered playtest feedback into shippable design decisions, fast. Open to a quick intro this week?" },
   { id: "out-3", name: "Neon Drift Games", initials: "ND", channel: "Warm intro", stage: "contacted", last: "Sent 1d ago" },
   { id: "out-8", name: "Maple & Bit", initials: "MB", channel: "Cold email", stage: "contacted", last: "Sent 3d ago" },
   { id: "out-4", name: "Voxel Republic", initials: "VR", channel: "Cold email", stage: "replied", last: "Replied 4h ago" },

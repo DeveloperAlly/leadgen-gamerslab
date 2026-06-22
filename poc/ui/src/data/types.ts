@@ -132,8 +132,10 @@ export interface OutreachItem {
   initials: string;
   channel: string;
   stage: OutreachStage;
-  /** Draft message, present while awaiting approval. */
-  draft?: string;
+  /** Draft subject line, present while awaiting approval. */
+  subject?: string;
+  /** Draft body, present while awaiting approval. */
+  body?: string;
   /** Last-event label once the prospect has moved past awaiting. */
   last?: string;
 }

@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
       accessToken,
       data.from_email,
       data.from_email, // test send goes to self
-      "GamersLab outreach — test send",
+      "GamersLab outreach test send",
       "This is a test from your GamersLab outreach setup. If you received this, sending works.",
     );
   } catch (e) {

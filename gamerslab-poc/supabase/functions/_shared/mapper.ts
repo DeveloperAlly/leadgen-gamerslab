@@ -203,12 +203,10 @@ export function toLead(p: PublisherRow): Lead {
 
 export function toOutreachItem(p: PublisherRow): OutreachItem {
   const name = p.publisher_name || p.game_name || "Unknown publisher";
-  const draft =
-    p.approved_body || p.draft_body
-      ? `${p.approved_subject || p.draft_subject || ""}\n\n${
-        p.approved_body || p.draft_body || ""
-      }`.trim()
-      : undefined;
+  // Subject and body are kept separate end to end — the human edits each independently.
+  // Prefer the human-approved values over the LLM draft when present.
+  const subject = p.approved_subject || p.draft_subject || undefined;
+  const body = p.approved_body || p.draft_body || undefined;
   let last: string | undefined;
   if (p.replied_at) last = `Replied ${relDate(p.replied_at)}`;
   else if (p.sent_at) last = `Sent ${relDate(p.sent_at)}`;
@@ -218,7 +216,8 @@ export function toOutreachItem(p: PublisherRow): OutreachItem {
     initials: initialsOf(name),
     channel: "Email",
     stage: outreachStageOf(p),
-    draft,
+    subject,
+    body,
     last,
   };
 }

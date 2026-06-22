@@ -2,6 +2,7 @@
  * outreach — Gate C board. Drafts and prospect states from `publishers`.
  *
  *   GET   /outreach              -> OutreachItem[]
+ *   PATCH /outreach/:id          -> OutreachItem   (persists an edited subject/body)
  *   POST  /outreach/:id/approve  -> OutreachItem   (approves the draft; fires the n8n send)
  *   POST  /outreach/:id/skip     -> OutreachItem   (moves to lost)
  *
@@ -44,6 +45,33 @@ Deno.serve(async (req) => {
       .filter((p) => p.draft_body || p.approved_body)
       .map(toOutreachItem);
     return json(items);
+  }
+
+  // ---- PATCH /outreach/:id ---- persist an edited subject/body to the approved_* columns.
+  if (req.method === "PATCH") {
+    const { id } = parsePath(req.url);
+    if (!id) return errBody("bad_request", "Missing outreach id", 400);
+    let payload: { subject?: unknown; body?: unknown };
+    try {
+      payload = await req.json();
+    } catch {
+      return errBody("bad_request", "Invalid JSON body", 400);
+    }
+    const patch: Record<string, string> = {};
+    if (typeof payload.subject === "string") patch.approved_subject = payload.subject;
+    if (typeof payload.body === "string") patch.approved_body = payload.body;
+    if (Object.keys(patch).length === 0) {
+      return errBody("bad_request", "Provide subject and/or body", 400);
+    }
+
+    const { data, error } = await db
+      .from("publishers")
+      .update(patch)
+      .eq("id", id)
+      .select(PUBLISHER_SELECT)
+      .single();
+    if (error) return errBody("db_error", error.message, error.code === "PGRST116" ? 404 : 500);
+    return json(toOutreachItem(data as unknown as PublisherRow));
   }
 
   // ---- POST /outreach/:id/{approve,skip} ----

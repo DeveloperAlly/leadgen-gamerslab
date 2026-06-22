@@ -109,7 +109,8 @@ export interface OutreachItem {
   initials: string;
   channel: string;
   stage: OutreachStage;
-  draft?: string;
+  subject?: string;
+  body?: string;
   last?: string;
 }
 

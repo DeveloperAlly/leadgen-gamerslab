@@ -4,6 +4,7 @@ import { GateBanner } from "../components/ui/GateBanner";
 import { ProspectCard } from "../components/ui/ProspectCard";
 import { Button } from "../components/ui/Button";
 import { Card, Eyebrow } from "../components/ui/Card";
+import { Input } from "../components/ui/Input";
 import { Textarea } from "../components/ui/Textarea";
 import { BellIcon, CheckIcon, EditIcon } from "../components/icons";
 import { copy } from "../data/fixtures/copy";
@@ -86,11 +87,24 @@ export function ProspectTrackingScreen() {
                 </div>
 
                 {state.editingOutreach === o.id ? (
-                  <Textarea
-                    value={state.outreachDraft}
-                    onChange={(e) => actions.setOutreachDraft(e.target.value)}
-                    style={{ minHeight: 120, marginBottom: space.md }}
-                  />
+                  <div style={{ display: "flex", flexDirection: "column", gap: space.sm, marginBottom: space.md }}>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)" }}>
+                      Subject
+                    </label>
+                    <Input
+                      value={state.outreachSubject}
+                      onChange={(e) => actions.setOutreachSubject(e.target.value)}
+                      placeholder="Subject line"
+                    />
+                    <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", marginTop: space.xs }}>
+                      Body
+                    </label>
+                    <Textarea
+                      value={state.outreachBody}
+                      onChange={(e) => actions.setOutreachBody(e.target.value)}
+                      style={{ minHeight: 120 }}
+                    />
+                  </div>
                 ) : (
                   <div
                     style={{
@@ -98,14 +112,34 @@ export function ProspectTrackingScreen() {
                       border: "1px solid var(--border)",
                       borderRadius: radius.md,
                       padding: "12px 14px",
-                      fontSize: 14,
-                      lineHeight: 1.55,
-                      color: "var(--text-primary)",
                       marginBottom: space.md,
-                      whiteSpace: "pre-wrap",
                     }}
                   >
-                    {o.draft}
+                    {o.subject && (
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: "var(--text-primary)",
+                          paddingBottom: 8,
+                          marginBottom: 8,
+                          borderBottom: "1px solid var(--border)",
+                        }}
+                      >
+                        <span style={{ color: "var(--text-muted)", fontWeight: 600 }}>Subject: </span>
+                        {o.subject}
+                      </div>
+                    )}
+                    <div
+                      style={{
+                        fontSize: 14,
+                        lineHeight: 1.55,
+                        color: "var(--text-primary)",
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {o.body}
+                    </div>
                   </div>
                 )}
 

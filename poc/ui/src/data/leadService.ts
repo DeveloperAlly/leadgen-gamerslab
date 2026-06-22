@@ -280,6 +280,15 @@ export const leadService = {
   getOutreach: (): Promise<OutreachItem[]> =>
     USE_FIXTURES ? resolve(seedOutreach) : req<OutreachItem[]>("/outreach"),
 
+  /** Persist a human-edited subject/body to the approved_* columns before approval. */
+  updateOutreach: (id: string, subject: string, body: string): Promise<void> =>
+    USE_FIXTURES
+      ? resolve(undefined)
+      : req<unknown>(`/outreach/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ subject, body }),
+      }).then(() => undefined),
+
   approveOutreach: (id: string): Promise<void> =>
     USE_FIXTURES
       ? resolve(undefined)
