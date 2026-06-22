@@ -76,7 +76,8 @@ const initialState: PipelineState = {
   loadingMsgIdx: 0,
   outreach: clone(seedOutreach),
   editingOutreach: null,
-  outreachDraft: "",
+  outreachSubject: "",
+  outreachBody: "",
   toast: null,
 };
 
@@ -112,7 +113,8 @@ export interface PipelineActions {
   approveOutreach: (id: string) => void;
   skipOutreach: (id: string) => void;
   startEditOutreach: (id: string) => void;
-  setOutreachDraft: (value: string) => void;
+  setOutreachSubject: (value: string) => void;
+  setOutreachBody: (value: string) => void;
   saveOutreachDraft: () => void;
   cancelEditOutreach: () => void;
   applyRefinement: () => void;
@@ -348,11 +350,20 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
       },
       startEditOutreach: (id) => {
         const item = stateRef.current.outreach.find((o) => o.id === id);
-        dispatch({ type: "START_EDIT_OUTREACH", id, draft: item?.draft ?? "" });
+        dispatch({
+          type: "START_EDIT_OUTREACH",
+          id,
+          subject: item?.subject ?? "",
+          body: item?.body ?? "",
+        });
       },
-      setOutreachDraft: (value) => dispatch({ type: "SET_OUTREACH_DRAFT", value }),
+      setOutreachSubject: (value) => dispatch({ type: "SET_OUTREACH_SUBJECT", value }),
+      setOutreachBody: (value) => dispatch({ type: "SET_OUTREACH_BODY", value }),
       saveOutreachDraft: () => {
+        const id = stateRef.current.editingOutreach;
+        const { outreachSubject, outreachBody } = stateRef.current;
         dispatch({ type: "SAVE_OUTREACH_DRAFT" });
+        if (id) void leadService.updateOutreach(id, outreachSubject, outreachBody);
         showToast("Draft saved");
       },
       cancelEditOutreach: () => dispatch({ type: "CANCEL_EDIT_OUTREACH" }),
