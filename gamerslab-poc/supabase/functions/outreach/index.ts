@@ -222,8 +222,70 @@ Deno.serve(async (req) => {
   if (req.method === "POST") {
     const { seg1: id, seg2: action } = parsePath(req.url);
     if (!id) return errBody("bad_request", "Missing publisher id", 400);
-    if (!["approve", "skip", "won", "lost"].includes(action ?? "")) {
-      return errBody("bad_request", "action must be approve, skip, won, or lost", 400);
+    if (!["approve", "skip", "won", "lost", "follow-up"].includes(action ?? "")) {
+      return errBody("bad_request", "action must be approve, skip, won, lost, or follow-up", 400);
+    }
+
+    // Follow up: a step-2 email in the same Gmail thread to a contacted, not-yet-replied
+    // prospect. Creates (or refreshes) the step-2 message and fires the Send workflow with
+    // its message id, so it sends in-thread. Cadence/templating is intentionally simple here.
+    if (action === "follow-up") {
+      const { data: m1, error: e1 } = await db
+        .from("message")
+        .select("subject, thread_id")
+        .eq("publisher_id", id)
+        .eq("step", 1)
+        .eq("is_control", true)
+        .limit(1)
+        .maybeSingle();
+      if (e1) return errBody("db_error", e1.message, 500);
+      if (!m1?.thread_id) return errBody("not_sent", "Send the initial email before following up", 422);
+
+      const { data: pub } = await db.from("publishers").select("tenant_id").eq("id", id).single();
+      const subject = m1.subject
+        ? (m1.subject.startsWith("Re:") ? m1.subject : `Re: ${m1.subject}`)
+        : "Following up";
+      const body =
+        "Hi, just following up on my note below in case it slipped through. " +
+        "Would this be a fit for your team? Happy to share a quick example.";
+
+      const { data: created, error: cErr } = await db
+        .from("message")
+        .upsert(
+          {
+            tenant_id: pub?.tenant_id,
+            publisher_id: id,
+            step: 2,
+            variant: "A",
+            is_control: true,
+            subject,
+            body,
+            status: "approved",
+            thread_id: m1.thread_id,
+          },
+          { onConflict: "publisher_id,step,variant" },
+        )
+        .select("id")
+        .single();
+      if (cErr) return errBody("db_error", cErr.message, 500);
+
+      const sendUrl = Deno.env.get("N8N_SEND_WEBHOOK_URL");
+      if (sendUrl) {
+        const secret = Deno.env.get("N8N_WEBHOOK_SECRET");
+        try {
+          await fetch(sendUrl, {
+            method: "POST",
+            headers: { "content-type": "application/json", ...(secret ? { "x-webhook-secret": secret } : {}) },
+            body: JSON.stringify({ publisher_id: id, message_id: created.id }),
+          });
+        } catch (_e) {
+          // Swallowed by design.
+        }
+      }
+
+      const { item, error: rErr } = await publisherItem(db, id);
+      if (rErr) return errBody("db_error", rErr.message, 500);
+      return json(item);
     }
 
     // Outcome on a replied prospect. Persist to publishers + message (the board reads

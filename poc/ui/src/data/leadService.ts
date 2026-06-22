@@ -305,6 +305,12 @@ export const leadService = {
       ? resolve(undefined)
       : req<unknown>(`/outreach/${id}/${outcome}`, { method: "POST" }).then(() => undefined),
 
+  /** Send a step-2 follow-up in the same thread to a contacted, not-yet-replied prospect. */
+  followUpOutreach: (id: string): Promise<void> =>
+    USE_FIXTURES
+      ? resolve(undefined)
+      : req<unknown>(`/outreach/${id}/follow-up`, { method: "POST" }).then(() => undefined),
+
   /* ---- Email send identity (the inbox outreach sends from) ---- */
   getEmailAccount: (): Promise<EmailAccount> =>
     USE_FIXTURES ? resolve(loadEmailFixture()) : req<EmailAccount>("/email-account"),

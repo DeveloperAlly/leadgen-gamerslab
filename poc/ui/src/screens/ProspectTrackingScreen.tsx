@@ -5,7 +5,7 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { Textarea } from "../components/ui/Textarea";
-import { AlertIcon, ArrowRightIcon, CheckIcon, EditIcon, MailIcon, ReplyIcon, XIcon } from "../components/icons";
+import { AlertIcon, ArrowRightIcon, CheckIcon, EditIcon, MailIcon, ReplyIcon, SendIcon, XIcon } from "../components/icons";
 import { radius, space } from "../theme/tokens";
 import type { EmailAccount, OutreachItem, OutreachStage, OutreachVariant } from "../data/types";
 
@@ -243,7 +243,10 @@ function StageCard({
       )}
 
       {item.stage === "contacted" && (
-        <div style={{ display: "flex", gap: space.sm }}>
+        <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
+          <Button leadingIcon={<SendIcon size={16} strokeWidth={2} />} onClick={() => actions.followUp(item.id)}>
+            Follow up
+          </Button>
           <Button variant="ghost" leadingIcon={<XIcon size={15} strokeWidth={2} />} onClick={() => actions.markLost(item.id)}>
             Mark lost
           </Button>

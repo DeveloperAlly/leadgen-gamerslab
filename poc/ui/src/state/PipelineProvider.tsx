@@ -146,6 +146,8 @@ export interface PipelineActions {
   /** Final outcome on a replied prospect. */
   markWon: (id: string) => void;
   markLost: (id: string) => void;
+  /** Send a step-2 follow-up to a contacted, not-yet-replied prospect. */
+  followUp: (id: string) => void;
   /** Re-pull the outreach board from the backend (the store hydrates once on mount). */
   refreshOutreach: () => void;
   startEditVariant: (messageId: string) => void;
@@ -397,6 +399,11 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
         dispatch({ type: "SET_OUTREACH_STAGE", id, stage: "lost", last: "Marked lost" });
         void leadService.markOutcome(id, "lost");
         showToast("Marked lost");
+      },
+      followUp: (id) => {
+        // The prospect stays contacted (awaiting a reply); a follow-up is a step-2 nudge.
+        void leadService.followUpOutreach(id);
+        showToast("Follow-up sent");
       },
       refreshOutreach: () => {
         void leadService
