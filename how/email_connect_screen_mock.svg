@@ -1,0 +1,41 @@
+<svg viewBox="0 0 760 560" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" role="img" aria-label="Mockup of the Connect email settings screen">
+<title>Connect email — screen mockup (DRAFT)</title>
+<rect x="0" y="0" width="760" height="560" fill="#ffffff"/>
+<style>
+.t{fill:#1f1d1a}.s{fill:#6b6660}.m{fill:#908a80}.i{fill:#3552a4}.g{fill:#0f6e56}.r{fill:#a32d2d}
+.h1{font-size:24px;font-weight:700}.h2{font-size:17px;font-weight:700}
+.eb{font-size:11px;font-weight:700;letter-spacing:.06em}
+.bd{font-size:13px}.bt{font-size:13px;font-weight:600}.sm{font-size:11px}
+.card{fill:#ffffff;stroke:#e5e1d8;stroke-width:1.5}
+.btn{fill:#ffffff;stroke:#c9c4ba;stroke-width:1.5}
+</style>
+
+<text x="40" y="46" class="t h1">Email</text>
+<text x="40" y="70" class="s bd">Connect the inbox GamersLab outreach is sent from. It sends as you — best deliverability.</text>
+
+<rect x="40" y="90" width="680" height="214" rx="14" class="card"/>
+<text x="64" y="126" class="i eb">OUTREACH EMAIL</text>
+<text x="64" y="152" class="t h2">Connect the inbox you'll send from</text>
+<text x="64" y="176" class="s bd">One click. We never see your password — only a revocable token, encrypted and scoped to you.</text>
+<rect x="64" y="194" width="300" height="46" rx="9" class="btn"/>
+<circle cx="92" cy="217" r="9" fill="#ea4335"/>
+<text x="112" y="222" class="t bt">Continue with Gmail</text>
+<rect x="380" y="194" width="300" height="46" rx="9" class="btn"/>
+<rect x="399" y="208" width="18" height="18" rx="2" fill="#0078d4"/>
+<text x="428" y="222" class="t bt">Continue with Outlook</text>
+<text x="64" y="278" class="m sm">Grants send + read-your-replies on this account only. Revoke anytime here or from your Google / Microsoft account.</text>
+
+<rect x="40" y="324" width="680" height="200" rx="14" fill="#faf9f6" stroke="#e5e1d8" stroke-width="1.5"/>
+<text x="64" y="358" class="i eb">CONNECTED ACCOUNT — STATE PREVIEW</text>
+<text x="64" y="390" class="t h2">ally@gamerslab.com</text>
+<rect x="300" y="374" width="92" height="22" rx="11" fill="#e1f5ee" stroke="#9fe1cb" stroke-width="1"/>
+<circle cx="316" cy="385" r="3.5" fill="#1d9e75"/>
+<text x="326" y="389" class="g sm" font-weight="600">Connected</text>
+<text x="64" y="420" class="s bd">Provider — Google Workspace</text>
+<text x="64" y="442" class="s bd">Daily send headroom — about 2,000 / day</text>
+<text x="64" y="464" class="s bd">Scope — send message, read replies</text>
+<rect x="64" y="478" width="186" height="40" rx="9" class="btn"/>
+<text x="86" y="503" class="t bt">Send a test email</text>
+<rect x="266" y="478" width="132" height="40" rx="9" fill="#ffffff" stroke="#e2a3a3" stroke-width="1.5"/>
+<text x="288" y="503" class="r bt">Disconnect</text>
+</svg>

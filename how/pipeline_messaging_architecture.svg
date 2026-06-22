@@ -1,0 +1,87 @@
+<svg viewBox="0 0 900 540" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" role="img" aria-label="Pipeline messaging architecture — subject split, A/B variants, sequencing and reply detection">
+<title>Pipeline messaging — message entity, A/B variants, sequencing, reply detection</title>
+<rect x="0" y="0" width="900" height="540" fill="#ffffff"/>
+<style>
+.t{fill:#1f1d1a}.s{fill:#6b6660}.i{fill:#3552a4}.g{fill:#0f6e56}.p{fill:#6d4bb0}
+.box{fill:#f4f3ef;stroke:#d8d4ca;stroke-width:1.5}
+.done{fill:#ffffff;stroke:#2b7fd4;stroke-width:1.5}
+.new{fill:#ffffff;stroke:#1d9e75;stroke-width:1.5}
+.h{font-size:13px;font-weight:700}.lbl{font-size:12px;font-weight:600}
+.sub{font-size:10px}.tag{font-size:9.5px;font-weight:600}
+.ar{stroke:#b3aca0;stroke-width:1.6;fill:none}.art{stroke:#1d9e75;stroke-width:1.6;fill:none}
+.arh{stroke:#6d4bb0;stroke-width:1.6;fill:none}
+</style>
+<defs>
+<marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#b3aca0"/></marker>
+<marker id="ag" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1d9e75"/></marker>
+<marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6d4bb0"/></marker>
+</defs>
+
+<text x="28" y="30" class="t h" font-size="17">Pipeline messaging — subject split, A/B variants, sequencing, reply detection</text>
+<text x="28" y="50" class="s sub" font-size="11">The model stops conflating one publisher with one email. Each candidate email is a row, keyed by step (initial vs follow-up) and variant (A/B/control).</text>
+
+<!-- Legend -->
+<rect x="640" y="60" width="232" height="58" rx="7" fill="#fbfaf8" stroke="#cdc8be" stroke-width="1.2"/>
+<rect x="652" y="72" width="14" height="10" rx="2" class="done"/><text x="672" y="81" class="s tag">Phase 0 · BUILT (subject split)</text>
+<rect x="652" y="90" width="14" height="10" rx="2" class="new"/><text x="672" y="99" class="s tag">Phases 1-3 · DESIGN (pre-gate)</text>
+<rect x="652" y="106" width="14" height="10" rx="2" class="box"/><text x="672" y="115" class="s tag">existing · unchanged</text>
+
+<!-- AGENT: draft + variants -->
+<rect x="28" y="74" width="280" height="150" rx="10" fill="#fbfaf8" stroke="#cdc8be" stroke-width="1.5"/>
+<text x="44" y="96" class="i tag">AGENT — n8n draft (extends v10)</text>
+<rect x="44" y="108" width="248" height="100" rx="7" class="new"/>
+<text x="56" y="131" class="t lbl">Draft step 1 + N variants</text>
+<text x="56" y="150" class="s sub">CAG + intel → subject A / subject B</text>
+<text x="56" y="165" class="s sub">one variable per test · plain text</text>
+<text x="56" y="182" class="s sub">writes one message row per variant</text>
+<text x="56" y="200" class="g tag">NEW · variant generation</text>
+
+<!-- DATA: message entity -->
+<rect x="330" y="74" width="300" height="150" rx="10" fill="#faf9f6" stroke="#1d9e75" stroke-width="1.5"/>
+<text x="346" y="96" class="g tag">DATA — message entity (Supabase · RLS)</text>
+<rect x="346" y="108" width="268" height="100" rx="7" class="new"/>
+<text x="358" y="131" class="t lbl">message</text>
+<text x="358" y="150" class="s sub">publisher_id · step · variant · is_control</text>
+<text x="358" y="165" class="s sub">subject · body · status · scheduled_for</text>
+<text x="358" y="180" class="s sub">sent_at · replied_at · thread_id · message_id</text>
+<text x="358" y="200" class="g tag">NEW · table (Phase 1)</text>
+<path d="M292,158 L344,158" class="art" marker-end="url(#ag)"/>
+
+<!-- HUMAN GATE -->
+<rect x="28" y="248" width="602" height="92" rx="10" fill="#faf8fd" stroke="#c3b6e6" stroke-width="1.5"/>
+<text x="44" y="270" class="p tag">HUMAN GATE — Pipeline page (poc/ui · ProspectTrackingScreen)</text>
+<rect x="44" y="282" width="186" height="46" rx="7" class="done"/>
+<text x="56" y="302" class="t lbl">Subject + Body fields</text>
+<text x="56" y="318" class="s sub">edit each separately · persists</text>
+<rect x="246" y="282" width="186" height="46" rx="7" class="new"/>
+<text x="258" y="302" class="t lbl">Step + Variant switcher</text>
+<text x="258" y="318" class="s sub">initial / follow-up · A vs B vs control</text>
+<rect x="448" y="282" width="170" height="46" rx="7" class="new"/>
+<text x="460" y="302" class="t lbl">Inbox / replies</text>
+<text x="460" y="318" class="s sub">read reply · pause sequence</text>
+<path d="M480,224 L480,246" class="arh" marker-end="url(#ah)"/>
+<text x="486" y="240" class="p tag">review subject/body per variant</text>
+
+<!-- EXECUTION -->
+<rect x="28" y="364" width="844" height="120" rx="10" fill="#fbfaf8" stroke="#cdc8be" stroke-width="1.5"/>
+<text x="44" y="386" class="i tag">EXECUTION — n8n shared engine (reads per-tenant token from email_accounts; see email_send_pipeline_DRAFT)</text>
+<rect x="44" y="398" width="252" height="72" rx="7" class="new"/>
+<text x="56" y="420" class="t lbl">Send (on approve)</text>
+<text x="56" y="438" class="s sub">provider send API</text>
+<text x="56" y="453" class="s sub">stores thread_id + message_id</text>
+<rect x="320" y="398" width="252" height="72" rx="7" class="new"/>
+<text x="332" y="420" class="t lbl">Reply poll (scheduled)</text>
+<text x="332" y="438" class="s sub">Gmail History API · 5-15 min</text>
+<text x="332" y="453" class="s sub">match thread_id → set replied_at</text>
+<rect x="596" y="398" width="260" height="72" rx="7" class="new"/>
+<text x="608" y="420" class="t lbl">Sequencer (same poll)</text>
+<text x="608" y="438" class="s sub">no reply + step due → next step</text>
+<text x="608" y="453" class="s sub">reply / outcome halts cadence</text>
+
+<path d="M170,328 L170,396" class="arh" marker-end="url(#ah)"/>
+<text x="176" y="360" class="p tag">approve</text>
+<path d="M446,470 L446,500 L322,500 L322,470" class="art" marker-end="url(#ag)"/>
+<text x="330" y="514" class="g tag">reply detected → board "Replied" populates · bell</text>
+<path d="M726,398 L726,360 L600,360" class="art" marker-end="url(#ag)"/>
+<text x="690" y="354" class="g tag">drafts next step row</text>
+</svg>

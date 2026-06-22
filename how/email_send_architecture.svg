@@ -1,0 +1,72 @@
+<svg viewBox="0 0 900 476" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" role="img" aria-label="Email send pipeline — identity layer split from n8n execution layer">
+<title>Email Send Pipeline (v1 DRAFT) — identity split from execution</title>
+<rect x="0" y="0" width="900" height="476" fill="#ffffff"/>
+<style>
+.t{fill:#1f1d1a}.s{fill:#6b6660}.i{fill:#3552a4}.g{fill:#0f6e56}
+.box{fill:#f4f3ef;stroke:#d8d4ca;stroke-width:1.5}
+.new{fill:#ffffff;stroke:#1d9e75;stroke-width:1.5}
+.h{font-size:13px;font-weight:700}.lbl{font-size:12px;font-weight:600}
+.sub{font-size:10px}.tag{font-size:9.5px;font-weight:600}
+.ar{stroke:#b3aca0;stroke-width:1.6;fill:none}.art{stroke:#1d9e75;stroke-width:1.6;fill:none}
+</style>
+<defs>
+<marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#b3aca0"/></marker>
+<marker id="ag" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1d9e75"/></marker>
+</defs>
+
+<text x="28" y="30" class="t h" font-size="17">Email Send Pipeline — identity split from execution</text>
+<text x="28" y="50" class="s sub" font-size="11">DRAFT v1 · a separate pipeline from v10 · the user connects their own inbox (OAuth) · the token is app data, n8n reads it per-send · free-for-Ally</text>
+
+<rect x="28" y="64" width="844" height="156" rx="10" fill="#faf9f6" stroke="#c3b6e6" stroke-width="1.5"/>
+<text x="44" y="86" class="i tag">IDENTITY — per tenant · user-configured (App UI + Supabase) · the piece missing today</text>
+<rect x="44" y="100" width="252" height="100" rx="7" class="new"/>
+<text x="56" y="124" class="t lbl">Connect email</text>
+<text x="56" y="143" class="s sub">Settings → one-click</text>
+<text x="56" y="158" class="s sub">Gmail / Outlook OAuth</text>
+<text x="56" y="188" class="g tag">NEW · UI screen</text>
+<rect x="320" y="100" width="252" height="100" rx="7" class="new"/>
+<text x="332" y="124" class="t lbl">OAuth callback</text>
+<text x="332" y="143" class="s sub">Supabase Edge Function</text>
+<text x="332" y="158" class="s sub">exchanges code → refresh token</text>
+<text x="332" y="188" class="g tag">NEW · Edge Function</text>
+<rect x="596" y="100" width="260" height="100" rx="7" class="new"/>
+<text x="608" y="124" class="t lbl">email_accounts</text>
+<text x="608" y="143" class="s sub">encrypted refresh token, per tenant</text>
+<text x="608" y="158" class="s sub">from_email · provider · scopes</text>
+<text x="608" y="188" class="g tag">NEW · table</text>
+<path d="M296,150 L318,150" class="ar" marker-end="url(#a)"/>
+<path d="M572,150 L594,150" class="ar" marker-end="url(#a)"/>
+
+<rect x="28" y="238" width="844" height="156" rx="10" fill="#fbfaf8" stroke="#cdc8be" stroke-width="1.5"/>
+<text x="44" y="260" class="i tag">EXECUTION — n8n shared engine (one instance · all tenants · tenant_id)</text>
+<rect x="44" y="274" width="252" height="100" rx="7" class="box"/>
+<text x="56" y="298" class="t lbl">v10 discover + draft</text>
+<text x="56" y="317" class="s sub">existing workflow</text>
+<text x="56" y="332" class="s sub">no identity needed</text>
+<text x="56" y="362" class="s tag">EXISTING · unchanged</text>
+<rect x="320" y="274" width="252" height="100" rx="7" class="new"/>
+<text x="332" y="298" class="t lbl">Send</text>
+<text x="332" y="317" class="s sub">trigger: on approve (webhook)</text>
+<text x="332" y="332" class="s sub">reads token → provider send API</text>
+<text x="332" y="362" class="g tag">NEW · workflow</text>
+<rect x="596" y="274" width="260" height="100" rx="7" class="new"/>
+<text x="608" y="298" class="t lbl">Reply poll</text>
+<text x="608" y="317" class="s sub">schedule: every N minutes</text>
+<text x="608" y="332" class="s sub">reads token → checks mailbox</text>
+<text x="608" y="362" class="g tag">NEW · workflow</text>
+
+<path d="M726,200 L726,272" class="art" marker-end="url(#ag)"/>
+<text x="732" y="244" class="g tag">reads token</text>
+<path d="M700,200 L700,228 L456,228 L456,272" class="art" marker-end="url(#ag)"/>
+<text x="500" y="222" class="g tag">reads token (per send)</text>
+
+<rect x="28" y="410" width="844" height="50" rx="8" class="box"/>
+<text x="44" y="431" class="t lbl">DATA · Supabase</text>
+<text x="44" y="448" class="s sub">publishers: draft → approved → sent_at → replied_at    ·    email_accounts: the sender identity (refresh token, from_email)</text>
+<path d="M170,374 L170,408" class="ar" marker-end="url(#a)"/>
+<text x="176" y="396" class="s tag">writes draft</text>
+<path d="M446,374 L446,408" class="art" marker-end="url(#ag)"/>
+<text x="452" y="396" class="g tag">sets sent_at</text>
+<path d="M726,374 L726,408" class="art" marker-end="url(#ag)"/>
+<text x="732" y="396" class="g tag">sets replied_at</text>
+</svg>

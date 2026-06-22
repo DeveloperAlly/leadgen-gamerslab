@@ -1,0 +1,104 @@
+<svg viewBox="0 0 900 840" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" role="img" aria-label="Lead-gen infrastructure stack">
+<title>Lead-Gen Infra Stack (v10) — foundations + pipeline spine, Exa engine</title>
+<rect x="0" y="0" width="900" height="840" fill="#ffffff"/>
+<style>
+.t{fill:#1f1d1a}.s{fill:#6b6660}.i{fill:#3552a4}
+.box{fill:#f4f3ef;stroke:#d8d4ca;stroke-width:1.5}
+.found{fill:#ffffff;stroke:#c3b6e6;stroke-width:1.5}
+.gate{fill:#ffffff;stroke:#3552a4;stroke-width:1.5;stroke-dasharray:5 3}
+.h{font-size:13px;font-weight:700}.lbl{font-size:11.5px;font-weight:600}
+.sub{font-size:10px}.tag{font-size:9.5px;font-weight:600}
+.ar{stroke:#b3aca0;stroke-width:1.6;fill:none}
+</style>
+<defs>
+<marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#b3aca0"/></marker>
+<marker id="al" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3552a4"/></marker>
+</defs>
+
+<text x="28" y="30" class="t h" font-size="17">Lead-Gen Infra Stack — foundations + pipeline spine</text>
+<text x="28" y="50" class="s sub" font-size="11">DRAFT v10 · every API verified vs 2026 docs · free-for-Ally · Exa is the discovery engine · v9 patterns folded in</text>
+
+<!-- FOUNDATIONS -->
+<rect x="28" y="64" width="844" height="124" rx="10" fill="#faf9f6" stroke="#c3b6e6" stroke-width="1.5"/>
+<text x="44" y="86" class="i tag">FOUNDATIONS — under every stage, from day 1</text>
+<rect x="44" y="96" width="196" height="80" rx="7" class="box"/>
+<text x="54" y="116" class="t lbl">F1 Front-end</text>
+<text x="54" y="133" class="s sub">React, config-driven</text>
+<text x="54" y="147" class="s sub">themeable per tenant</text>
+<text x="54" y="169" class="i tag">Vercel free</text>
+<rect x="248" y="96" width="196" height="80" rx="7" class="box"/>
+<text x="258" y="116" class="t lbl">F2 Auth + Tenancy</text>
+<text x="258" y="133" class="s sub">Supabase Auth · RLS</text>
+<text x="258" y="147" class="s sub">tenant_id everywhere</text>
+<text x="258" y="169" class="i tag">JWT claim hook</text>
+<rect x="452" y="96" width="196" height="80" rx="7" class="box"/>
+<text x="462" y="116" class="t lbl">F3 Data plane</text>
+<text x="462" y="133" class="s sub">Postgres + pgvector</text>
+<text x="462" y="147" class="s sub">Storage · backlog table</text>
+<text x="462" y="169" class="i tag">gte-small 384d free</text>
+<rect x="656" y="96" width="200" height="80" rx="7" class="box"/>
+<text x="666" y="116" class="t lbl">F4 Model Router</text>
+<text x="666" y="133" class="s sub">Edge Fn · Vault BYOK</text>
+<text x="666" y="147" class="s sub">discover free models →</text>
+<text x="666" y="161" class="s sub">fan-out → pick best</text>
+<text x="666" y="178" class="i tag">OpenRouter :free</text>
+
+<text x="44" y="206" class="s sub" font-size="10.5">every model call → F4 (key never hits the browser) · every row carries tenant_id (F2) · Exa key shared, scoped by externalId=tenant</text>
+
+<!-- SPINE -->
+<g>
+<rect x="240" y="222" width="420" height="40" rx="7" class="box"/>
+<text x="256" y="240" class="t lbl">L1 · INGEST</text>
+<text x="256" y="254" class="s sub">files + website + socials → normalise → chunk → embed</text>
+<text x="644" y="246" class="i tag" text-anchor="end">Exa Contents</text>
+
+<rect x="240" y="270" width="420" height="44" rx="7" class="box"/>
+<text x="256" y="288" class="t lbl">L2 · UNDERSTAND</text>
+<text x="256" y="304" class="s sub">extraction skill → summary + venue map · RAG corpus + CAG core</text>
+<text x="644" y="294" class="i tag" text-anchor="end">★ skill</text>
+
+<rect x="240" y="322" width="420" height="30" rx="7" class="gate"/>
+<text x="256" y="342" class="i lbl">⚑ GATE A · human confirms summary + venue map</text>
+
+<rect x="240" y="360" width="420" height="56" rx="7" class="box"/>
+<text x="256" y="378" class="t lbl">L3 · DISCOVER + ENRICH</text>
+<text x="256" y="393" class="s sub">Exa Websets: venue mine + entity hop, verified, criteria-checked,</text>
+<text x="256" y="406" class="s sub">enrichments (contacts/socials) — replaces v9 Serper+WHOIS+scrape</text>
+<text x="644" y="372" class="i tag" text-anchor="end">Exa Websets</text>
+
+<rect x="240" y="424" width="420" height="56" rx="7" class="box"/>
+<text x="256" y="442" class="t lbl">L4 · SCORE + VERIFY + DEDUP</text>
+<text x="256" y="457" class="s sub">pre-score GATE → fit_score (value × match) · ★ painpoint-verify</text>
+<text x="256" y="470" class="s sub">· email verify + classify · backlog dedup (skip already-drafted)</text>
+
+<rect x="240" y="488" width="420" height="30" rx="7" class="gate"/>
+<text x="256" y="508" class="i lbl">⚑ GATE B · human approves / rejects leads</text>
+
+<rect x="240" y="526" width="420" height="44" rx="7" class="box"/>
+<text x="256" y="544" class="t lbl">L5 · ORCHESTRATE</text>
+<text x="256" y="560" class="s sub">n8n shared engine (tenant_id) · rate-limit waits · schedule/monitor</text>
+<text x="644" y="538" class="i tag" text-anchor="end">n8n free</text>
+
+<rect x="240" y="578" width="420" height="44" rx="7" class="box"/>
+<text x="256" y="596" class="t lbl">L6 · HAND-OFF</text>
+<text x="256" y="612" class="s sub">multi-model draft → pick best · CSV / CRM / webhook · NO sending</text>
+
+<rect x="240" y="630" width="420" height="44" rx="7" class="box"/>
+<text x="256" y="648" class="t lbl">L7 · LEARN</text>
+<text x="256" y="664" class="s sub">outcomes → client prompts/skills + scoring · cost caps throughout</text>
+</g>
+
+<g class="ar" marker-end="url(#a)">
+<path d="M450,262 L450,269"/><path d="M450,314 L450,321"/><path d="M450,352 L450,359"/>
+<path d="M450,416 L450,423"/><path d="M450,480 L450,487"/><path d="M450,518 L450,525"/>
+<path d="M450,570 L450,577"/><path d="M450,622 L450,629"/>
+</g>
+<path d="M450,188 L450,221" class="ar" marker-end="url(#a)"/>
+
+<!-- learn loop -->
+<path d="M660,652 C724,620 724,400 660,388" fill="none" stroke="#3552a4" stroke-width="1.6" marker-end="url(#al)"/>
+<text x="690" y="525" class="i tag">feeds back</text>
+
+<text x="28" y="712" class="s sub" font-size="10.5">v9 patterns added: F4 dynamic free-model discovery + fan-out/pick-best · L3 entity hop · L4 pre-score gate, email verify/classify, backlog dedup · L5 rate-limit.</text>
+<text x="28" y="729" class="s sub" font-size="10.5">Change from v9: Exa Websets replaces Serper + WHOIS + raw scraping as the discovery/enrichment engine. Net-new vs v9: gates, UI, tenancy, tracking, learn loop.</text>
+</svg>

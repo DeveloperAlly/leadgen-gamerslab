@@ -1,0 +1,102 @@
+<svg viewBox="0 0 1200 520" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" role="img" aria-label="Product v2 phase roadmap">
+<title>Product v2 — phase delivery roadmap</title>
+<rect x="0" y="0" width="1200" height="520" fill="#ffffff"/>
+<style>
+.t{fill:#1f1d1a}.s{fill:#6b6660}.i{fill:#3552a4}.m{fill:#9a968e}
+.card{fill:#ffffff;stroke:#d8d4ca;stroke-width:1.5}
+.poc{fill:#eef4f1;stroke:#2f6f62;stroke-width:2}
+.gate{fill:#f8ecd9;stroke:#c9792e;stroke-width:1.6}
+.h{font-size:12.5px;font-weight:700}.lbl{font-size:11px;font-weight:600}.sub{font-size:9.7px}.tag{font-size:9.5px;font-weight:700}
+.ar{stroke:#8aa0d8;stroke-width:2;fill:none}
+</style>
+<defs><marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#8aa0d8"/></marker></defs>
+
+<text x="32" y="30" class="t h" font-size="16">Product v2 — Phase Delivery Roadmap (POC first · Auth deferred to Phase 2)</text>
+<text x="32" y="48" class="s sub" font-size="10.5">The 10-screen UI is already built on fixtures. Each phase makes more of it real. v9 engine is wrapped, not rebuilt.</text>
+
+<!-- gate -->
+<rect x="32" y="120" width="92" height="120" rx="10" class="gate"/>
+<text x="78" y="170" class="i h" text-anchor="middle" font-size="11">HARD</text>
+<text x="78" y="186" class="i h" text-anchor="middle" font-size="11">GATE</text>
+<text x="78" y="210" class="s sub" text-anchor="middle">approve UI +</text>
+<text x="78" y="223" class="s sub" text-anchor="middle">architecture</text>
+<path d="M124,180 L150,180" class="ar" marker-end="url(#a)"/>
+
+<!-- Phase 0 POC -->
+<rect x="152" y="100" width="208" height="300" rx="10" class="poc"/>
+<text x="166" y="122" class="t h">Phase 0 · POC</text>
+<text x="166" y="138" class="i tag">DO FIRST · single-tenant · free · no auth</text>
+<text x="166" y="160" class="s sub">• wire built UI → real backend</text>
+<text x="166" y="175" class="s sub">  (leadService → fetch)</text>
+<text x="166" y="190" class="s sub">• Integration layer (Edge Fns)</text>
+<text x="166" y="205" class="s sub">• Ingest: Exa Contents + embed</text>
+<text x="166" y="220" class="s sub">• Model Router (BYOK→:free)</text>
+<text x="166" y="235" class="s sub">• Gate A: summary + venue map</text>
+<text x="166" y="250" class="s sub">• update v9: Exa swap + tenant_id</text>
+<text x="166" y="265" class="s sub">• Gate B: discover→leads+evidence</text>
+<text x="166" y="280" class="s sub">• draft side of Gate C (no send)</text>
+<text x="166" y="295" class="s sub">• Dashboard + usage</text>
+<text x="166" y="316" class="t tag">EXIT</text>
+<text x="166" y="330" class="s sub">full flow on real data · $0 to Ally</text>
+<text x="166" y="344" class="s sub">· nothing hard-coded to GamersLab</text>
+<text x="166" y="366" class="i sub" font-weight="700">Free: Vercel·Supabase·n8n·Exa·OpenRouter</text>
+
+<path d="M360,250 L376,250" class="ar" marker-end="url(#a)"/>
+
+<!-- Phase 1 -->
+<rect x="378" y="120" width="190" height="260" rx="10" class="card"/>
+<text x="392" y="142" class="t h">Phase 1 · Send</text>
+<text x="392" y="158" class="i tag">Gate C live</text>
+<text x="392" y="180" class="s sub">• approve → actually send</text>
+<text x="392" y="195" class="s sub">• use existing sender</text>
+<text x="392" y="210" class="s sub">  (no deliverability build)</text>
+<text x="392" y="225" class="s sub">• reply/bounce tracking</text>
+<text x="392" y="240" class="s sub">• prospect board states</text>
+<text x="392" y="262" class="t tag">EXIT</text>
+<text x="392" y="276" class="s sub">approve→send→reply tracked</text>
+
+<path d="M568,250 L584,250" class="ar" marker-end="url(#a)"/>
+
+<!-- Phase 2 Auth -->
+<rect x="586" y="120" width="190" height="260" rx="10" class="card"/>
+<text x="600" y="142" class="t h">Phase 2 · Auth+MT</text>
+<text x="600" y="158" class="i tag">⇦ AUTH LANDS HERE</text>
+<text x="600" y="180" class="s sub">• Supabase Auth (email+Google)</text>
+<text x="600" y="195" class="s sub">• Custom Access Token Hook</text>
+<text x="600" y="210" class="s sub">  → tenant_id+role in JWT</text>
+<text x="600" y="225" class="s sub">• RLS enforced · memberships</text>
+<text x="600" y="240" class="s sub">• CI cross-tenant isolation test</text>
+<text x="600" y="262" class="t tag">EXIT</text>
+<text x="600" y="276" class="s sub">Tenant A can't see Tenant B</text>
+
+<path d="M776,250 L792,250" class="ar" marker-end="url(#a)"/>
+
+<!-- Phase 3 -->
+<rect x="794" y="120" width="190" height="260" rx="10" class="card"/>
+<text x="808" y="142" class="t h">Phase 3 · White-label</text>
+<text x="808" y="158" class="i tag">sellable</text>
+<text x="808" y="180" class="s sub">• theme + BYO keys in Settings</text>
+<text x="808" y="195" class="s sub">  (UI already token-driven)</text>
+<text x="808" y="210" class="s sub">• usage metering + Stripe</text>
+<text x="808" y="225" class="s sub">• partner admin</text>
+<text x="808" y="240" class="s sub">• clone-a-tenant (Snapshot)</text>
+<text x="808" y="262" class="t tag">EXIT</text>
+<text x="808" y="276" class="s sub">new tenant = config, no code</text>
+
+<path d="M984,250 L1000,250" class="ar" marker-end="url(#a)"/>
+
+<!-- Phase 4 -->
+<rect x="1002" y="120" width="166" height="260" rx="10" class="card"/>
+<text x="1016" y="142" class="t h">Phase 4 · Investors</text>
+<text x="1016" y="158" class="i tag">2× TAM</text>
+<text x="1016" y="180" class="s sub">• Cust⇄Inv toggle</text>
+<text x="1016" y="195" class="s sub">  (already in UI)</text>
+<text x="1016" y="210" class="s sub">• investor entity</text>
+<text x="1016" y="225" class="s sub">• 4-dim rubric</text>
+<text x="1016" y="240" class="s sub">• reuse engine + gates</text>
+<text x="1016" y="262" class="t tag">EXIT</text>
+<text x="1016" y="276" class="s sub">run a raise on the pipeline</text>
+
+<text x="32" y="430" class="s sub" font-size="10">Auth is intentionally NOT in the POC — Phase 0 ships single-tenant with tenant_id present-but-defaulted so Phase 2 enforces isolation without a schema migration.</text>
+<text x="32" y="448" class="s sub" font-size="10">Each phase is independently shippable; the build only starts after the hard gate (approve UI + architecture).</text>
+</svg>

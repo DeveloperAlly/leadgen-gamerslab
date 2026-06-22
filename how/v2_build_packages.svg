@@ -1,0 +1,75 @@
+<svg viewBox="0 0 1100 560" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" role="img" aria-label="v2 build packages and dependencies">
+<title>v2 — Work packages &amp; build dependency graph (parallel build)</title>
+<rect x="0" y="0" width="1100" height="560" fill="#ffffff"/>
+<style>
+.t{fill:#1f1d1a}.s{fill:#6b6660}.i{fill:#3552a4}
+.wp{fill:#ffffff;stroke:#d8d4ca;stroke-width:1.5}
+.start{fill:#eef4f1;stroke:#2f6f62;stroke-width:2}
+.h{font-size:12.5px;font-weight:700}.lbl{font-size:11px;font-weight:600}.sub{font-size:9.6px}.tag{font-size:9.4px;font-weight:700}
+.dep{stroke:#8aa0d8;stroke-width:1.8;fill:none}
+</style>
+<defs><marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#8aa0d8"/></marker></defs>
+
+<text x="28" y="28" class="t h" font-size="16">v2 — Work Packages &amp; Build Dependencies (agents build in parallel against frozen contracts)</text>
+<text x="28" y="46" class="s sub" font-size="10.5">Green = can start immediately. Arrows = "depends on the contract of". Integration points are the §4 API + §3 schema, not shared code.</text>
+
+<!-- column 1: start now -->
+<rect x="40" y="80" width="240" height="120" rx="10" class="start"/>
+<text x="56" y="102" class="t h">WP-DB</text><text x="56" y="118" class="i tag">START NOW</text>
+<text x="56" y="138" class="s sub">tables + indexes + RLS</text>
+<text x="56" y="152" class="s sub">match_documents RPC</text>
+<text x="56" y="170" class="t tag">DONE: migrations apply,</text>
+<text x="56" y="184" class="s sub">RLS/tenant tests pass</text>
+
+<rect x="40" y="220" width="240" height="120" rx="10" class="start"/>
+<text x="56" y="242" class="t h">WP-ROUTER</text><text x="56" y="258" class="i tag">START NOW</text>
+<text x="56" y="278" class="s sub">chat + embeddings</text>
+<text x="56" y="292" class="s sub">BYOK→free routing</text>
+<text x="56" y="310" class="t tag">DONE: completion +</text>
+<text x="56" y="324" class="s sub">path logged; key works</text>
+
+<!-- column 2: API -->
+<rect x="360" y="150" width="250" height="130" rx="10" class="wp"/>
+<text x="376" y="172" class="t h">WP-API</text><text x="376" y="188" class="s tag">after DB schema + Router iface</text>
+<text x="376" y="208" class="s sub">all /api/* endpoints (§4,§5)</text>
+<text x="376" y="222" class="s sub">Edge Functions; tenant-scope</text>
+<text x="376" y="240" class="t tag">DONE: contract tests green;</text>
+<text x="376" y="254" class="s sub">401 bad bearer · 404 cross-tenant</text>
+
+<!-- column 3: discovery + web -->
+<rect x="690" y="80" width="250" height="130" rx="10" class="wp"/>
+<text x="706" y="102" class="t h">WP-DISCOVERY</text><text x="706" y="118" class="s tag">vs frozen contracts</text>
+<text x="706" y="138" class="s sub">n8n v2 workflow (§6)</text>
+<text x="706" y="152" class="s sub">venue adapters · Exa · score</text>
+<text x="706" y="170" class="t tag">DONE: run → verified,</text>
+<text x="706" y="184" class="s sub">scored leads + evidence + dedup</text>
+
+<rect x="690" y="230" width="250" height="130" rx="10" class="wp"/>
+<text x="706" y="252" class="t h">WP-WEB</text><text x="706" y="268" class="s tag">vs §4 contract</text>
+<text x="706" y="288" class="s sub">wire api.ts → C2</text>
+<text x="706" y="302" class="s sub">10 screens live · theme swap</text>
+<text x="706" y="320" class="t tag">DONE: full flow on real</text>
+<text x="706" y="334" class="s sub">data; portability test passes</text>
+
+<!-- WP-TEST -->
+<rect x="360" y="330" width="250" height="120" rx="10" class="wp"/>
+<text x="376" y="352" class="t h">WP-TEST</text><text x="376" y="368" class="s tag">continuous</text>
+<text x="376" y="388" class="s sub">integration + e2e + acceptance</text>
+<text x="376" y="402" class="s sub">cross-tenant isolation (auth phase)</text>
+<text x="376" y="420" class="t tag">DONE: acceptance suite</text>
+<text x="376" y="434" class="s sub">green (10-screen flow, $0)</text>
+
+<!-- deps -->
+<g class="dep" marker-end="url(#a)">
+<path d="M280,140 L360,190"/>        <!-- DB -> API -->
+<path d="M280,280 L360,230"/>        <!-- ROUTER -> API -->
+<path d="M280,150 C320,120 660,120 690,130"/>  <!-- DB -> DISCOVERY -->
+<path d="M280,300 C330,360 660,300 690,295"/>  <!-- ROUTER -> DISCOVERY -->
+<path d="M610,215 L690,260"/>        <!-- API -> WEB -->
+<path d="M610,230 C650,210 660,170 690,160"/>  <!-- API -> DISCOVERY (status/upsert contract) -->
+<path d="M610,400 C650,420 660,360 690,340"/>  <!-- WEB -> TEST (rev) just visual -->
+</g>
+
+<text x="28" y="500" class="s sub" font-size="10">Critical path: WP-DB → WP-API → WP-WEB. WP-ROUTER parallels WP-DB. WP-DISCOVERY parallels WP-API once DB + Router interfaces are frozen.</text>
+<text x="28" y="518" class="s sub" font-size="10">Each WP ships and tests independently behind its contract; no WP imports another's code — they meet at HTTP (§4) and SQL (§3).</text>
+</svg>

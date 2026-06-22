@@ -1,0 +1,38 @@
+name: Deploy Edge Functions
+
+# Deploys the GamersLab v1 integration API (gamerslab-poc/supabase/functions/*) to the
+# ccmwksmgoisijvyovgko Supabase project. Runs on push to the functions, or on demand.
+#
+# Required repo secret: SUPABASE_ACCESS_TOKEN (Supabase account access token, sbp_...).
+# Project ref is non-secret and set below.
+
+on:
+  push:
+    branches: [lead-pipeline-prototype, main]
+    paths: ["gamerslab-poc/supabase/functions/**"]
+  workflow_dispatch: {}
+
+env:
+  SUPABASE_PROJECT_REF: ccmwksmgoisijvyovgko
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy functions
+        working-directory: gamerslab-poc
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          for fn in tenant sources intake venues understanding discovery n8n-status leads outreach insights; do
+            echo "Deploying $fn"
+            supabase functions deploy "$fn" \
+              --project-ref "$SUPABASE_PROJECT_REF" \
+              --no-verify-jwt
+          done

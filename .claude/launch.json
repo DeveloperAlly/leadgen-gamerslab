@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "poc-ui",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "poc/ui", "run", "dev:poc"],
+      "port": 5173
+    }
+  ]
+}
