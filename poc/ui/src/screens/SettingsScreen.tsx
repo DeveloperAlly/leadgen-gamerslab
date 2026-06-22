@@ -8,6 +8,7 @@ import { useTheme } from "../theme/ThemeProvider";
 import { themeSwatches } from "../theme/tokens";
 import { space } from "../theme/tokens";
 import { appConfig } from "../config/appConfig";
+import { EmailConnectionCard } from "../components/EmailConnectionCard";
 
 const KEY_STORE = "gl.modelKeys";
 
@@ -40,9 +41,12 @@ export function SettingsScreen() {
       <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Settings</h1>
       <p style={{ margin: "0 0 22px", fontSize: 15, color: "var(--text-secondary)" }}>
         {appConfig.showThemeControls
-          ? "Theme and model configuration for this workspace."
-          : "Model configuration for this workspace."}
+          ? "Email, theme, and model configuration for this workspace."
+          : "Email and model configuration for this workspace."}
       </p>
+
+      {/* Outreach email — the inbox approved drafts send from */}
+      <EmailConnectionCard />
 
       {/* Theme */}
       {appConfig.showThemeControls && (

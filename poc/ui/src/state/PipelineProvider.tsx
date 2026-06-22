@@ -24,6 +24,7 @@ import { discoveryStatusLines } from "../data/fixtures/copy";
 import { appConfig } from "../config/appConfig";
 import type {
   DashboardInsights,
+  EmailAccount,
   GateFieldKey,
   Intake,
   LeadStatus,
@@ -81,6 +82,7 @@ const initialState: PipelineState = {
   tenant: clone(tenant),
   usage: clone(usage),
   insights: clone(seedDashboardInsights),
+  emailAccount: null,
   dataState: "idle",
   dataError: null,
   sources: clone(seedSources),
@@ -101,7 +103,7 @@ const initialState: PipelineState = {
   loadingPct: 0,
   loadingMsgIdx: 0,
   outreach: clone(seedOutreach),
-  editingOutreach: null,
+  editingMessageId: null,
   outreachSubject: "",
   outreachBody: "",
   toast: null,
@@ -113,6 +115,7 @@ export interface PipelineActions {
   setEmail: (email: string) => void;
   setPassword: (password: string) => void;
   signinContinue: () => void;
+  setEmailAccount: (account: EmailAccount | null) => void;
   notify: (message: string) => void;
   addSource: (type: SourceType, label: string) => void;
   uploadSource: (file: File) => void;
@@ -138,7 +141,7 @@ export interface PipelineActions {
   sendToCrm: () => void;
   approveOutreach: (id: string) => void;
   skipOutreach: (id: string) => void;
-  startEditOutreach: (id: string) => void;
+  startEditVariant: (messageId: string) => void;
   setOutreachSubject: (value: string) => void;
   setOutreachBody: (value: string) => void;
   saveOutreachDraft: () => void;
@@ -204,8 +207,9 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
       leadService.getLeads(),
       leadService.getOutreach(),
       leadService.getDashboardInsights(),
+      leadService.getEmailAccount(),
     ])
-      .then(([tenantRes, sources, leads, outreach, insights]) => {
+      .then(([tenantRes, sources, leads, outreach, insights, emailAccount]) => {
         if (cancelled) return;
         dispatch({
           type: "HYDRATE",
@@ -217,6 +221,7 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
             foundCount: leads.length,
             outreach,
             insights,
+            emailAccount,
           },
         });
         dispatch({ type: "SET_DATA_STATE", state: "ready" });
@@ -249,6 +254,7 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
       setMode: (mode) => dispatch({ type: "SET_MODE", mode }),
       setEmail: (email) => dispatch({ type: "SET_EMAIL", email }),
       setPassword: (password) => dispatch({ type: "SET_PASSWORD", password }),
+      setEmailAccount: (account) => dispatch({ type: "SET_EMAIL_ACCOUNT", account }),
       notify: (message) => showToast(message),
       signinContinue: () => {
         const ok =
@@ -375,22 +381,26 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
         dispatch({ type: "SET_OUTREACH_STAGE", id, stage: "lost", last: "Skipped" });
         void leadService.skipOutreach(id);
       },
-      startEditOutreach: (id) => {
-        const item = stateRef.current.outreach.find((o) => o.id === id);
+      startEditVariant: (messageId) => {
+        let v;
+        for (const o of stateRef.current.outreach) {
+          const found = o.variants.find((x) => x.messageId === messageId);
+          if (found) { v = found; break; }
+        }
         dispatch({
           type: "START_EDIT_OUTREACH",
-          id,
-          subject: item?.subject ?? "",
-          body: item?.body ?? "",
+          messageId,
+          subject: v?.subject ?? "",
+          body: v?.body ?? "",
         });
       },
       setOutreachSubject: (value) => dispatch({ type: "SET_OUTREACH_SUBJECT", value }),
       setOutreachBody: (value) => dispatch({ type: "SET_OUTREACH_BODY", value }),
       saveOutreachDraft: () => {
-        const id = stateRef.current.editingOutreach;
+        const messageId = stateRef.current.editingMessageId;
         const { outreachSubject, outreachBody } = stateRef.current;
         dispatch({ type: "SAVE_OUTREACH_DRAFT" });
-        if (id) void leadService.updateOutreach(id, outreachSubject, outreachBody);
+        if (messageId) void leadService.updateOutreach(messageId, outreachSubject, outreachBody);
         showToast("Draft saved");
       },
       cancelEditOutreach: () => dispatch({ type: "CANCEL_EDIT_OUTREACH" }),

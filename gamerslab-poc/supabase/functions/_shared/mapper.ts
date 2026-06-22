@@ -12,9 +12,11 @@
 import type {
   EvidenceItem,
   Lead,
+  LeadContact,
   LeadStatus,
   OutreachItem,
   OutreachStage,
+  OutreachVariant,
   RiskFlag,
 } from "./types.ts";
 
@@ -30,10 +32,18 @@ export interface PublisherRow {
   review_score: number | null;
   total_reviews: number | null;
 
+  publisher_website: string | null;
   contact_email: string | null;
   contact_source: string | null;
+  contact_name: string | null;
+  contact_role: string | null;
   email_valid: boolean | null;
   email_status: string | null;
+
+  twitter_handle: string | null;
+  linkedin_company_url: string | null;
+  discord_url: string | null;
+  founder_name: string | null;
 
   founder_quote: string | null;
   founder_quote_source: string | null;
@@ -101,9 +111,9 @@ const leadStatusOf = (s: string | null): LeadStatus => {
   }
 };
 
-/** publishers.pipeline_status -> OutreachStage (Gate C board). */
-const outreachStageOf = (p: PublisherRow): OutreachStage => {
-  switch (p.pipeline_status) {
+/** pipeline_status / message.status -> OutreachStage (Gate C board). */
+const statusToStage = (s: string | null): OutreachStage => {
+  switch (s) {
     case "replied":
       return "replied";
     case "sent":
@@ -159,6 +169,48 @@ const evidenceOf = (p: PublisherRow): EvidenceItem[] => {
   return out;
 };
 
+/**
+ * Treat empty, whitespace-only, and the literal "unknown" sentinel as absent. The
+ * GamersLab pipeline writes "unknown"/"" when enrichment failed to resolve a field, so
+ * the UI must not render those as if they were real values.
+ */
+const clean = (v: string | null | undefined): string | undefined => {
+  const t = (v ?? "").trim();
+  if (!t || t.toLowerCase() === "unknown") return undefined;
+  return t;
+};
+
+/** Normalize a bare domain/handle into an absolute https URL; pass through real URLs. */
+const urlOf = (v: string | null): string | undefined => {
+  const t = clean(v);
+  if (!t) return undefined;
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+};
+
+/** twitter_handle is stored as "@foo", "foo", or a full URL; normalize to a profile URL. */
+const twitterUrl = (v: string | null): string | undefined => {
+  const t = clean(v);
+  if (!t) return undefined;
+  if (/^https?:\/\//i.test(t)) return t;
+  return `https://x.com/${t.replace(/^@+/, "")}`;
+};
+
+/** Build the public contact block, dropping sentinels. Returns undefined when nothing resolved. */
+const contactOf = (p: PublisherRow): LeadContact | undefined => {
+  const name = clean(p.contact_name) ?? clean(p.founder_name);
+  const c: LeadContact = {
+    website: urlOf(p.publisher_website),
+    email: clean(p.contact_email),
+    name,
+    // A role is only meaningful alongside a name.
+    role: name ? clean(p.contact_role) : undefined,
+    twitter: twitterUrl(p.twitter_handle),
+    linkedin: urlOf(p.linkedin_company_url),
+    discord: urlOf(p.discord_url),
+  };
+  return Object.values(c).some(Boolean) ? c : undefined;
+};
+
 const metaOf = (p: PublisherRow): string[] =>
   [
     p.primary_genre,
@@ -197,36 +249,102 @@ export function toLead(p: PublisherRow): Lead {
       : undefined,
     // N5: anti-fit warnings, surfaced — never used to drop the lead.
     riskFlags: asArray<RiskFlag>(p.risk_flags).filter((f) => f && f.flag),
+    // Public contact + presence (website, socials, email, human name); sentinels dropped.
+    contact: contactOf(p),
     status: leadStatusOf(p.pipeline_status),
   };
 }
 
-export function toOutreachItem(p: PublisherRow): OutreachItem {
-  const name = p.publisher_name || p.game_name || "Unknown publisher";
-  // Subject and body are kept separate end to end — the human edits each independently.
-  // Prefer the human-approved values over the LLM draft when present.
-  const subject = p.approved_subject || p.draft_subject || undefined;
-  const body = p.approved_body || p.draft_body || undefined;
-  let last: string | undefined;
-  if (p.replied_at) last = `Replied ${relDate(p.replied_at)}`;
-  else if (p.sent_at) last = `Sent ${relDate(p.sent_at)}`;
-  return {
-    id: p.id,
-    name,
-    initials: initialsOf(name),
-    channel: "Email",
-    stage: outreachStageOf(p),
-    subject,
-    body,
-    last,
-  };
+/** A `message` row joined with its publisher's display fields. */
+export interface MessageRow {
+  id: string;
+  publisher_id: string;
+  step: number;
+  variant: string;
+  is_control: boolean;
+  subject: string | null;
+  body: string | null;
+  status: string | null;
+  sent_at: string | null;
+  replied_at: string | null;
+  publishers:
+    | {
+        publisher_name: string | null;
+        game_name: string | null;
+        contact_email: string | null;
+        email_valid: boolean | null;
+      }
+    | null;
+}
+
+/** Columns to SELECT from `message` (with the publisher name + recipient embedded) for the board. */
+export const MESSAGE_SELECT =
+  "id,publisher_id,step,variant,is_control,subject,body,status,sent_at,replied_at," +
+  "publishers(publisher_name,game_name,contact_email,email_valid)";
+
+/**
+ * Group `message` rows by publisher into the UI's OutreachItem shape. One item per
+ * publisher; its A/B variants for the initial step are carried in `variants`. The
+ * control variant supplies the convenience `subject`/`body` and the board's last-event.
+ */
+export function toOutreachItems(rows: MessageRow[]): OutreachItem[] {
+  const byPublisher = new Map<string, MessageRow[]>();
+  for (const r of rows) {
+    const list = byPublisher.get(r.publisher_id) ?? [];
+    list.push(r);
+    byPublisher.set(r.publisher_id, list);
+  }
+
+  const items: OutreachItem[] = [];
+  for (const [publisherId, msgs] of byPublisher) {
+    const pub = msgs[0]!.publishers;
+    const name = pub?.publisher_name || pub?.game_name || "Unknown publisher";
+    // Control row drives the publisher-level stage/last-event and the convenience fields.
+    const control = msgs.find((m) => m.is_control) ?? msgs[0]!;
+
+    const variants: OutreachVariant[] = msgs
+      .filter((m) => m.step === 1)
+      .sort((a, b) => a.variant.localeCompare(b.variant))
+      .map((m) => ({
+        messageId: m.id,
+        variant: m.variant,
+        isControl: m.is_control,
+        step: m.step,
+        subject: m.subject ?? undefined,
+        body: m.body ?? undefined,
+        sentCount: m.sent_at ? 1 : 0,
+        replyCount: m.replied_at ? 1 : 0,
+      }));
+
+    let last: string | undefined;
+    if (control.replied_at) last = `Replied ${relDate(control.replied_at)}`;
+    else if (control.sent_at) last = `Sent ${relDate(control.sent_at)}`;
+
+    items.push({
+      id: publisherId,
+      name,
+      initials: initialsOf(name),
+      channel: "Email",
+      stage: statusToStage(control.status),
+      // Empty string means no contact was found — normalize to undefined so the UI's
+      // "no recipient, can't send" branch fires instead of rendering a blank address.
+      toEmail: pub?.contact_email?.trim() ? pub.contact_email.trim() : undefined,
+      emailValid: pub?.email_valid ?? undefined,
+      subject: control.subject ?? undefined,
+      body: control.body ?? undefined,
+      variants,
+      last,
+    });
+  }
+  return items;
 }
 
 /** Columns to SELECT for the lead/outreach views (keeps payloads lean). */
 export const PUBLISHER_SELECT =
   "id,steam_app_id,game_name,publisher_name,primary_genre," +
-  "game_phase,owners_estimate,review_score,total_reviews,contact_email,contact_source," +
-  "email_valid,email_status,founder_quote,founder_quote_source,pain_signal,intel_summary," +
+  "game_phase,owners_estimate,review_score,total_reviews,publisher_website,contact_email,contact_source," +
+  "contact_name,contact_role,email_valid,email_status,twitter_handle,linkedin_company_url,discord_url," +
+  "founder_name,founder_quote,founder_quote_source,pain_signal,intel_summary," +
   "intel_quality,evidence_strength,evidence_quote,evidence_sources,evidence_as_of,risk_flags," +
   "pre_score,fit_score,outreach_tier,score_rationale,gamerslab_hook," +
   "draft_subject,draft_body,approved_subject,approved_body,pipeline_status,sent_at," +
