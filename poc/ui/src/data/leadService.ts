@@ -306,11 +306,20 @@ export const leadService = {
       ? resolve(undefined)
       : req<unknown>(`/outreach/${id}/${outcome}`, { method: "POST" }).then(() => undefined),
 
-  /** Send a step-2 follow-up in the same thread to a contacted, not-yet-replied prospect. */
-  followUpOutreach: (id: string): Promise<void> =>
+  /** Create a step-2 follow-up DRAFT for review (does not send). */
+  followUpOutreach: (id: string): Promise<OutreachItem> =>
     USE_FIXTURES
-      ? resolve(undefined)
-      : req<unknown>(`/outreach/${id}/follow-up`, { method: "POST" }).then(() => undefined),
+      ? resolve({} as OutreachItem)
+      : req<OutreachItem>(`/outreach/${id}/follow-up`, { method: "POST" }),
+
+  /** Persist final edits to the follow-up draft, then send it in-thread. */
+  sendFollowUp: (id: string, subject: string, body: string): Promise<OutreachItem> =>
+    USE_FIXTURES
+      ? resolve({} as OutreachItem)
+      : req<OutreachItem>(`/outreach/${id}/send-follow-up`, {
+        method: "POST",
+        body: JSON.stringify({ subject, body }),
+      }),
 
   /** The live Gmail conversation (sent + replies) for a prospect. */
   getThread: (publisherId: string): Promise<ThreadMessage[]> =>

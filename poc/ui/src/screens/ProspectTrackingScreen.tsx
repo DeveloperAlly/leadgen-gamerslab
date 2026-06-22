@@ -282,7 +282,9 @@ function StageCard({
         </div>
       )}
 
-      {item.stage === "contacted" && (
+      {item.followUp ? (
+        <FollowUpEditor draft={item.followUp} onSend={(s, b) => actions.sendFollowUp(item.id, s, b)} />
+      ) : item.stage === "contacted" ? (
         <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
           <Button leadingIcon={<SendIcon size={16} strokeWidth={2} />} onClick={() => actions.followUp(item.id)}>
             Follow up
@@ -291,7 +293,7 @@ function StageCard({
             Mark lost
           </Button>
         </div>
-      )}
+      ) : null}
     </Card>
   );
 }
@@ -317,6 +319,51 @@ function ThreadBubble({ m }: { m: ThreadMessage }) {
         <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{when}</span>
       </div>
       <div style={{ fontSize: 13.5, lineHeight: 1.5, color: "var(--text-primary)", whiteSpace: "pre-wrap" }}>{m.body}</div>
+    </div>
+  );
+}
+
+/** Review + edit a step-2 follow-up before it sends (in the same thread, "Re:" subject). */
+function FollowUpEditor({
+  draft,
+  onSend,
+}: {
+  draft: { messageId: string; subject: string; body: string };
+  onSend: (subject: string, body: string) => void;
+}) {
+  const [subject, setSubject] = useState(draft.subject);
+  const [body, setBody] = useState(draft.body);
+  const [sending, setSending] = useState(false);
+  return (
+    <div
+      style={{
+        background: "var(--bg-subtle)",
+        border: "1px solid var(--highlight)",
+        borderRadius: radius.md,
+        padding: "12px 14px",
+      }}
+    >
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--highlight-ink)", marginBottom: 10 }}>
+        Follow-up draft · review before sending
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: space.sm }}>
+        <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)" }}>Subject</label>
+        <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject line" />
+        <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", marginTop: space.xs }}>Message</label>
+        <Textarea value={body} onChange={(e) => setBody(e.target.value)} style={{ minHeight: 110 }} />
+      </div>
+      <div style={{ display: "flex", gap: space.sm, marginTop: space.md }}>
+        <Button
+          leadingIcon={<SendIcon size={16} strokeWidth={2} />}
+          disabled={sending}
+          onClick={() => {
+            setSending(true);
+            onSend(subject, body);
+          }}
+        >
+          {sending ? "Sending…" : "Send follow-up"}
+        </Button>
+      </div>
     </div>
   );
 }

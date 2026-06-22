@@ -174,6 +174,8 @@ export interface OutreachItem {
   body?: string;
   /** All A/B variants for the initial step. */
   variants: OutreachVariant[];
+  /** A pending step-2 follow-up draft (not yet sent), surfaced for review/edit before sending. */
+  followUp?: { messageId: string; subject: string; body: string };
   /** Last-event label once the prospect has moved past awaiting. */
   last?: string;
 }

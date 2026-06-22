@@ -146,8 +146,10 @@ export interface PipelineActions {
   /** Final outcome on a replied prospect. */
   markWon: (id: string) => void;
   markLost: (id: string) => void;
-  /** Send a step-2 follow-up to a contacted, not-yet-replied prospect. */
+  /** Draft a step-2 follow-up for review (does not send). */
   followUp: (id: string) => void;
+  /** Persist edits to the follow-up draft and send it in-thread. */
+  sendFollowUp: (id: string, subject: string, body: string) => void;
   /** Re-pull the outreach board from the backend (the store hydrates once on mount). */
   refreshOutreach: () => void;
   startEditVariant: (messageId: string) => void;
@@ -401,8 +403,20 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
         showToast("Marked lost");
       },
       followUp: (id) => {
-        // The prospect stays contacted (awaiting a reply); a follow-up is a step-2 nudge.
-        void leadService.followUpOutreach(id);
+        // Create a step-2 draft (no send) and re-pull so the editor surfaces on the card.
+        void leadService
+          .followUpOutreach(id)
+          .then(() => leadService.getOutreach())
+          .then((outreach) => dispatch({ type: "HYDRATE", payload: { outreach } }))
+          .catch(() => showToast("Couldn't draft the follow-up"));
+        showToast("Follow-up drafted. Review and send");
+      },
+      sendFollowUp: (id, subject, body) => {
+        void leadService
+          .sendFollowUp(id, subject, body)
+          .then(() => leadService.getOutreach())
+          .then((outreach) => dispatch({ type: "HYDRATE", payload: { outreach } }))
+          .catch(() => showToast("Couldn't send the follow-up"));
         showToast("Follow-up sent");
       },
       refreshOutreach: () => {
