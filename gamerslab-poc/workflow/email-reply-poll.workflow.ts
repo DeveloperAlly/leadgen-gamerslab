@@ -125,7 +125,8 @@ const markPublisherReplied = node({
       resource: 'database',
       operation: 'executeQuery',
       query: "UPDATE public.publishers SET pipeline_status='replied', replied_at=NOW() WHERE id=$1",
-      options: { queryReplacement: expr('{{ $json.publisher_id }}') },
+      // Reference Detect Reply explicitly: $json here is the prior UPDATE's output, which has no publisher_id.
+      options: { queryReplacement: expr("{{ $('Detect Reply').item.json.publisher_id }}") },
     },
     credentials: { postgres: newCredential('Postgres account GamersLab Lead Gen') },
   },
