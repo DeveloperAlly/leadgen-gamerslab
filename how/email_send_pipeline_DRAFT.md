@@ -228,3 +228,17 @@ Nothing below is built until the gate passes. This is the change-set the gate ap
   subscriptions). Start with polling.
 - Cold **sequencing**, CRM sync, open/click tracking — separate specs (INTEGRATIONS §10/§11).
 - Exact 2026 provider endpoint/scopes — **verified at M2**, not here.
+
+## 11. Scope note — POC (A) vs white-label (B)
+
+**Built = A (POC):** one connected inbox; GamersLab sends as themselves. The email-* functions
+resolve "the connected account" globally (no tenant filter) — consistent with the rest of the v1
+POC, which is single-tenant.
+
+**B (white-label, per client) — deferred, path recorded:** each tenant connects their own inbox.
+`email_accounts.tenant_id` already exists; the only change is to scope every email-* function by
+the current tenant, using the **same pattern the v2 functions already use** — read the tenant id
+from the `tenant` table / request context (see `intake-bank/index.ts`: `db.from("tenant")…` then
+`.eq("tenant_id", tenantId)`) and filter `email_accounts` by it. Also gated on Google's
+restricted-scope (`gmail.readonly`) verification before arbitrary external clients can connect in
+production. Not built now (A is the agreed scope).
