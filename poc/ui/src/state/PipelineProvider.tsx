@@ -42,13 +42,39 @@ const clone = <T,>(v: T): T =>
   typeof structuredClone === "function" ? structuredClone(v) : (JSON.parse(JSON.stringify(v)) as T);
 
 /**
+ * The sign-in gate is client-side only (shared password / email check). Persist a
+ * "passed the gate" flag so a page reload doesn't force re-entry every time. Scoped to
+ * the build mode and kept in localStorage (survives reloads and closing the tab/browser;
+ * cleared on Sign out). Swap to sessionStorage if it should clear when the tab closes.
+ */
+const GATE_STORAGE_KEY = `gl.gatePassed.${appConfig.mode}`;
+
+const readGatePassed = (): boolean => {
+  if (!appConfig.requireSignin) return true;
+  try {
+    return localStorage.getItem(GATE_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const writeGatePassed = (passed: boolean): void => {
+  try {
+    if (passed) localStorage.setItem(GATE_STORAGE_KEY, "1");
+    else localStorage.removeItem(GATE_STORAGE_KEY);
+  } catch {
+    /* storage unavailable (private mode / SSR) — gate falls back to in-memory only */
+  }
+};
+
+/**
  * Initial state is hydrated from the data layer's seed. In production the provider
  * would instead call leadService.get*() in an effect and populate via SET_* actions
  * (the actions already exist for exactly that); the shape is identical either way.
  */
 const initialState: PipelineState = {
   mode: "customers",
-  screen: appConfig.requireSignin ? "signin" : appConfig.postLoginScreen,
+  screen: readGatePassed() ? appConfig.postLoginScreen : "signin",
   email: "",
   password: "",
   signinState: "idle",
@@ -234,6 +260,7 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
           return;
         }
         dispatch({ type: "SET_SIGNIN_STATE", state: "loading" });
+        writeGatePassed(true);
         setTimeout(() => dispatch({ type: "GO", screen: appConfig.postLoginScreen }), 850);
       },
       addSource,
@@ -374,6 +401,7 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
       dismissRefinement: () => dispatch({ type: "DISMISS_REFINEMENT" }),
       restart: () => {
         if (discoveryTimer.current) clearInterval(discoveryTimer.current);
+        writeGatePassed(false);
         dispatch({ type: "RESET_SIGNIN" });
       },
     };
