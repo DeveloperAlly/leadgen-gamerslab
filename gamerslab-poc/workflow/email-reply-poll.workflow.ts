@@ -4,10 +4,11 @@
  * Live in n8n: id LAPjN0jbvV9GAetX (schedule: every 15 min).
  *
  * Detects replies to sent outreach. Asks the email-access-token broker for a Gmail access
- * token, selects publishers that are 'sent' with a thread id and no reply yet, reads each
- * Gmail thread, and when a message From someone other than the connected inbox appears,
- * stamps replied_at + pipeline_status='replied' (which rings the UI bell).
- * Design: how/email_send_pipeline_DRAFT.md §6b.
+ * token, selects `message` rows that are 'sent' with a thread id and no reply yet, reads
+ * each Gmail thread, and when a message From someone other than the connected inbox
+ * appears, dual-writes replied_at + status='replied' to BOTH the `message` row and the
+ * `publishers` row (the board reads publishers; rings the UI bell). Bound to the message
+ * entity per how/pipeline_messaging_ab_sequencing_DRAFT.md §4.
  *
  * Credential the n8n instance needs: a Header Auth credential "GamersLab API Bearer"
  * (Name: Authorization, Value: Bearer <API_BEARER>) bound to the Get Access Token node.
@@ -47,7 +48,7 @@ const awaiting = node({
     parameters: {
       resource: 'database',
       operation: 'executeQuery',
-      query: "SELECT id, outreach_thread_id FROM publishers WHERE pipeline_status='sent' AND outreach_thread_id IS NOT NULL AND replied_at IS NULL LIMIT 50",
+      query: "SELECT id, publisher_id, thread_id AS outreach_thread_id FROM public.message WHERE status='sent' AND thread_id IS NOT NULL AND replied_at IS NULL LIMIT 50",
     },
     credentials: { postgres: newCredential('Postgres account GamersLab Lead Gen') },
   },
@@ -79,7 +80,7 @@ const detectReply = node({
     parameters: {
       mode: 'runOnceForEachItem',
       language: 'javaScript',
-      jsCode: "const me = ($('Get Access Token').first().json.from_email || '').toLowerCase();\nconst msgs = $json.messages || [];\nlet replied = false;\nfor (const m of msgs) {\n  const headers = (m.payload && m.payload.headers) || [];\n  const fromH = headers.find(h => (h.name || '').toLowerCase() === 'from');\n  const fromVal = fromH ? (fromH.value || '').toLowerCase() : '';\n  if (fromVal && me && fromVal.indexOf(me) === -1) { replied = true; break; }\n}\nconst id = $('Reply Loop').item.json.id;\nreturn { id, replied };",
+      jsCode: "const me = ($('Get Access Token').first().json.from_email || '').toLowerCase();\nconst msgs = $json.messages || [];\nlet replied = false;\nfor (const m of msgs) {\n  const headers = (m.payload && m.payload.headers) || [];\n  const fromH = headers.find(h => (h.name || '').toLowerCase() === 'from');\n  const fromVal = fromH ? (fromH.value || '').toLowerCase() : '';\n  if (fromVal && me && fromVal.indexOf(me) === -1) { replied = true; break; }\n}\nconst id = $('Reply Loop').item.json.id;\nconst publisher_id = $('Reply Loop').item.json.publisher_id;\nreturn { id, publisher_id, replied };",
     },
   },
 });
@@ -98,6 +99,7 @@ const ifReplied = ifElse({
   },
 });
 
+// Primary: stamp the message row.
 const markReplied = node({
   type: 'n8n-nodes-base.postgres',
   version: 2.6,
@@ -106,8 +108,24 @@ const markReplied = node({
     parameters: {
       resource: 'database',
       operation: 'executeQuery',
-      query: "UPDATE publishers SET replied_at=NOW(), pipeline_status='replied' WHERE id=$1",
+      query: "UPDATE public.message SET status='replied', replied_at=NOW() WHERE id=$1",
       options: { queryReplacement: expr('{{ $json.id }}') },
+    },
+    credentials: { postgres: newCredential('Postgres account GamersLab Lead Gen') },
+  },
+});
+
+// Dual-write: mirror to publishers so the board's Replied column populates.
+const markPublisherReplied = node({
+  type: 'n8n-nodes-base.postgres',
+  version: 2.6,
+  config: {
+    name: 'Mark Publisher Replied',
+    parameters: {
+      resource: 'database',
+      operation: 'executeQuery',
+      query: "UPDATE public.publishers SET pipeline_status='replied', replied_at=NOW() WHERE id=$1",
+      options: { queryReplacement: expr('{{ $json.publisher_id }}') },
     },
     credentials: { postgres: newCredential('Postgres account GamersLab Lead Gen') },
   },
@@ -120,5 +138,5 @@ export default workflow('gamerslab-reply-poll', 'GamersLab Reply Poll')
   .to(loop
     .onDone(done)
     .onEachBatch(getThread.to(detectReply.to(ifReplied
-      .onTrue(markReplied.to(nextBatch(loop)))
+      .onTrue(markReplied.to(markPublisherReplied.to(nextBatch(loop))))
       .onFalse(nextBatch(loop))))));
