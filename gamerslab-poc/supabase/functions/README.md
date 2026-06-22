@@ -27,10 +27,15 @@ supabase/
 │   ├── discovery/              POST /run, GET /:jobId (triggers n8n, polls runs)
 │   ├── n8n-status/             POST                   (n8n -> run progress callback)
 │   ├── leads/                  GET/PATCH/POST export  (live, over publishers)
-│   ├── outreach/               GET/POST approve|skip  (live, over publishers)
-│   └── insights/               GET/POST apply         (fixed; apply no-op)
+│   ├── outreach/               GET/POST approve|skip  (live; approve fires n8n Send)
+│   ├── insights/               GET/POST apply         (fixed; apply no-op)
+│   ├── email-oauth/            POST /start, GET /callback (connect Gmail/Outlook)
+│   ├── email-account/          GET/DELETE             (read / disconnect the inbox)
+│   ├── email-test-send/        POST                   (test send from the inbox)
+│   └── _shared/email.ts        token crypto + Gmail/Graph OAuth + send helpers
 └── migrations/
-    └── 0001_runs.sql           discovery job-state table
+    ├── 0001_runs.sql           discovery job-state table
+    └── 0005_email_accounts.sql connected sending inbox (encrypted token)
 ```
 
 **Live data path** (real `publishers` data): discovery → leads → outreach → approve/export.
@@ -54,9 +59,12 @@ npx supabase db push
 npx supabase secrets set --env-file supabase/functions/.env --project-ref ccmwksmgoisijvyovgko
 
 # 4. Deploy every function with --no-verify-jwt (we use our own static bearer, not a Supabase JWT):
-for fn in tenant sources intake venues understanding discovery n8n-status leads outreach insights; do
+for fn in tenant sources intake venues understanding discovery n8n-status leads outreach insights \
+          email-oauth email-account email-test-send; do
   npx supabase functions deploy "$fn" --no-verify-jwt --project-ref ccmwksmgoisijvyovgko
 done
+# (email-oauth/-account/-test-send were deployed live 2026-06-22 via MCP; email-account verified.
+#  Re-run `outreach` after setting N8N_SEND_WEBHOOK_URL so approve fires the Send workflow.)
 
 # 5. Point the UI at it (poc/ui/.env.local):
 #   VITE_API_BASE=https://ccmwksmgoisijvyovgko.supabase.co/functions/v1
@@ -70,6 +78,23 @@ done
 - **API_BEARER** — generate any long random string (UI + functions must match).
 - **N8N_WEBHOOK_URL / N8N_WEBHOOK_SECRET** — set after the webhook node is added (below).
 - **N8N_STATUS_SECRET** — any random string; also set on the workflow's status nodes.
+
+### Email send pipeline (the only Ally-only step is provisioning the OAuth apps)
+
+The code is built + deployed; it needs these secrets to function (see `.env.example`):
+- **EMAIL_TOKEN_KEY** — `openssl rand -base64 32` (encrypts stored refresh tokens).
+- **EMAIL_REDIRECT_BASE** — `https://ccmwksmgoisijvyovgko.supabase.co/functions/v1`.
+- **EMAIL_APP_URL** — the deployed UI origin (callback bounces back here).
+- **GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET** — a Google Cloud OAuth "Web" client; enable the
+  Gmail API; consent-screen scopes `gmail.send` + `gmail.readonly`; redirect URI =
+  `EMAIL_REDIRECT_BASE/email-oauth/callback`.
+- **MS_CLIENT_ID / MS_CLIENT_SECRET** — an Entra ID app registration ("Web" redirect =
+  same callback); delegated `Mail.Send` + `Mail.Read` + `offline_access`. Confidential/web
+  app type (durable refresh tokens — SPA type expires them in 24h).
+- **N8N_SEND_WEBHOOK_URL** — the n8n Send workflow's webhook (then re-deploy `outreach`).
+
+Until the OAuth apps exist, `email-oauth/start` returns `config_error` and the UI Connect
+buttons surface that — by design.
 
 ## n8n v10 webhook (APPLIED — live on `GamersLab Publisher Outreach v10`, id `MouIeDmDAAHKIpDn`)
 

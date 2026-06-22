@@ -166,7 +166,8 @@ All prospects across the board + drafts awaiting approval.
 - **200:** `OutreachItem[]`
 
 ### `POST /api/outreach/:id/approve`
-Approve & send a drafted message. Moves the prospect to `contacted`.
+Approve a drafted message. Marks it approved and fires the n8n Send workflow (which reads the
+connected inbox's token and sends); the board moves to `contacted`.
 - **Service:** `approveOutreach(id)`  **Consumed by:** `ProspectTrackingScreen`
 - **Body (optional):** `{ "draft": string }` if the user edited the message
 - **200:** `OutreachItem`
@@ -177,8 +178,40 @@ Skip a draft; moves the prospect to `lost`.
 - **200:** `OutreachItem`
 
 > Reply/outcome transitions (`replied`, `success`, `partial`) are driven by inbound
-> tracking on the backend (email/CRM webhooks), not the UI. The board reflects whatever
-> `GET /api/outreach` returns; consider a websocket/SSE push so the board updates live.
+> tracking on the backend (the n8n Reply-poll workflow stamps `replied_at`), not the UI. The
+> board reflects whatever `GET /api/outreach` returns; consider a websocket/SSE push so it updates live.
+
+---
+
+## 7b. Email send identity (Connect-email screen)
+
+The inbox outreach is sent from. WHO sends (this surface) is split from HOW it sends (n8n reads
+the stored token per-send). Design: `how/email_send_pipeline_DRAFT.md`. Type `EmailAccount`:
+`{ connected, provider?('google'|'microsoft'), fromEmail?, displayName?, dailyCap?, sentToday?, scopes?[], status? }`.
+
+### `GET /api/email-account`
+The connected inbox (never returns the token). `{ connected: false }` when none.
+- **Service:** `getEmailAccount()`  **Consumed by:** `EmailScreen`
+- **200:** `EmailAccount`
+
+### `POST /api/email-oauth/start`
+Begin connecting an inbox; returns the provider consent URL to redirect to.
+- **Service:** `startEmailConnect(provider)`  **Consumed by:** `EmailScreen`
+- **Body:** `{ "provider": "google"|"microsoft" }`
+- **200:** `{ "url": string }`
+
+### `GET /api/email-oauth/callback`
+Provider redirect target. Exchanges the code, stores the encrypted refresh token, 302s back to the app. Public (validated by `state`), not bearer-auth.
+
+### `DELETE /api/email-account`
+Disconnect (soft-revoke); stops all sending for the tenant.
+- **Service:** `disconnectEmail()`  **Consumed by:** `EmailScreen`
+- **204**
+
+### `POST /api/email-test-send`
+Send a test message from the connected inbox to itself.
+- **Service:** `sendTestEmail()`  **Consumed by:** `EmailScreen`
+- **200:** `{ "ok": true, "to": string }`  ·  **409** `no_account`  ·  **429** `cap_reached`
 
 ---
 

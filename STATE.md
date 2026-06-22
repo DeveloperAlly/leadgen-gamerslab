@@ -30,7 +30,7 @@
 | Infra stack & layers (the HOW) | Agent (done) | `how/infra_stack_and_layers_DRAFT.md` (+ embedded `infra_stack_diagram.svg`) | ✅ v10 |
 | v9 pipeline reconciliation | Agent (done) | Both docs §v10; aDNA tag `v9` | ✅ |
 | Pipeline critique v2 — Tier 1 (POC) | Live + verified | `gamerslab-poc/workflow/v10-live-edits/` | ✅ n8n (I1/I6/D1/N5/N9 + prompt) · DB migration · `leads` Edge v3 · UI badges/reason picker — all live & verified |
-| Email send pipeline (identity + delivery) | Design (Claude) | `how/email_send_pipeline_DRAFT.md` (+ `email_send_architecture.svg`, `email_connect_screen_mock.svg`) | 🟡 DRAFT pre-gate — fills the deferred send layer; separate n8n workflows + `email_accounts` + Connect-email UI. Provider endpoints to verify at M2 |
+| Email send pipeline (identity + delivery) | Build (Claude) — gate passed 2026-06-22 | `how/email_send_pipeline_DRAFT.md`; `gamerslab-poc/supabase` (migration 0005 + email-* fns); `poc/ui` EmailScreen | 🟢 backend+UI live & verified: `email_accounts` table (live), EmailScreen (both states verified via real backend), `email-account`/`email-oauth`/`email-test-send` deployed. ⏳ Pending: n8n Send+Reply workflows; OAuth apps + secrets (Ally-only); re-deploy `outreach` after N8N_SEND_WEBHOOK_URL. Endpoints verified vs 2026 docs |
 | Requirements specs (M1) | Pending Ally go | — | ⏸ awaiting next session |
 | Verified architecture (M2) | Pending M1 | — | ⏸ |
 | UI design (M3) | Pending M2 | — | ⏸ |
