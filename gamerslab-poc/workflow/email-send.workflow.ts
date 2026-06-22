@@ -67,7 +67,7 @@ const buildRaw = node({
     parameters: {
       mode: 'runOnceForEachItem',
       language: 'javaScript',
-      jsCode: "const from = $('Get Access Token').first().json.from_email;\nconst to = $('Get Draft').first().json.contact_email;\nconst subject = $('Get Draft').first().json.subj || 'Hello';\nconst body = $('Get Draft').first().json.body_text || '';\nconst mime = `From: ${from}\\r\\nTo: ${to}\\r\\nSubject: ${subject}\\r\\nContent-Type: text/plain; charset=UTF-8\\r\\n\\r\\n${body}`;\nconst raw = Buffer.from(mime).toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\nreturn { raw, to };",
+      jsCode: "const from = $('Get Access Token').first().json.from_email;\nconst to = $('Get Draft').first().json.contact_email;\nconst subject = $('Get Draft').first().json.subj || 'Hello';\nconst body = $('Get Draft').first().json.body_text || '';\nconst subjEnc = /[^\\x00-\\x7F]/.test(subject) ? '=?UTF-8?B?' + Buffer.from(subject, 'utf8').toString('base64') + '?=' : subject;\nconst mime = `From: ${from}\\r\\nTo: ${to}\\r\\nSubject: ${subjEnc}\\r\\nMIME-Version: 1.0\\r\\nContent-Type: text/plain; charset=UTF-8\\r\\nContent-Transfer-Encoding: 8bit\\r\\n\\r\\n${body}`;\nconst raw = Buffer.from(mime, 'utf8').toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\nreturn { raw, to };",
     },
   },
 });

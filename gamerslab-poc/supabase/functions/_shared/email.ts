@@ -186,9 +186,14 @@ export const sendMail = async (
   body: string,
 ): Promise<void> => {
   if (provider === "google") {
+    // Headers must be ASCII; RFC 2047-encode the subject when it has non-ASCII
+    // (em dashes, smart quotes, accented names) or it arrives as mojibake.
+    const subjectHeader = /[^\x00-\x7F]/.test(subject)
+      ? `=?UTF-8?B?${b64(enc.encode(subject))}?=`
+      : subject;
     const raw = base64url(
-      `From: ${from}\r\nTo: ${to}\r\nSubject: ${subject}\r\n` +
-        `Content-Type: text/plain; charset=UTF-8\r\n\r\n${body}`,
+      `From: ${from}\r\nTo: ${to}\r\nSubject: ${subjectHeader}\r\nMIME-Version: 1.0\r\n` +
+        `Content-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n${body}`,
     );
     const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
       method: "POST",
