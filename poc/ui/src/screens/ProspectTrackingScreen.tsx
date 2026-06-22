@@ -1,107 +1,273 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePipeline } from "../state/PipelineProvider";
 import { AppShell } from "../layout/AppShell";
-import { GateBanner } from "../components/ui/GateBanner";
-import { ProspectCard } from "../components/ui/ProspectCard";
 import { Button } from "../components/ui/Button";
-import { Card, Eyebrow } from "../components/ui/Card";
+import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { Textarea } from "../components/ui/Textarea";
-import { AlertIcon, BellIcon, CheckIcon, EditIcon, MailIcon } from "../components/icons";
-import { copy } from "../data/fixtures/copy";
+import { AlertIcon, ArrowRightIcon, CheckIcon, EditIcon, MailIcon, ReplyIcon, XIcon } from "../components/icons";
 import { radius, space } from "../theme/tokens";
 import type { EmailAccount, OutreachItem, OutreachStage, OutreachVariant } from "../data/types";
-
-const columns: { key: OutreachStage; label: string; token: string }[] = [
-  { key: "contacted", label: "Contacted", token: "--accent" },
-  { key: "replied", label: "Replied", token: "--highlight-ink" },
-  { key: "success", label: "Success", token: "--success" },
-  { key: "partial", label: "Partial", token: "--warning" },
-  { key: "lost", label: "Lost", token: "--text-muted" },
-];
 
 /** ~200 sends/variant is the floor for a meaningful cold-email A/B read (see research). */
 const AB_MIN_PER_VARIANT = 200;
 
+/** The pipeline spine. A prospect moves New -> Contacted -> Replied -> Won or Lost. */
+const STAGES: { key: OutreachStage; label: string; token: string }[] = [
+  { key: "awaiting", label: "New", token: "--highlight-ink" },
+  { key: "contacted", label: "Contacted", token: "--accent" },
+  { key: "replied", label: "Replied", token: "--success" },
+  { key: "success", label: "Won", token: "--success" },
+  { key: "lost", label: "Lost", token: "--text-muted" },
+];
+
 export function ProspectTrackingScreen() {
-  const { state, actions, derived } = usePipeline();
-  const awaiting = state.outreach.filter((o) => o.stage === "awaiting");
+  const { state, actions } = usePipeline();
+  const [stage, setStage] = useState<OutreachStage>("awaiting");
   // Selected A/B variant per prospect (defaults to the control row).
   const [selected, setSelected] = useState<Record<string, string>>({});
+  // Lead.id === OutreachItem.id, so one lookup links each prospect back to its lead.
+  const leadScoreById = new Map(state.leads.map((l) => [l.id, l.score]));
+
+  // The store hydrates once on app mount; re-pull when the board opens so backend
+  // transitions (sent, replied) appear without a full page reload.
+  useEffect(() => {
+    actions.refreshOutreach();
+  }, [actions]);
+
+  // A jump from a lead focuses its prospect: switch to its stage tab and scroll it in.
+  useEffect(() => {
+    if (state.screen === "outreach" && state.focusId) {
+      const item = state.outreach.find((o) => o.id === state.focusId);
+      if (item) setStage(item.stage);
+      requestAnimationFrame(() => {
+        document.getElementById(`prospect-${state.focusId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    }
+  }, [state.focusId, state.screen, state.outreach]);
+
+  const countFor = (key: OutreachStage) => state.outreach.filter((o) => o.stage === key).length;
+  const items = state.outreach.filter((o) => o.stage === stage);
 
   return (
     <AppShell maxWidth={920}>
       <SenderBanner account={state.emailAccount} onConnect={() => actions.go("settings")} />
 
-      {derived.pendingApprovals > 0 && (
-        <div style={{ marginBottom: space.lg }}>
-          <GateBanner
-            eyebrow={copy.gateC.eyebrow}
-            heading={`${derived.pendingApprovals} messages need your approval before they send`}
-            sub={copy.gateC.sub}
-            icon={<BellIcon size={20} strokeWidth={2} />}
-          />
-        </div>
-      )}
-
-      {/* Summary row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: space.lg, marginBottom: space.xl }}>
-        <SummaryStat label="Contacted" value={derived.contactedTotal} />
-        <SummaryStat label="Replied" value={derived.repliedTotal} />
-        <SummaryStat label="Success" value={derived.successCount} color="var(--success)" />
-      </div>
-
-      {/* Awaiting approval */}
-      {awaiting.length > 0 && (
-        <section style={{ marginBottom: space.xl }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: space.md }}>Awaiting your approval</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: space.md }}>
-            {awaiting.map((o) => (
-              <AwaitingCard
-                key={o.id}
-                item={o}
-                selectedMessageId={selected[o.id]}
-                onSelectVariant={(mid) => setSelected((s) => ({ ...s, [o.id]: mid }))}
-                editingMessageId={state.editingMessageId}
-                draftSubject={state.outreachSubject}
-                draftBody={state.outreachBody}
-                actions={actions}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Prospect board */}
-      <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: space.md }}>Prospect board</h2>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: space.md }}>
-        {columns.map((col) => {
-          const items = state.outreach.filter((o) => o.stage === col.key);
+      {/* Stage toggle — the spine of the pipeline */}
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          flexWrap: "wrap",
+          marginBottom: space.xl,
+          borderBottom: "1px solid var(--border)",
+          paddingBottom: space.md,
+        }}
+      >
+        {STAGES.map((s) => {
+          const active = s.key === stage;
+          const n = countFor(s.key);
           return (
-            <div key={col.key}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "0 4px 10px",
-                  borderBottom: `2px solid var(${col.token})`,
-                  marginBottom: 10,
-                }}
-              >
-                <span style={{ fontSize: 13, fontWeight: 700 }}>{col.label}</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>{items.length}</span>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: space.sm }}>
-                {items.map((o) => (
-                  <ProspectCard key={o.id} prospect={o} />
-                ))}
-              </div>
-            </div>
+            <button
+              key={s.key}
+              onClick={() => setStage(s.key)}
+              style={{
+                padding: "8px 15px",
+                borderRadius: radius.pill,
+                fontSize: 13,
+                fontWeight: 600,
+                border: `1px solid ${active ? `var(${s.token})` : "var(--border)"}`,
+                background: active ? "var(--highlight-soft)" : "transparent",
+                color: active ? "var(--text-primary)" : "var(--text-secondary)",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
+              }}
+            >
+              {s.label}
+              <span style={{ fontSize: 12, fontWeight: 700, color: active ? `var(${s.token})` : "var(--text-muted)" }}>
+                {n}
+              </span>
+            </button>
           );
         })}
       </div>
+
+      {items.length === 0 ? (
+        <EmptyStage stage={stage} />
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: space.md }}>
+          {items.map((o) => (
+            <div
+              key={o.id}
+              id={`prospect-${o.id}`}
+              style={{
+                borderRadius: radius.md,
+                boxShadow: state.focusId === o.id ? "0 0 0 2px var(--accent-soft)" : undefined,
+                transition: "box-shadow .15s",
+              }}
+            >
+              {stage === "awaiting" ? (
+                <AwaitingCard
+                  item={o}
+                  selectedMessageId={selected[o.id]}
+                  onSelectVariant={(mid) => setSelected((sel) => ({ ...sel, [o.id]: mid }))}
+                  editingMessageId={state.editingMessageId}
+                  draftSubject={state.outreachSubject}
+                  draftBody={state.outreachBody}
+                  actions={actions}
+                />
+              ) : (
+                <StageCard
+                  item={o}
+                  leadScore={leadScoreById.get(o.id)}
+                  onOpenLead={() => actions.go("gateB", o.id)}
+                  actions={actions}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </AppShell>
+  );
+}
+
+const stagePill = (stage: OutreachStage): { label: string; bg: string; fg: string } => {
+  switch (stage) {
+    case "contacted":
+      return { label: "Contacted", bg: "var(--highlight-soft)", fg: "var(--accent)" };
+    case "replied":
+      return { label: "Replied", bg: "var(--success-soft, var(--bg-subtle))", fg: "var(--success)" };
+    case "success":
+      return { label: "Won", bg: "var(--success-soft, var(--bg-subtle))", fg: "var(--success)" };
+    case "lost":
+      return { label: "Lost", bg: "var(--bg-subtle)", fg: "var(--text-muted)" };
+    default:
+      return { label: "Awaiting", bg: "var(--bg-subtle)", fg: "var(--text-muted)" };
+  }
+};
+
+/**
+ * A non-awaiting prospect: contacted, replied, won, or lost. Shows the recipient, the
+ * subject that went out, and stage-appropriate actions. Replied is the one that acts:
+ * Mark won / Mark lost, which persists the outcome to Supabase for the learning loop.
+ */
+function StageCard({
+  item,
+  leadScore,
+  onOpenLead,
+  actions,
+}: {
+  item: OutreachItem;
+  leadScore?: number;
+  onOpenLead: () => void;
+  actions: ReturnType<typeof usePipeline>["actions"];
+}) {
+  const pill = stagePill(item.stage);
+  return (
+    <Card>
+      <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 10 }}>
+        <span
+          style={{
+            flex: "none", width: 40, height: 40, borderRadius: 11, background: "var(--bg-subtle)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 14, fontWeight: 700, color: "var(--text-secondary)",
+          }}
+        >
+          {item.initials}
+        </span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 15, fontWeight: 700 }}>{item.name}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              {item.last ?? item.channel}
+              {typeof leadScore === "number" ? ` · score ${leadScore}` : ""}
+            </span>
+            <button
+              onClick={onOpenLead}
+              title="View this prospect's lead and evidence"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 3,
+                fontSize: 12, fontWeight: 600, color: "var(--accent)",
+                background: "none", border: "none", cursor: "pointer", padding: 0,
+              }}
+            >
+              View lead
+              <ArrowRightIcon size={12} strokeWidth={2.4} />
+            </button>
+          </div>
+        </div>
+        <span
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 5,
+            fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: radius.pill,
+            background: pill.bg, color: pill.fg,
+          }}
+        >
+          {item.stage === "replied" && <ReplyIcon size={12} strokeWidth={2.2} />}
+          {pill.label}
+        </span>
+      </div>
+
+      <RecipientLine toEmail={item.toEmail} emailValid={item.emailValid} />
+
+      {item.subject && (
+        <div
+          style={{
+            background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: radius.md,
+            padding: "10px 13px", fontSize: 13,
+            marginBottom: item.stage === "replied" || item.stage === "contacted" ? space.md : 0,
+          }}
+        >
+          <span style={{ color: "var(--text-muted)", fontWeight: 600 }}>Subject: </span>
+          {item.subject}
+        </div>
+      )}
+
+      {item.stage === "replied" && (
+        <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
+          <Button leadingIcon={<CheckIcon size={16} strokeWidth={2.4} />} onClick={() => actions.markWon(item.id)}>
+            Mark won
+          </Button>
+          <Button
+            variant="ghost"
+            leadingIcon={<XIcon size={15} strokeWidth={2} />}
+            onClick={() => actions.markLost(item.id)}
+            style={{ color: "var(--danger)", borderColor: "var(--danger)" }}
+          >
+            Mark lost
+          </Button>
+        </div>
+      )}
+
+      {item.stage === "contacted" && (
+        <div style={{ display: "flex", gap: space.sm }}>
+          <Button variant="ghost" leadingIcon={<XIcon size={15} strokeWidth={2} />} onClick={() => actions.markLost(item.id)}>
+            Mark lost
+          </Button>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function EmptyStage({ stage }: { stage: OutreachStage }) {
+  const msg =
+    stage === "awaiting"
+      ? "No drafts awaiting your approval."
+      : stage === "contacted"
+        ? "Nothing sent and awaiting a reply yet."
+        : stage === "replied"
+          ? "No replies yet. They land here when a prospect responds."
+          : stage === "success"
+            ? "No won deals yet."
+            : "Nothing lost.";
+  return (
+    <Card>
+      <div style={{ fontSize: 14, color: "var(--text-secondary)", padding: "8px 4px" }}>{msg}</div>
+    </Card>
   );
 }
 
@@ -147,7 +313,21 @@ function AwaitingCard({
         </span>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 15, fontWeight: 700 }}>{item.name}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{item.channel} · Initial email</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{item.channel} · Initial email</span>
+            <button
+              onClick={() => actions.go("gateB", item.id)}
+              title="View this prospect's lead and evidence"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 3,
+                fontSize: 12, fontWeight: 600, color: "var(--accent)",
+                background: "none", border: "none", cursor: "pointer", padding: 0,
+              }}
+            >
+              View lead
+              <ArrowRightIcon size={12} strokeWidth={2.4} />
+            </button>
+          </div>
         </div>
         <span
           style={{
@@ -259,8 +439,8 @@ function AwaitingCard({
 }
 
 /**
- * The "To:" line on an approval card. Answers "where does this send?" at a glance, and
- * flags when there is no contact (can't send) or the address failed MX validation.
+ * The "To:" line on a card. Answers "where does this send?" at a glance, and flags when
+ * there is no contact (can't send) or the address failed MX validation.
  */
 function RecipientLine({ toEmail, emailValid }: { toEmail?: string; emailValid?: boolean }) {
   const missing = !toEmail;
@@ -306,7 +486,7 @@ function RecipientLine({ toEmail, emailValid }: { toEmail?: string; emailValid?:
 /**
  * Makes the destination of approved drafts unmistakable: outreach sends *from* this inbox.
  * When nothing is connected, the approve buttons would have nowhere to send — so this warns
- * and links straight to Settings where the inbox is connected.
+ * and links to Settings where the inbox is connected.
  */
 function SenderBanner({
   account,
@@ -364,14 +544,5 @@ function SenderBanner({
         </>
       )}
     </div>
-  );
-}
-
-function SummaryStat({ label, value, color }: { label: string; value: number; color?: string }) {
-  return (
-    <Card>
-      <Eyebrow>{label}</Eyebrow>
-      <div style={{ fontSize: 28, fontWeight: 700, color: color ?? "var(--text-primary)" }}>{value}</div>
-    </Card>
   );
 }

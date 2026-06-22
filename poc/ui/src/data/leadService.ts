@@ -299,6 +299,12 @@ export const leadService = {
       ? resolve(undefined)
       : req<unknown>(`/outreach/${id}/skip`, { method: "POST" }).then(() => undefined),
 
+  /** Record the final outcome of a replied prospect (persists to message + publishers). */
+  markOutcome: (id: string, outcome: "won" | "lost"): Promise<void> =>
+    USE_FIXTURES
+      ? resolve(undefined)
+      : req<unknown>(`/outreach/${id}/${outcome}`, { method: "POST" }).then(() => undefined),
+
   /* ---- Email send identity (the inbox outreach sends from) ---- */
   getEmailAccount: (): Promise<EmailAccount> =>
     USE_FIXTURES ? resolve(loadEmailFixture()) : req<EmailAccount>("/email-account"),

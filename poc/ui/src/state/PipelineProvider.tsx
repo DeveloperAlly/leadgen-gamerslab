@@ -76,6 +76,7 @@ const writeGatePassed = (passed: boolean): void => {
 const initialState: PipelineState = {
   mode: "customers",
   screen: readGatePassed() ? appConfig.postLoginScreen : "signin",
+  focusId: null,
   email: "",
   password: "",
   signinState: "idle",
@@ -110,7 +111,8 @@ const initialState: PipelineState = {
 };
 
 export interface PipelineActions {
-  go: (screen: ScreenKey) => void;
+  /** Navigate to a screen, optionally focusing a publisher id (links lead <-> outreach). */
+  go: (screen: ScreenKey, focusId?: string) => void;
   setMode: (mode: Mode) => void;
   setEmail: (email: string) => void;
   setPassword: (password: string) => void;
@@ -141,6 +143,11 @@ export interface PipelineActions {
   sendToCrm: () => void;
   approveOutreach: (id: string) => void;
   skipOutreach: (id: string) => void;
+  /** Final outcome on a replied prospect. */
+  markWon: (id: string) => void;
+  markLost: (id: string) => void;
+  /** Re-pull the outreach board from the backend (the store hydrates once on mount). */
+  refreshOutreach: () => void;
   startEditVariant: (messageId: string) => void;
   setOutreachSubject: (value: string) => void;
   setOutreachBody: (value: string) => void;
@@ -250,7 +257,7 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
     };
 
     return {
-      go: (screen) => dispatch({ type: "GO", screen }),
+      go: (screen, focusId) => dispatch({ type: "GO", screen, focusId }),
       setMode: (mode) => dispatch({ type: "SET_MODE", mode }),
       setEmail: (email) => dispatch({ type: "SET_EMAIL", email }),
       setPassword: (password) => dispatch({ type: "SET_PASSWORD", password }),
@@ -380,6 +387,22 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
       skipOutreach: (id) => {
         dispatch({ type: "SET_OUTREACH_STAGE", id, stage: "lost", last: "Skipped" });
         void leadService.skipOutreach(id);
+      },
+      markWon: (id) => {
+        dispatch({ type: "SET_OUTREACH_STAGE", id, stage: "success", last: "Marked won" });
+        void leadService.markOutcome(id, "won");
+        showToast("Marked won");
+      },
+      markLost: (id) => {
+        dispatch({ type: "SET_OUTREACH_STAGE", id, stage: "lost", last: "Marked lost" });
+        void leadService.markOutcome(id, "lost");
+        showToast("Marked lost");
+      },
+      refreshOutreach: () => {
+        void leadService
+          .getOutreach()
+          .then((outreach) => dispatch({ type: "HYDRATE", payload: { outreach } }))
+          .catch(() => {});
       },
       startEditVariant: (messageId) => {
         let v;
