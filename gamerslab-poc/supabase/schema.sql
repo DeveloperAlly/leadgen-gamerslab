@@ -141,6 +141,13 @@ ALTER TABLE publishers ADD COLUMN IF NOT EXISTS reject_reason_code    TEXT;     
 CREATE INDEX IF NOT EXISTS idx_publishers_evidence_strength  ON publishers(evidence_strength);
 CREATE INDEX IF NOT EXISTS idx_publishers_reject_reason_code ON publishers(reject_reason_code);
 
+-- Reply tracking (migration 0006) — the Gmail thread/message id of a sent outreach, so the
+-- n8n Reply-poll workflow can detect when the publisher replies. See how/email_send_pipeline_DRAFT.md §6b.
+ALTER TABLE publishers ADD COLUMN IF NOT EXISTS outreach_thread_id  TEXT;
+ALTER TABLE publishers ADD COLUMN IF NOT EXISTS outreach_message_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_publishers_awaiting_reply
+  ON publishers (pipeline_status) WHERE pipeline_status = 'sent' AND replied_at IS NULL;
+
 -- ─────────────────────────────────────────────
 -- EMAIL_ACCOUNTS (migration 0005, applied live 2026-06-22)
 -- The inbox a tenant connects (Gmail/Outlook OAuth) to send approved outreach from.

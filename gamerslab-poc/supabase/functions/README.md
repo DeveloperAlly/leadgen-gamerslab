@@ -29,14 +29,22 @@ supabase/
 │   ├── leads/                  GET/PATCH/POST export  (live, over publishers)
 │   ├── outreach/               GET/POST approve|skip  (live; approve fires n8n Send)
 │   ├── insights/               GET/POST apply         (fixed; apply no-op)
-│   ├── email-oauth/            POST /start, GET /callback (connect Gmail/Outlook)
+│   ├── email-oauth/            POST /start, GET /callback (connect Gmail)
 │   ├── email-account/          GET/DELETE             (read / disconnect the inbox)
 │   ├── email-test-send/        POST                   (test send from the inbox)
-│   └── _shared/email.ts        token crypto + Gmail/Graph OAuth + send helpers
+│   ├── email-access-token/     POST                   (broker: mints an access token for n8n)
+│   └── _shared/email.ts        token crypto + Gmail OAuth + send helpers
 └── migrations/
-    ├── 0001_runs.sql           discovery job-state table
-    └── 0005_email_accounts.sql connected sending inbox (encrypted token)
+    ├── 0001_runs.sql                    discovery job-state table
+    ├── 0005_email_accounts.sql          connected sending inbox (encrypted token)
+    └── 0006_outreach_thread_tracking.sql Gmail thread/message id for reply detection
 ```
+
+**n8n workflows** (created live; activate after secrets):
+- `GamersLab Outreach Send` (id `YEgPZ0eATTSAb9pa`) — webhook `…/webhook/gamerslab-send`,
+  fired by approve; sends via the broker. Source: `workflow/email-send.workflow.ts`.
+- `GamersLab Reply Poll` (id `LAPjN0jbvV9GAetX`) — every 15 min; stamps `replied_at`.
+  Source: `workflow/email-reply-poll.workflow.ts`. Both need `API_BEARER` in the n8n env.
 
 **Live data path** (real `publishers` data): discovery → leads → outreach → approve/export.
 **Fixed-config surfaces** (GamersLab is single-config; baked into the workflow): tenant,

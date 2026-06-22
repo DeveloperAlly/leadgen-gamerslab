@@ -12,7 +12,6 @@ import {
   LockIcon,
   CheckIcon,
   XIcon,
-  GlobeIcon,
 } from "../components/icons";
 
 const providerLabel = (p?: EmailAccount["provider"]) =>
@@ -96,14 +95,6 @@ export function EmailScreen() {
               onClick={() => connect("google")}
             >
               Continue with Gmail
-            </Button>
-            <Button
-              variant="secondary"
-              leadingIcon={<GlobeIcon size={17} strokeWidth={2} />}
-              disabled={busy !== null}
-              onClick={() => connect("microsoft")}
-            >
-              Continue with Outlook
             </Button>
           </div>
           <p
