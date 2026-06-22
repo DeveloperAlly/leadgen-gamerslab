@@ -176,6 +176,23 @@ export const leadService = {
   removeSource: (id: string): Promise<void> =>
     USE_FIXTURES ? resolve(undefined) : req<void>(`/sources/${id}`, { method: "DELETE" }),
 
+  /** Upload a real document (bytes -> Storage) and register it as a queued source. */
+  uploadDocument: async (file: File): Promise<Source> => {
+    if (USE_FIXTURES) {
+      return resolve<Source>({ id: nextId("src"), type: "file", label: file.name, parsing: false, done: false });
+    }
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("label", file.name);
+    const res = await fetch(`${API_BASE}/sources`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${API_BEARER}` },
+      body: fd,
+    });
+    if (!res.ok) throw new Error(`POST /sources (upload) -> ${res.status}`);
+    return (await res.json()) as Source;
+  },
+
   getIntake: (): Promise<Intake> =>
     USE_FIXTURES ? resolve(seedIntake) : req<Intake>("/intake"),
 

@@ -88,6 +88,7 @@ export interface PipelineActions {
   signinContinue: () => void;
   notify: (message: string) => void;
   addSource: (type: SourceType, label: string) => void;
+  uploadSource: (file: File) => void;
   removeSource: (id: string) => void;
   setWebsiteInput: (value: string) => void;
   setSocialInput: (value: string) => void;
@@ -234,6 +235,11 @@ export function PipelineProvider({ children }: { children: ReactNode }) {
         setTimeout(() => dispatch({ type: "GO", screen: appConfig.postLoginScreen }), 850);
       },
       addSource,
+      uploadSource: (file: File) => {
+        // Uploads the real bytes to Storage; the returned source is "queued" until the
+        // Source Ingestion workflow downloads + extracts it.
+        void leadService.uploadDocument(file).then((source) => dispatch({ type: "ADD_SOURCE", source }));
+      },
       removeSource: (id) => {
         void leadService.removeSource(id);
         dispatch({ type: "REMOVE_SOURCE", id });

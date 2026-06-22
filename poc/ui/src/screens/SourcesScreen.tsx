@@ -39,7 +39,7 @@ export function SourcesScreen() {
           }
           hint="PDFs, decks, docs — anything that explains your business"
           onBrowse={() => actions.addSource("file", "research-notes.pdf")}
-          onFiles={(files) => Array.from(files).forEach((f) => actions.addSource("file", f.name))}
+          onFiles={(files) => Array.from(files).forEach((f) => actions.uploadSource(f))}
         />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: space.md, marginTop: space.lg }}>
           <Input
