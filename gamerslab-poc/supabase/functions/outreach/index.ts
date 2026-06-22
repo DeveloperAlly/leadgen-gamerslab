@@ -11,12 +11,130 @@
  * variant (A -> approved_subject, B -> approved_subject_b, body -> approved_body) and the
  * trigger mirrors it back into `message`. Approve marks the publisher approved and, when
  * N8N_SEND_WEBHOOK_URL is set, fires the n8n Send workflow (non-fatal).
+ *
+ * The message->OutreachItem mapping lives inline here (not in _shared/mapper.ts) so the
+ * board contract is self-contained and deploys without the shared mapper.
  * Design: how/pipeline_messaging_ab_sequencing_DRAFT.md. Send: how/email_send_pipeline_DRAFT.md.
  */
 
 import { admin, errBody, json, preflight, requireBearer } from "../_shared/http.ts";
-import { MESSAGE_SELECT, type MessageRow, toOutreachItems } from "../_shared/mapper.ts";
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+/** A `message` row joined with its publisher's display + recipient fields. */
+interface MessageRow {
+  id: string;
+  publisher_id: string;
+  step: number;
+  variant: string;
+  is_control: boolean;
+  subject: string | null;
+  body: string | null;
+  status: string | null;
+  sent_at: string | null;
+  replied_at: string | null;
+  publishers:
+    | {
+      publisher_name: string | null;
+      game_name: string | null;
+      contact_email: string | null;
+      email_valid: boolean | null;
+    }
+    | null;
+}
+
+/** Columns to SELECT from `message` (with the publisher name + recipient embedded). */
+const MESSAGE_SELECT =
+  "id,publisher_id,step,variant,is_control,subject,body,status,sent_at,replied_at," +
+  "publishers(publisher_name,game_name,contact_email,email_valid)";
+
+const initialsOf = (name: string): string =>
+  name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("") || "?";
+
+const relDate = (iso: string | null): string => {
+  if (!iso) return "";
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "";
+  const days = Math.floor((Date.now() - then) / 86_400_000);
+  if (days <= 0) return "today";
+  if (days === 1) return "1d ago";
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  return months === 1 ? "1mo ago" : `${months}mo ago`;
+};
+
+/** message.status -> OutreachStage (Gate C board). */
+const statusToStage = (s: string | null): string => {
+  switch (s) {
+    case "won":
+      return "success";
+    case "lost":
+      return "lost";
+    case "replied":
+      return "replied";
+    case "sent":
+      return "contacted";
+    // V1-GAP: approving is the terminal action in v1; it shows on the board as "contacted".
+    case "approved":
+      return "contacted";
+    case "rejected":
+    case "skip":
+      return "lost";
+    default:
+      return "awaiting"; // draft / null — has a draft awaiting approval
+  }
+};
+
+/** Group `message` rows by publisher into the UI's OutreachItem shape (A/B variants inside). */
+function toOutreachItems(rows: MessageRow[]): unknown[] {
+  const byPublisher = new Map<string, MessageRow[]>();
+  for (const r of rows) {
+    const list = byPublisher.get(r.publisher_id) ?? [];
+    list.push(r);
+    byPublisher.set(r.publisher_id, list);
+  }
+
+  const items: unknown[] = [];
+  for (const [publisherId, msgs] of byPublisher) {
+    const pub = msgs[0]!.publishers;
+    const name = pub?.publisher_name || pub?.game_name || "Unknown publisher";
+    const control = msgs.find((m) => m.is_control) ?? msgs[0]!;
+
+    const variants = msgs
+      .filter((m) => m.step === 1)
+      .sort((a, b) => a.variant.localeCompare(b.variant))
+      .map((m) => ({
+        messageId: m.id,
+        variant: m.variant,
+        isControl: m.is_control,
+        step: m.step,
+        subject: m.subject ?? undefined,
+        body: m.body ?? undefined,
+        sentCount: m.sent_at ? 1 : 0,
+        replyCount: m.replied_at ? 1 : 0,
+      }));
+
+    let last: string | undefined;
+    if (control.replied_at) last = `Replied ${relDate(control.replied_at)}`;
+    else if (control.sent_at) last = `Sent ${relDate(control.sent_at)}`;
+
+    items.push({
+      id: publisherId,
+      name,
+      initials: initialsOf(name),
+      channel: "Email",
+      stage: statusToStage(control.status),
+      // Empty string means no contact found — normalize to undefined so the UI's
+      // "no recipient, can't send" branch fires instead of rendering a blank address.
+      toEmail: pub?.contact_email?.trim() ? pub.contact_email.trim() : undefined,
+      emailValid: pub?.email_valid ?? undefined,
+      subject: control.subject ?? undefined,
+      body: control.body ?? undefined,
+      variants,
+      last,
+    });
+  }
+  return items;
+}
 
 // Segments after "outreach": /outreach/message/:id -> ["message", id]; /outreach/:id/approve -> [id, "approve"].
 const parsePath = (url: string): { seg1?: string; seg2?: string } => {
@@ -52,7 +170,7 @@ Deno.serve(async (req) => {
       .select(MESSAGE_SELECT)
       .eq("step", 1)
       // Only actionable rows with real content: drop skip/backlog tiers and empty drafts (matches v1).
-      .in("status", ["draft", "approved", "rejected", "sent", "replied"])
+      .in("status", ["draft", "approved", "rejected", "sent", "replied", "won", "lost"])
       .neq("body", "")
       .order("publisher_id", { ascending: true })
       .order("variant", { ascending: true });
@@ -104,8 +222,22 @@ Deno.serve(async (req) => {
   if (req.method === "POST") {
     const { seg1: id, seg2: action } = parsePath(req.url);
     if (!id) return errBody("bad_request", "Missing publisher id", 400);
-    if (action !== "approve" && action !== "skip") {
-      return errBody("bad_request", "action must be approve or skip", 400);
+    if (!["approve", "skip", "won", "lost"].includes(action ?? "")) {
+      return errBody("bad_request", "action must be approve, skip, won, or lost", 400);
+    }
+
+    // Outcome on a replied prospect. Persist to publishers + message (the board reads
+    // message.status); this is the outcome data the learning loop reads. publishers first
+    // so the sync trigger can't clobber the message stamp.
+    if (action === "won" || action === "lost") {
+      const status = action;
+      const { error: pErr } = await db.from("publishers").update({ pipeline_status: status }).eq("id", id);
+      if (pErr) return errBody("db_error", pErr.message, pErr.code === "PGRST116" ? 404 : 500);
+      const { error: mErr } = await db.from("message").update({ status }).eq("publisher_id", id).eq("step", 1);
+      if (mErr) return errBody("db_error", mErr.message, 500);
+      const { item, error: rErr } = await publisherItem(db, id);
+      if (rErr) return errBody("db_error", rErr.message, 500);
+      return json(item);
     }
 
     // Guard: never approve-and-send a publisher with no recipient. Approval fires the
