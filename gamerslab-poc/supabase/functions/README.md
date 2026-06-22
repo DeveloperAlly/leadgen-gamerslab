@@ -44,7 +44,9 @@ supabase/
 - `GamersLab Outreach Send` (id `YEgPZ0eATTSAb9pa`) — webhook `…/webhook/gamerslab-send`,
   fired by approve; sends via the broker. Source: `workflow/email-send.workflow.ts`.
 - `GamersLab Reply Poll` (id `LAPjN0jbvV9GAetX`) — every 15 min; stamps `replied_at`.
-  Source: `workflow/email-reply-poll.workflow.ts`. Both need `API_BEARER` in the n8n env.
+  Source: `workflow/email-reply-poll.workflow.ts`. Both call the broker via a Header Auth
+  **credential** `GamersLab API Bearer` (Authorization = `Bearer <API_BEARER>`) on the
+  `Get Access Token` node — n8n uses credentials, not env vars.
 
 **Live data path** (real `publishers` data): discovery → leads → outreach → approve/export.
 **Fixed-config surfaces** (GamersLab is single-config; baked into the workflow): tenant,

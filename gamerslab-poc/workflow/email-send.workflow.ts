@@ -9,7 +9,8 @@
  * token or crypto key), sends as the connected inbox, and stamps sent_at + the Gmail
  * thread/message id on the publisher row. Design: how/email_send_pipeline_DRAFT.md §6a.
  *
- * Secrets the n8n instance needs (env): API_BEARER (to call the broker).
+ * Credential the n8n instance needs: a Header Auth credential "GamersLab API Bearer"
+ * (Name: Authorization, Value: Bearer <API_BEARER>) bound to the Get Access Token node.
  */
 
 import { workflow, node, trigger, newCredential, expr } from '@n8n/workflow-sdk';
@@ -51,10 +52,10 @@ const getToken = node({
     parameters: {
       method: 'POST',
       url: 'https://ccmwksmgoisijvyovgko.supabase.co/functions/v1/email-access-token',
-      sendHeaders: true,
-      specifyHeaders: 'keypair',
-      headerParameters: { parameters: [{ name: 'Authorization', value: expr('Bearer {{ $env.API_BEARER }}') }] },
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
     },
+    credentials: { httpHeaderAuth: newCredential('GamersLab API Bearer') },
   },
 });
 
