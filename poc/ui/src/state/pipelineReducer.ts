@@ -25,6 +25,13 @@ export interface Usage {
 export interface PipelineState {
   mode: Mode;
   screen: ScreenKey;
+  /**
+   * Cross-screen navigation target: the publisher id a jump wants the destination screen
+   * to surface (a lead's outreach, or an outreach's lead). Lead.id === OutreachItem.id, so
+   * one id links both. Null when navigation carries no focus. Consumed + cleared by the
+   * destination screen (scroll-to / highlight); GO also auto-expands the lead at Gate B.
+   */
+  focusId: string | null;
 
   email: string;
   password: string;
@@ -79,7 +86,7 @@ export type HydratePayload = Partial<
 >;
 
 export type PipelineAction =
-  | { type: "GO"; screen: ScreenKey }
+  | { type: "GO"; screen: ScreenKey; focusId?: string }
   | { type: "SET_MODE"; mode: Mode }
   | { type: "SET_EMAIL"; email: string }
   | { type: "SET_PASSWORD"; password: string }
@@ -122,7 +129,14 @@ export type PipelineAction =
 export function pipelineReducer(state: PipelineState, action: PipelineAction): PipelineState {
   switch (action.type) {
     case "GO":
-      return { ...state, screen: action.screen };
+      return {
+        ...state,
+        screen: action.screen,
+        focusId: action.focusId ?? null,
+        // Jumping to a specific lead opens its dossier so the link lands on the evidence.
+        expandedLead:
+          action.screen === "gateB" && action.focusId ? action.focusId : state.expandedLead,
+      };
     case "SET_MODE":
       return { ...state, mode: action.mode };
     case "SET_EMAIL":
