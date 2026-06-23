@@ -44,6 +44,27 @@ gamerslab-poc/                              ← you are here (the built v1 pipel
 > **white-label v2** design/productisation lives at `../whitelabel/`, and the cross-cutting
 > campaign context (research, business process, architecture) at the repo root (`who/ what/ how/`).
 
+## System flow (end-to-end)
+
+Two flows make up the system. The first builds the client's **CAG brief**; the second is the
+**lead lifecycle** that consumes it. Inputs are on the left of each step, outputs on the right.
+Full node/wiring detail is in [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
+> ⚠️ **Keep these current.** These SVGs are generated from the live system. When a workflow,
+> Edge function, or DB write changes, **update the matching `docs/assets/*.svg` in the same change**
+> — it is step 1 on the `ARCHITECTURE.md §10` maintenance checklist.
+
+### 1 · Client — onboarding & intelligence loop (builds the CAG brief)
+
+![Client onboarding and intelligence loop: sources → ingestion → intake bank → Context Builder → CAG brief](docs/assets/client-intelligence-flow.svg)
+
+### 2 · Leads — end-to-end (Steam → inbox → reply)
+
+![Leads end-to-end flow: trigger, mine, score, enrich, draft, Gate B, Gate C, send, reply, learn — with inputs and outputs per stage](docs/assets/leads-end-to-end-flow.svg)
+
+The single handoff between them is the **CAG brief**: built in flow 1, consumed at the *draft* step
+of flow 2 (`Apply CAG from DB`).
+
 ## Setup
 
 ### 1. Secrets

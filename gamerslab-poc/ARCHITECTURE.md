@@ -43,11 +43,13 @@ gap to close** (tech debt, not acceptable design):
 | Layer | Modular design (the standard) | As-built today | Gap to close before it extends cleanly |
 |---|---|---|---|
 | Venue / mining | Venue is a **pluggable adapter**; tenant declares its venue + entity hop | Steam/SteamSpy logic is in the v10 engine nodes | Lift Steam specifics into a venue-adapter config; engine stays generic |
-| CAG / brief | `cag_context` built from a tenant's `intake_answer` bank by the generic Context Builder | Generic ✅ — already data-driven per tenant | Keep question keys tenant-scoped (no GamersLab keys in code) |
+| CAG / brief | `cag_context` derived from ALL the tenant's sources + composed by the generic Context Builder | Generic ✅ — bank auto-derived from all sources (deck+site), generic `=== BUSINESS BRIEF ===` scaffold | Keep question keys tenant-scoped; restore banned-phrases/contact as an operator-config layer (they prune as non-source facts) |
 | Data model | `tenant_id` on every row; generic entities (`lead`, `evidence`, `outreach`, …) | `tenant_id` present; live pipeline still writes `publishers` | Migrate the live path onto the generic schema |
 | Edge API surface | **Identical generic function surface** for every tenant; backend swaps underneath | Generic Lead/Outreach contract via `_shared/mapper.ts` ✅ | Keep baked GamersLab config (`gamerslab-config.ts`) tenant-loaded, not hardcoded |
 | n8n workflows | One **shared** engine + send + reply + context + ingest, parameterised by `tenant_id` | 6 GamersLab-wired graphs (the correct *pattern*, single-tenant) | Parameterise per-tenant inputs; one shared instance, not instance-per-tenant |
 | UI | **One source** (`poc/ui/`), reskinned by tokens — never forked | Built `--mode poc`, themed "gamerslab" ✅ | None — already one source, two build modes |
+| Models / LLM | Model + provider are **per-tenant config**, with a runtime fallback | Config-driven ✅ — `pipeline_config.models` override + dynamic resolution from the live OpenRouter `/models` list; no pinned IDs | BYO model KEY broker still to build (`how/byo_model_keys_DRAFT.md`) so each tenant funds their own usage |
+| Scoring / rubric | "Good lead" derived from the value prop, tenant-editable | De-hardcoded ✅ — `Pre-Score` is a generic budget pre-filter; fit is the LLM `fit_score` vs the derived rubric (`b1_fit_strong`/`b1_icp`/`b2_poorfit`) in the CAG, and it gates the board | Surface the rubric weights on the Context page; learn weights from reply outcomes |
 
 > So: **clear differentiation (POC ≠ v2) AND a clean extension path (POC → v2 by config).** Everything
 > below (§1–§10) is the **v1 as-built**; the "Gap to close" column is the modularisation backlog that
@@ -109,7 +111,7 @@ All on the same self-hosted n8n instance (`n8n-j39n.sliplane.app`).
 | ② | **GamersLab Outreach Send** | `YEgPZ0eATTSAb9pa` | `POST /webhook/gamerslab-send` | ✅ | Approve → Gmail send → stamp `sent` on `publishers` + `message`. |
 | ③ | **GamersLab Reply Poll** | `LAPjN0jbvV9GAetX` | Schedule every 15 min | ✅ | Detect inbound reply on sent threads → stamp `replied`. |
 | ④ | **GamersLab Context Builder** | `G5Mkf1KUmr6LHJdV` | `POST /webhook/context-build` | ✅ | Compose the CAG block from `intake_answer` → write `cag_context`. |
-| ⑤ | **GamersLab Source Ingestion** | `ertFL6pi4wlJ3lMJ` | `POST /webhook/source-ingest` | ✅ | URL/file → LLM-extract facts → fill/suggest intake → trigger ④. |
+| ⑤ | **GamersLab Source Ingestion** | `ertFL6pi4wlJ3lMJ` | `POST /webhook/source-ingest` | ✅ | URL/file → capture raw_text (zero-AI) → derive the bank from ALL sources combined → overwrite `intake_answer` → trigger ④. |
 | — | **GamersLab Publisher Outreach v9** | `bGxcwlp3VRL8jT9r-Mm_h` | Schedule **(node disabled)** | ⏸ inert | **Superseded by ①ㆍparked.** Trigger node disabled → does not run. See §3. |
 | — | *Gamers Lab Monitor Site* | `pTkt5lTwDgTwUY1f` | Schedule | ✅ | **Different product** (monitoring bot). Not lead-gen. |
 
@@ -163,13 +165,25 @@ Edge fn). n8n has no REST execute endpoint, so the webhook is the UI's entry.
   → (enrich done) Resolve Run Context → Status: Completed   posts progress 100 (webhook runs only)
 ```
 
-**Recent live edits (2026-06-23, already applied):** `WHOIS Lookup` node **removed** (0% real
-registrants by law) and rewired `Normalise Search → Fetch Publisher Website`; `Merge All Data` now
-mines socials from Exa result links; `Add B Variant` inserted between `Build Final Record` and
-`Upsert to Supabase`. See `workflow/v10-live-edits/` for the applied node bodies.
+**Recent live edits (2026-06-23, applied + published):** de-hardcoded for the modular mandate —
+`Pre-Score` is now a generic review-volume budget pre-filter (no Steam-specific fit weights);
+`Pick 100 Publishers` ranks by sentiment + review volume (dropped the Steam-appid recency weight);
+`Prepare LLM Items` dropped the fabricated fallback brief (neutral placeholder) and the hardcoded
+`bestUgcApp`/`pitchAngle` (the LLM picks angle/product from the derived brief); `Build Final Record`
+now **gates the board** on the LLM `fit_score` (weak / `recommended_action=archive` → `pipeline_status=skip`);
+a new `Get Model Config` node + config-driven model resolution replaces hardcoded model IDs (below).
+Earlier 2026-06-23 edits: `WHOIS Lookup` removed, socials mined from Exa, `Add B Variant` inserted.
+See `workflow/v10-live-edits/`.
 
-**Outreach tiers** (set in `Pre-Score`): A `60+` full · B `30–59` full · C `10–29` short · skip
-`<10` backlog. **Writes:** `publishers` (upsert `steam_app_id`), backlog rows; reads `cag_context`.
+**Model selection (config-driven, no pinned IDs):** `Get Model Config` reads `pipeline_config.models`
+(per-tenant override); when empty, `Prepare LLM Items` resolves a good-cheap chain from the live
+OpenRouter `/models` list (reputable instruct families, < $5/1M combined, cheapest top 4) and emits a
+`models:[…]` array so OpenRouter auto-routes across them (one model rate-limiting can't fail the run).
+Paid calls bill the `OpenRouter GamerLab Acct` credential.
+
+**Outreach tiers** (set in `Pre-Score`, now a generic review-volume pre-filter): A `40+` · B `20–39` ·
+C `0–19` short · skip `<0` backlog. Real fit is the LLM `fit_score` vs the derived rubric (it gates
+the board). **Writes:** `publishers` (upsert `steam_app_id`), backlog rows; reads `cag_context`.
 **Credentials:** OpenRouter, Supabase Postgres, `SERPER_API_KEY` + Exa key (env/HTTP),
 `N8N_STATUS_SECRET`.
 
@@ -213,29 +227,45 @@ by ⑤ at the end of an ingest.
 Build Webhook → Read Intake → Compose CAG → Publish to cag_context → Trim cag_context
 ```
 - **Read Intake** — `SELECT question_key, answer FROM intake_answer` for the tenant.
-- **Compose CAG** — deterministic template assembling the `=== GAMERSLAB PRODUCT BRIEF === … ===
-  END GAMERSLAB BRIEF ===` block from keyed answers (oneliner, problem, numbers, peers, apps, pitch
-  angles, objections, sdk, fit profile, contact/CTA, team, banned phrases). **These markers are the
-  exact block the engine's `Apply CAG from DB` node regex-swaps** — do not rename them.
+- **Compose CAG** — deterministic GENERIC template (no client nouns, 2026-06-23): assembles
+  `=== BUSINESS BRIEF === … === END BUSINESS BRIEF ===` from keyed answers (what-it-is, problem,
+  numbers, peers, products, pitch angles, objections, integration, ICP, fit signals, poor-fit, pain
+  signals, good-lead, contact/CTA, team, banned). The engine's `Apply CAG from DB` regex matches the
+  PLACEHOLDER block inside ①'s `Prepare LLM Items` (still `=== GAMERSLAB PRODUCT BRIEF ===`) and
+  substitutes this DB block, so the DB markers may differ from the placeholder. **Follow-up:** make
+  the placeholder markers generic too for consistency.
 - **Publish to cag_context** — insert new row; **Trim** keeps only the latest by `updated_at`.
 
 ### ⑤ GamersLab Source Ingestion (`ertFL6pi4wlJ3lMJ`)
 
 **Trigger:** `POST /webhook/source-ingest` — fired by the `sources` Edge fn when a source is queued.
+**Rebuilt 2026-06-23** to (a) capture source text with ZERO AI before any LLM, and (b) DERIVE the
+whole intake bank from ALL sources COMBINED (no per-source ADD/SUGGEST, no hand-authoring).
+Re-derives on every source add.
 ```
-Ingest Webhook → Fetch Free Models → Get Answers → Prep → Get Queued URLs → Route Type (IF)
-   url  → Fetch URL ─┐
-   file → Download File → Extract Doc (PDF) ─┘→ Prep LLM → Extract Chain (OR Model / OR Fallback)
-   → Build Writes → Apply Writes → Trigger Context Builder (calls ④)
+Get Model Config (pipeline_config) ┐  (leaf, read once)
+Ingest Webhook → Fetch Free Models ┴→ Get Answers → Prep(resolve model chain) → Get Queued URLs
+  → Route Type (IF)   url → Fetch URL ┐   file → Download File → Extract Doc (PDF, native, free) ┐
+  → Capture Text  ◄────────────────────┴──────────────────────────────────────────────────────────┘  normalise text
+  → Store Text + Index   write source_extract.raw_text + mark source `indexed`  (BEFORE any LLM)
+  → Collapse (runOnceForAllItems) → Read All Sources   aggregate EVERY source's raw_text = the corpus
+  → Prep LLM   ONE synthesis prompt over the combined corpus
+  → Extract Chain (OR Model / OR Fallback)   LLM (config-driven cheap models)
+  → Build Writes   parse JSON; guard (skip overwrite if <3 keys)
+  → Apply Writes   UPSERT derived keys into intake_answer + PRUNE any key not derived
+  → Trigger Context Builder (calls ④)
 ```
-- **Prep** — picks two **free** OpenRouter models (primary + fallback), rotated across the live
-  `:free` instruct pool to spread rate limits.
+- **Zero-AI capture:** `Extract from File` (PDF) / HTTP fetch → `Capture Text` → `Store Text + Index`
+  persists `source_extract.raw_text` and marks the source `indexed` UPSTREAM of the LLM, so a model
+  failure can never lose a source. Reading a PDF needs no AI.
+- **Combined derive:** `Read All Sources` reads the latest `raw_text` of every source; one LLM pass
+  synthesises the bank from the combined corpus; `Apply Writes` upserts the derived keys and deletes
+  any key the sources don't support → bank holds ONLY source-derived content (no fabrication). This
+  replaced the old per-source ADD/SUGGEST flow.
+- **Models:** config-driven (see §4① "Model selection"); `Prep` resolves `model`/`model2` from
+  `pipeline_config` or live OpenRouter availability; `OR Model`/`OR Fallback` read `$('Prep')`. Paid
+  via `OpenRouter GamerLab Acct`.
 - **Get Queued URLs** — `SELECT … FROM source WHERE status='queued' AND type IN ('url','file') LIMIT 3`.
-- **Extract Chain** — LangChain LLM chain over stripped page/PDF text → minified JSON mapping
-  intake `question_key` → `{answer, confidence, quote}`, grounded only in the text.
-- **Build Writes / Apply Writes** — single CTE: insert `source_extract`; **ADD** to `intake_answer`
-  where empty (on-conflict update); **SUGGEST** into `intake_suggestion` where the answer differs;
-  mark `source` `indexed`. Then **Trigger Context Builder** recomposes the CAG.
 
 ---
 
@@ -268,13 +298,16 @@ broker) → stamps `publishers` + `message` = `sent`. **③ Reply Poll** every 1
 | `cag_context` | ④ Publish/Trim · `context` Edge fn | ① `Get Drafted IDs` / `Apply CAG from DB` |
 | `intake_answer` | ⑤ ADD · `intake` Edge fn | ④ Read Intake, ⑤ Get Answers |
 | `intake_suggestion` | ⑤ SUGGEST | `intake`/`sources` Edge fns, UI |
-| `source` | `sources` Edge fn (queue) · ⑤ (indexed) | ⑤ Get Queued URLs |
-| `source_extract` | ⑤ Apply Writes | audit |
+| `source` | `sources` Edge fn (queue) · ⑤ Store Text + Index (indexed) | ⑤ Get Queued URLs / Read All Sources |
+| `source_extract` | ⑤ Store Text + Index (`raw_text`) | ⑤ Read All Sources (combined derive), audit |
+| `intake_answer` (derive target) | ⑤ Apply Writes (upsert+prune from sources) · `intake` Edge fn | ④ Read Intake |
+| `pipeline_config` | seed per tenant (UI settings later) | ① & ⑤ `Get Model Config` (model-chain override) |
 | `runs` | `discovery` Edge fn · `n8n-status` (from ①) | `discovery`, UI |
 | `tenant` | seed | all (tenant scoping) |
 
-Provisioned-but-unused v2 generic tables (`source`* aside, `document, venue, business_summary, lead,
-evidence, run, outcome, model_call_log`) are 0-row — see `SPEC.md §4.5`. (`run` ≠ `runs`.)
+Provisioned-but-unused v2 generic tables (`document, venue, business_summary, lead, evidence, run,
+outcome, model_call_log`) are 0-row — see `SPEC.md §4.5`. (`run` ≠ `runs`.) `pipeline_config` is the
+per-tenant config layer the BYO model KEY will join (`how/byo_model_keys_DRAFT.md`).
 
 ## 7. Webhook / endpoint registry
 
@@ -305,6 +338,14 @@ evidence, run, outcome, model_call_log`) are 0-row — see `SPEC.md §4.5`. (`ru
 node carries `disabled: true`, so it does not run.
 Supabase table roles cross-checked against `SPEC.md` (verified live 2026-06-22).
 
+**2026-06-23 (derive-from-sources + config-driven models):** ⑤ rebuilt and run successfully (execs
+69899/69920) — deck PDF (14,944 chars) + site captured to `source_extract.raw_text` with no AI; the
+combined derive overwrote `intake_answer` to ~13–14 SOURCE-DERIVED keys (hand-authored/seed content
+pruned); ④ recomposed `cag_context` with the generic `=== BUSINESS BRIEF ===` scaffold, correct
+sourced stats (+8/31/75/115, no +105% DLC), no app-naming. Model resolution verified config-driven:
+a run with `pipeline_config.models` NULL self-selected a working cheap model from live `/models`.
+①④⑤ republished (new active versions). Paid calls bill `OpenRouter GamerLab Acct`.
+
 ---
 
 ## 10. Maintenance rule (keep this doc true)
@@ -314,12 +355,15 @@ Supabase table roles cross-checked against `SPEC.md` (verified live 2026-06-22).
 - add/remove/rename a node, or rewire a connection → update the relevant §4 spine;
 - add a workflow → add a row to §2, a §4 block, and the §1 map;
 - change a webhook path or DB write → update §6/§7;
-- activate/deactivate a workflow → update §2 `Active` and §3 if it changes the v9 situation.
+- activate/deactivate a workflow → update §2 `Active` and §3 if it changes the v9 situation;
+- change any step's inputs/outputs or the flow → update the README flow SVGs
+  (`docs/assets/client-intelligence-flow.svg`, `docs/assets/leads-end-to-end-flow.svg`).
 
 **Update checklist (paste into the PR/commit body):**
 - [ ] §2 registry row accurate (ID, trigger, active, role)
 - [ ] §4 node spine matches the live graph (re-read via the n8n API, don't guess)
 - [ ] §6 table-writer matrix still correct
 - [ ] §7 webhook registry still correct
+- [ ] **README flow diagrams updated** (`docs/assets/*.svg`) if any step's in/out or wiring changed
 - [ ] §9 verification date bumped to today
 - [ ] aDNA `project_state` saved (tags `gamers-lab`, `lead-gen`) so other surfaces recall the change
