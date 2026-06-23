@@ -1,7 +1,7 @@
-<svg viewBox="0 0 920 820" xmlns="http://www.w3.org/2000/svg" role="img" font-family="ui-sans-serif, system-ui, sans-serif">
-<title>Client onboarding &amp; intelligence loop — end to end</title>
-<desc>How a tenant's sources become the CAG brief that feeds the lead engine, with inputs and outputs per step.</desc>
-<rect x="0" y="0" width="920" height="820" fill="#ffffff"/>
+<svg viewBox="0 0 920 880" xmlns="http://www.w3.org/2000/svg" role="img" font-family="ui-sans-serif, system-ui, sans-serif">
+<title>Client onboarding &amp; intelligence loop — end to end (rebuilt 2026-06-23)</title>
+<desc>How a tenant's sources are captured, combined, and derived into a generic business brief that feeds the lead engine, with inputs and outputs per step.</desc>
+<rect x="0" y="0" width="920" height="880" fill="#ffffff"/>
 <style>
 .t{fill:#1a1a1a;font-size:13px;font-weight:700;}
 .s{fill:#555;font-size:10.5px;}
@@ -15,86 +15,92 @@
 .hdR{fill:#2d6aa3;font-size:11px;font-weight:700;}
 </style>
 
-<text x="24" y="28" class="t" font-size="15">CLIENT — onboarding &amp; intelligence loop (builds the CAG brief)</text>
-<text x="24" y="46" class="s">Surface: UI = blue · n8n workflow = green. Solid = data flow · dashed amber = webhook trigger.</text>
+<text x="24" y="28" class="t" font-size="15">CLIENT — onboarding &amp; intelligence loop (derives the business brief)</text>
+<text x="24" y="46" class="s">UI = blue · n8n ⑤/④ = green. Solid = data flow · dashed amber = webhook trigger. Rebuilt 2026-06-23: combined derive, no hand-authoring.</text>
 <text x="40" y="70" class="hdL">INPUTS →</text>
 <text x="640" y="70" class="hdR">→ OUTPUTS</text>
 
-<rect x="320" y="82" width="280" height="64" rx="9" class="box"/>
-<text x="335" y="106" class="t">1 · Add source</text>
-<text x="335" y="124" class="s">UI Sources → `sources` Edge fn</text>
-<text x="335" y="139" class="mono">file bytes → Supabase Storage</text>
-<text x="305" y="108" class="io" text-anchor="end">URL, or</text>
-<text x="305" y="122" class="io" text-anchor="end">uploaded doc (PDF)</text>
-<text x="615" y="108" class="mono">source row (status=queued)</text>
-<text x="615" y="122" class="mono">+ fires source-ingest webhook</text>
+<rect x="320" y="82" width="280" height="62" rx="9" class="box"/>
+<text x="335" y="105" class="t">1 · Add sources</text>
+<text x="335" y="122" class="s">UI Sources → `sources` Edge fn</text>
+<text x="335" y="137" class="mono">file bytes → Supabase Storage</text>
+<text x="305" y="106" class="io" text-anchor="end">URLs + uploaded</text>
+<text x="305" y="120" class="io" text-anchor="end">docs (PDF/deck)</text>
+<text x="615" y="106" class="mono">source rows (queued)</text>
+<text x="615" y="120" class="mono">+ fires source-ingest</text>
 
-<rect x="320" y="190" width="280" height="78" rx="9" class="n8n"/>
-<text x="335" y="214" class="t">2 · Source Ingestion ⑤</text>
-<text x="335" y="231" class="s">fetch/download → strip/extract text</text>
-<text x="335" y="246" class="s">→ LLM extract (free model)</text>
-<text x="335" y="261" class="mono">JSON {answer, confidence, quote}</text>
+<rect x="320" y="188" width="280" height="64" rx="9" class="n8n"/>
+<text x="335" y="210" class="t">2 · Capture text (ZERO AI)</text>
+<text x="335" y="227" class="s">fetch URL / extract PDF → strip → store</text>
+<text x="335" y="243" class="mono">raw_text saved BEFORE any LLM</text>
 <text x="305" y="214" class="io" text-anchor="end">queued source</text>
-<text x="305" y="228" class="io" text-anchor="end">existing intake_answer</text>
-<text x="305" y="242" class="io" text-anchor="end">OpenRouter free models</text>
-<text x="615" y="220" class="mono">source_extract row</text>
-<text x="615" y="234" class="mono">facts keyed to intake Qs</text>
+<text x="305" y="228" class="io" text-anchor="end">(url / file)</text>
+<text x="615" y="214" class="mono">source_extract.raw_text</text>
+<text x="615" y="228" class="mono">source → indexed</text>
 
-<rect x="320" y="298" width="280" height="70" rx="9" class="n8n"/>
-<text x="335" y="322" class="t">3 · Fill / suggest intake bank</text>
-<text x="335" y="339" class="s">empty key → ADD · conflict → SUGGEST</text>
-<text x="335" y="356" class="mono">single CTE upsert</text>
-<text x="305" y="328" class="io" text-anchor="end">extracted facts</text>
-<text x="615" y="322" class="mono">intake_answer (ADD)</text>
-<text x="615" y="336" class="mono">intake_suggestion (SUGGEST)</text>
-<text x="615" y="350" class="mono">source → indexed</text>
+<rect x="320" y="296" width="280" height="66" rx="9" class="n8n"/>
+<text x="335" y="318" class="t">3 · Combined derive (1 LLM pass)</text>
+<text x="335" y="335" class="s">aggregate ALL sources → one synthesis</text>
+<text x="335" y="351" class="mono">config-driven model (pipeline_config)</text>
+<text x="305" y="318" class="io" text-anchor="end">corpus of all</text>
+<text x="305" y="332" class="io" text-anchor="end">source raw_text</text>
+<text x="305" y="346" class="io" text-anchor="end">model chain</text>
+<text x="615" y="324" class="mono">JSON: key → answer</text>
+<text x="615" y="338" class="mono">(only source-supported)</text>
 
-<rect x="320" y="398" width="280" height="68" rx="9" class="box"/>
-<text x="335" y="422" class="t">4 · Human review</text>
-<text x="335" y="439" class="s">UI Intake → `intake` Edge fn</text>
-<text x="335" y="455" class="s">accept / dismiss suggestion · edit</text>
-<text x="305" y="424" class="io" text-anchor="end">suggestions +</text>
-<text x="305" y="438" class="io" text-anchor="end">current answers</text>
-<text x="615" y="430" class="mono">confirmed intake_answer</text>
-<text x="615" y="444" class="mono">(41-question bank)</text>
+<rect x="320" y="406" width="280" height="64" rx="9" class="n8n"/>
+<text x="335" y="428" class="t">4 · Upsert + PRUNE bank</text>
+<text x="335" y="445" class="s">write derived keys; delete unsupported</text>
+<text x="335" y="461" class="mono">bank = ONLY source-derived (no fab)</text>
+<text x="305" y="432" class="io" text-anchor="end">derived keys</text>
+<text x="305" y="446" class="io" text-anchor="end">+ guard (&lt;3 = skip)</text>
+<text x="615" y="438" class="mono">intake_answer (replaced)</text>
+<text x="615" y="452" class="mono">→ triggers Context Builder</text>
 
-<rect x="320" y="496" width="280" height="72" rx="9" class="n8n"/>
-<text x="335" y="520" class="t">5 · Context Builder ④</text>
-<text x="335" y="537" class="s">compose deterministic CAG block</text>
-<text x="335" y="553" class="mono">=== GAMERSLAB PRODUCT BRIEF ===</text>
-<text x="305" y="526" class="io" text-anchor="end">all intake_answer</text>
-<text x="305" y="540" class="io" text-anchor="end">keys (per tenant)</text>
-<text x="615" y="526" class="mono">cag_context.cag_block</text>
-<text x="615" y="540" class="mono">(latest kept, rest trimmed)</text>
+<rect x="320" y="506" width="280" height="56" rx="9" class="box"/>
+<text x="335" y="528" class="t">5 · Human review / edit (optional)</text>
+<text x="335" y="544" class="s">UI Intake → `intake` Edge fn · edit answers</text>
+<text x="305" y="528" class="io" text-anchor="end">derived</text>
+<text x="305" y="542" class="io" text-anchor="end">answers</text>
+<text x="615" y="528" class="mono">confirmed intake_answer</text>
+<text x="615" y="542" class="mono">→ re-triggers builder</text>
 
-<rect x="320" y="598" width="280" height="68" rx="9" class="box"/>
-<text x="335" y="622" class="t">6 · Business Context (direct edit)</text>
-<text x="335" y="639" class="s">UI → `context` Edge fn (GET/PUT)</text>
-<text x="335" y="655" class="s">human edits the brief directly</text>
-<text x="305" y="632" class="io" text-anchor="end">cag_context</text>
-<text x="615" y="632" class="mono">cag_context (updated)</text>
+<rect x="320" y="596" width="280" height="66" rx="9" class="n8n"/>
+<text x="335" y="618" class="t">6 · Context Builder ④ (GENERIC)</text>
+<text x="335" y="635" class="s">compose neutral, client-agnostic brief</text>
+<text x="335" y="651" class="mono">=== BUSINESS BRIEF === (no client nouns)</text>
+<text x="305" y="622" class="io" text-anchor="end">all intake_answer</text>
+<text x="305" y="636" class="io" text-anchor="end">keys (per tenant)</text>
+<text x="615" y="622" class="mono">cag_context.cag_block</text>
+<text x="615" y="636" class="mono">(latest kept, rest trimmed)</text>
 
-<rect x="320" y="700" width="280" height="56" rx="9" fill="#f5f5f5" stroke="#c98a2b" stroke-width="1.6" stroke-dasharray="5 3"/>
-<text x="335" y="724" class="t">→ feeds the LEAD engine</text>
-<text x="335" y="741" class="s">read each run by `Apply CAG from DB` (see Leads diagram)</text>
+<rect x="320" y="694" width="280" height="58" rx="9" class="box"/>
+<text x="335" y="716" class="t">7 · Business Context (direct edit)</text>
+<text x="335" y="733" class="s">UI → `context` Edge fn (GET/PUT)</text>
+<text x="335" y="747" class="s">human edits the brief directly</text>
+<text x="305" y="726" class="io" text-anchor="end">cag_context</text>
+<text x="615" y="726" class="mono">cag_context (updated)</text>
 
-<path class="flow" d="M460 146 V190" marker-end="url(#ar)"/>
-<path class="flow" d="M460 268 V298" marker-end="url(#ar)"/>
-<path class="flow" d="M460 368 V398" marker-end="url(#ar)"/>
-<path class="flow" d="M460 466 V496" marker-end="url(#ar)"/>
-<path class="flow" d="M460 568 V598" marker-end="url(#ar)"/>
-<path class="flow" d="M460 666 V700" marker-end="url(#ar)"/>
+<rect x="320" y="786" width="280" height="56" rx="9" fill="#f5f5f5" stroke="#c98a2b" stroke-width="1.6" stroke-dasharray="5 3"/>
+<text x="335" y="810" class="t">→ feeds the LEAD engine</text>
+<text x="335" y="827" class="s">read each run by `Apply CAG from DB` (see Leads diagram)</text>
 
-<path class="trig" d="M600 120 C 660 150, 660 200, 602 222" marker-end="url(#art)"/>
-<path class="trig" d="M600 250 C 690 290, 690 470, 602 520" marker-end="url(#art)"/>
-<path class="trig" d="M600 440 C 700 470, 700 500, 602 524" marker-end="url(#art)"/>
+<path class="flow" d="M460 144 V188" marker-end="url(#ar)"/>
+<path class="flow" d="M460 252 V296" marker-end="url(#ar)"/>
+<path class="flow" d="M460 362 V406" marker-end="url(#ar)"/>
+<path class="flow" d="M460 470 V506" marker-end="url(#ar)"/>
+<path class="flow" d="M460 562 V596" marker-end="url(#ar)"/>
+<path class="flow" d="M460 662 V694" marker-end="url(#ar)"/>
+<path class="flow" d="M460 752 V786" marker-end="url(#ar)"/>
+
+<path class="trig" d="M600 116 C 665 150, 665 200, 602 214" marker-end="url(#art)"/>
+<path class="trig" d="M600 440 C 700 470, 700 600, 602 624" marker-end="url(#art)"/>
+<path class="trig" d="M600 540 C 690 565, 690 600, 602 626" marker-end="url(#art)"/>
 
 <defs>
 <marker id="ar" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 Z" fill="#9aa3ad"/></marker>
 <marker id="art" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 Z" fill="#c98a2b"/></marker>
 </defs>
 
-<text x="24" y="790" class="s">Settings that are config/echo only (not in this live loop): tenant theme · venue map · Gate-A understanding · dashboard insights.</text>
-<text x="700" y="715" class="s" font-style="italic">webhook</text>
-<text x="700" y="728" class="s" font-style="italic">triggers ⟳</text>
+<text x="24" y="868" class="s">⚠ Live gap: builder emits `=== BUSINESS BRIEF ===` but the engine's CAG placeholder still anchors on the old `=== GAMERSLAB PRODUCT BRIEF ===` — works today, generalise for safety.</text>
 </svg>

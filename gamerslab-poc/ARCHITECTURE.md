@@ -273,7 +273,8 @@ Ingest Webhook → Fetch Free Models ┴→ Get Answers → Prep(resolve model c
 
 **Onboarding / context loop (informs scoring + drafts):**
 client adds a source in the UI → `sources` Edge fn queues it + fires **⑤ Source Ingestion** →
-facts land in `intake_answer` (+ `intake_suggestion`) → ⑤ triggers **④ Context Builder** →
+the intake bank is **re-derived from ALL sources combined** into `intake_answer` (upsert + prune;
+the old per-source ADD/SUGGEST flow is gone) → ⑤ triggers **④ Context Builder** →
 `cag_context` row updated. Editing **Business Context** in the UI writes `cag_context` directly via
 the `context` Edge fn. Either way, the **next ① run** reads the fresh brief through `Apply CAG from DB`.
 
@@ -296,12 +297,12 @@ broker) → stamps `publishers` + `message` = `sent`. **③ Reply Poll** every 1
 | `publishers` (235) | ① upsert · ② sent · ③ replied | `leads`/`outreach` Edge fns, UI |
 | `message` (A/B variants, steps) | ① `Add B Variant` · ② sent · ③ replied | ② Get Draft, ③ Awaiting Reply, `outreach` |
 | `cag_context` | ④ Publish/Trim · `context` Edge fn | ① `Get Drafted IDs` / `Apply CAG from DB` |
-| `intake_answer` | ⑤ ADD · `intake` Edge fn | ④ Read Intake, ⑤ Get Answers |
-| `intake_suggestion` | ⑤ SUGGEST | `intake`/`sources` Edge fns, UI |
+| `intake_answer` | ⑤ Apply Writes (upsert + prune, from ALL sources combined) · `intake` Edge fn | ④ Read Intake, ⑤ Get Answers |
+| `intake_suggestion` | *(legacy — no longer written by ⑤ since the 2026-06-23 rebuild)* | `intake` Edge fn / UI |
 | `source` | `sources` Edge fn (queue) · ⑤ Store Text + Index (indexed) | ⑤ Get Queued URLs / Read All Sources |
 | `source_extract` | ⑤ Store Text + Index (`raw_text`) | ⑤ Read All Sources (combined derive), audit |
-| `intake_answer` (derive target) | ⑤ Apply Writes (upsert+prune from sources) · `intake` Edge fn | ④ Read Intake |
 | `pipeline_config` | seed per tenant (UI settings later) | ① & ⑤ `Get Model Config` (model-chain override) |
+| `model_key` (BYO, design) | model-keys Edge fn (planned) | ① `Get Model Key` broker |
 | `runs` | `discovery` Edge fn · `n8n-status` (from ①) | `discovery`, UI |
 | `tenant` | seed | all (tenant scoping) |
 
@@ -345,6 +346,19 @@ pruned); ④ recomposed `cag_context` with the generic `=== BUSINESS BRIEF ===` 
 sourced stats (+8/31/75/115, no +105% DLC), no app-naming. Model resolution verified config-driven:
 a run with `pipeline_config.models` NULL self-selected a working cheap model from live `/models`.
 ①④⑤ republished (new active versions). Paid calls bill `OpenRouter GamerLab Acct`.
+
+**2026-06-23 (independent re-verify of this session):** re-read ④⑤ full graphs + ① node list live.
+Confirmed ⑤'s rebuilt spine (Capture Text → Store Text + Index → Collapse → Read All Sources →
+combined derive → upsert+prune), ④'s generic `=== BUSINESS BRIEF ===`, and ① now at **40 nodes**
+incl. **`Get Model Config`** + **`Get Model Key`** (BYO-key broker). v9 trigger still `disabled`.
+**Live consistency gap confirmed:** ④ emits `=== BUSINESS BRIEF ===` while ①'s CAG placeholder/anchor
+still reads `=== GAMERSLAB PRODUCT BRIEF ===` — functional today, but generalise to one neutral anchor.
+
+> ⚠️ **Concurrency note.** On 2026-06-23 this repo + the live workflows were edited by **two sessions
+> in parallel** (a Cowork doc-consolidation session and a Claude Code build session). v10 was updated
+> at 22:52 while docs were being written; this doc and `STATE.md` were co-edited. Treat each §9 entry
+> as a point-in-time snapshot and **re-read live before trusting a spine.** The real fix is to
+> serialise edits (one owner per file/workflow at a time) — see the recommendation in aDNA.
 
 ---
 

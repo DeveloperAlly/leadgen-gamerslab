@@ -65,11 +65,11 @@
 
 <text x="24" y="396" class="ph">SCORE</text>
 <rect x="300" y="384" width="330" height="52" rx="9" class="eng"/>
-<text x="314" y="404" class="t">6 · Pre-Score (free signals)</text>
-<text x="314" y="420" class="s">PvP, leaderboards, Workshop, coop, phase</text>
-<text x="288" y="404" class="io" text-anchor="end">Steam signals</text>
-<text x="642" y="404" class="mono">pre_score + tier</text>
-<text x="642" y="417" class="mono">A/B/C/skip + publisher_key</text>
+<text x="314" y="404" class="t">6 · Pre-Score (generic budget pre-filter)</text>
+<text x="314" y="420" class="s">review-volume/sentiment; no Steam fit weights</text>
+<text x="288" y="404" class="io" text-anchor="end">review volume</text>
+<text x="642" y="404" class="mono">pre_score + tier band</text>
+<text x="642" y="417" class="mono">(real fit = LLM, step 9)</text>
 
 <rect x="300" y="446" width="330" height="58" rx="9" class="eng"/>
 <text x="314" y="466" class="t">7 · Select &amp; Split (budget gate)</text>
@@ -102,12 +102,13 @@
 
 <text x="24" y="664" class="ph">DRAFT</text>
 <rect x="300" y="646" width="330" height="64" rx="9" class="eng"/>
-<text x="314" y="666" class="t">9 · Apply CAG → LLM draft → pick best</text>
-<text x="314" y="682" class="s">one free model per lead (no fan-out)</text>
-<text x="314" y="698" class="s">grounded only in real facts + the brief</text>
-<text x="288" y="664" class="io" text-anchor="end">enriched lead</text>
-<text x="288" y="677" class="io" text-anchor="end">+ CAG brief</text>
-<text x="642" y="664" class="mono">draft_subject / body</text>
+<text x="314" y="666" class="t">9 · Apply CAG → LLM draft → fit-gate</text>
+<text x="314" y="682" class="s">config-driven cheap model(s); 1 per lead</text>
+<text x="314" y="698" class="s">LLM fit_score gates the board (weak → skip)</text>
+<text x="288" y="660" class="io" text-anchor="end">enriched lead</text>
+<text x="288" y="673" class="io" text-anchor="end">+ BUSINESS BRIEF</text>
+<text x="288" y="686" class="io" text-anchor="end">+ model chain</text>
+<text x="642" y="664" class="mono">draft_subject / body, fit_score</text>
 <text x="642" y="677" class="mono">intel, founder_quote</text>
 <text x="642" y="690" class="mono">evidence_strength, risk_flags</text>
 
