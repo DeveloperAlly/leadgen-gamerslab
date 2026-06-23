@@ -1,3 +1,7 @@
+> ⛔ **ARCHIVED / SUPERSEDED.** v9 node-by-node build requirements. Live engine is v10; current state is in [`../../SPEC.md`](../../SPEC.md) and [`../../ARCHITECTURE.md`](../../ARCHITECTURE.md). Kept for history.
+
+---
+
 # GamersLab Publisher Outreach Pipeline — Requirements (v9)
 
 ## Purpose

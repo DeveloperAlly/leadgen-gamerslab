@@ -21,6 +21,24 @@ If a task is ambiguous about which project, **ask before acting**.
 
 <br/>
 
+## Canonical docs — read THESE first, ignore the rest
+
+To stop parallel agents rebuilding partial pictures, read the canonical set for your area before
+touching anything. Everything else is design history or active drafts — not current-state truth.
+
+| For… | Read (in order) |
+|------|-----------------|
+| **Repo orientation** | `CLAUDE.md` (this) → `STATE.md` |
+| **GamersLab POC — current system** | `gamerslab-poc/SPEC.md` (UI↔Edge↔DB) → **`gamerslab-poc/ARCHITECTURE.md` (ALL n8n workflows + wiring)** |
+| **POC engine deltas** | `gamerslab-poc/workflow/v10-live-edits/` |
+| **White-label v2 design** | `whitelabel/README.md` → root `how/architecture_spec_M2_DRAFT.md`, `how/v2_phase_delivery_DRAFT.md` |
+
+⚠️ **There are SIX live n8n workflows, not one.** Any "the n8n workflow" mental model is wrong.
+`ARCHITECTURE.md` is the only doc with the full fleet — **update it in the same change as any live
+workflow edit** (its §10 has the checklist). Superseded docs live in `*/_archive/` with banners.
+
+<br/>
+
 ## Map
 
 ```
@@ -35,9 +53,11 @@ leadgen-gamerslab/
 │   └── design-refs/                    ← white-label UI design references (HTML prototypes)
 │
 ├── gamerslab-poc/                      ← PROJECT 1 — GamersLab POC (v1, BUILT, ACTIVE)
-│   ├── workflow/                       ← n8n outreach workflow (live instance is v10)
+│   ├── SPEC.md                         ← as-built UI↔Edge↔DB contract (canonical)
+│   ├── ARCHITECTURE.md                 ← ALL 6 live n8n workflows + wiring (canonical)
+│   ├── workflow/                       ← n8n exports + v10 live-edit deltas (live engine is v10)
 │   ├── supabase/                       ← schema + v1 integration API (Edge Functions)
-│   ├── docs/                           ← spec, requirements, CAG brief
+│   ├── docs/                           ← cag-block brief (+ _archive/ for old spec/requirements)
 │   └── README.md
 │
 └── whitelabel/                         ← PROJECT 3 — white-label v2 (DESIGN, PRE-GATE)

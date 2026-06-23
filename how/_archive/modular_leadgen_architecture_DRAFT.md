@@ -1,3 +1,7 @@
+> ⛔ **ARCHIVED / RECONCILED.** The source→intake→CAG deriver it proposed already exists and is live (Source Ingestion + Context Builder). As-built wiring is in [`../../gamerslab-poc/ARCHITECTURE.md`](../../gamerslab-poc/ARCHITECTURE.md); white-label generalisations in [`../architecture_spec_M2_DRAFT.md`](../architecture_spec_M2_DRAFT.md). Kept for history.
+
+---
+
 # Modular Lead-Gen Re-Architecture (DRAFT, pre-gate)
 
 Status: RECONCILED / PARTLY SUPERSEDED (2026-06-23). After reading the repo I confirmed the
