@@ -1,0 +1,184 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 1520" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#7c8aa5"/>
+    </marker>
+    <marker id="arrowG" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#5ad469"/>
+    </marker>
+    <style>
+      .bg{fill:#0c1322}
+      .title{fill:#eaf0ff;font-size:26px;font-weight:700}
+      .sub{fill:#8a99b8;font-size:14px}
+      .lbl{fill:#c8d3ea;font-size:12.5px}
+      .lblsm{fill:#9fb0d0;font-size:11px}
+      .h{font-size:14px;font-weight:700}
+      .venueB{fill:#16243f;stroke:#4f86f7;stroke-width:1.5}
+      .venueT{fill:#dce8ff}
+      .slotB{fill:#10302a;stroke:#33c08d;stroke-width:1.5}
+      .slotT{fill:#e3fff4}
+      .gateB{fill:#33240f;stroke:#ff9f43;stroke-width:1.8}
+      .gateT{fill:#ffe9cf}
+      .sinkB{fill:#34141d;stroke:#ff6b81;stroke-width:1.5}
+      .sinkT{fill:#ffd9e0}
+      .readyB{fill:#10330f;stroke:#5ad469;stroke-width:2}
+      .readyT{fill:#dcffd9}
+      .edge{stroke:#7c8aa5;stroke-width:1.6;fill:none}
+      .edgeG{stroke:#5ad469;stroke-width:2;fill:none}
+      .edgeR{stroke:#ff6b81;stroke-width:1.6;fill:none;stroke-dasharray:5 4}
+      .prov{fill:#1a2336;stroke:#6b7bb5;stroke-width:1.3}
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1120" height="1520"/>
+  <text class="title" x="40" y="48">Steam prospect → dossier: the intelligence-gathering process</text>
+  <text class="sub" x="40" y="72">gamerslab-poc · venue mine → entity hop → pre-score gate → per-slot fillers (with provenance) → coverage gate → draft  ·  DRAFT, pre-gate</text>
+
+  <!-- ROW 1: venue mining -->
+  <g>
+    <rect class="venueB" x="40" y="100" width="320" height="74" rx="10"/>
+    <text class="h venueT" x="58" y="126">SteamSpy — mine games</text>
+    <text class="lblsm" x="58" y="146" fill="#bcd0f5">target genres; owners, playtime,</text>
+    <text class="lblsm" x="58" y="162" fill="#bcd0f5">+/- reviews, publisher/developer</text>
+
+    <rect class="venueB" x="400" y="100" width="320" height="74" rx="10"/>
+    <text class="h venueT" x="418" y="126">Steam Store · appdetails</text>
+    <text class="lblsm" x="418" y="146" fill="#bcd0f5">genre, categories, release_date,</text>
+    <text class="lblsm" x="418" y="162" fill="#bcd0f5">price, description → game_phase</text>
+
+    <rect class="venueB" x="760" y="100" width="320" height="74" rx="10"/>
+    <text class="h venueT" x="778" y="126">Entity hop · game ➜ publisher</text>
+    <text class="lblsm" x="778" y="146" fill="#bcd0f5">resolve publisher_key;</text>
+    <text class="lblsm" x="778" y="162" fill="#bcd0f5">dedup = one dossier per publisher</text>
+  </g>
+  <path class="edge" d="M360,137 L400,137" marker-end="url(#arrow)"/>
+  <path class="edge" d="M720,137 L760,137" marker-end="url(#arrow)"/>
+
+  <!-- pre-score gate -->
+  <path class="gateB" d="M920,200 L1030,236 L920,272 L810,236 Z"/>
+  <text class="h gateT" x="920" y="232" text-anchor="middle">Pre-score gate</text>
+  <text class="lblsm" x="920" y="250" fill="#ffe9cf" text-anchor="middle">free Steam signals ≥ floor?</text>
+  <path class="edge" d="M920,174 L920,200" marker-end="url(#arrow)"/>
+
+  <!-- archive sink -->
+  <rect class="sinkB" x="810" y="300" width="220" height="50" rx="10"/>
+  <text class="h sinkT" x="920" y="322" text-anchor="middle">Archive / backlog</text>
+  <text class="lblsm" x="920" y="340" fill="#ffd9e0" text-anchor="middle">below floor · no spend</text>
+  <path class="edge" d="M920,272 L920,300" marker-end="url(#arrow)"/>
+  <text class="lblsm" x="934" y="290" fill="#ff9bab">no</text>
+
+  <!-- passes → down to fillers -->
+  <path class="edge" d="M810,236 L130,236 L130,300" marker-end="url(#arrow)"/>
+  <text class="lblsm" x="150" y="228" fill="#9fe0c0">passes</text>
+
+  <!-- FILLERS container -->
+  <rect x="40" y="310" width="1040" height="430" rx="14" fill="#0e1a2e" stroke="#33c08d" stroke-width="1.2" stroke-dasharray="6 5"/>
+  <text class="h" x="60" y="338" fill="#7fe6c0">Per-slot fillers — each writes { value, source_url, date, evidence_strength }</text>
+
+  <!-- 6 slot boxes: 2 cols x 3 rows -->
+  <!-- col x: 70 and 575 ; widths 475 -->
+  <!-- Row 1 -->
+  <rect class="slotB" x="70" y="356" width="475" height="104" rx="10"/>
+  <text class="h slotT" x="90" y="382">① Decision-maker</text>
+  <text class="lblsm" x="90" y="404" fill="#bdf2dc">Steam support_info → site scrape → Exa search →</text>
+  <text class="lblsm" x="90" y="420" fill="#bdf2dc">SerpAPI fallback → pattern-guess + MX verify →</text>
+  <text class="lblsm" x="90" y="436" fill="#bdf2dc">paid (Hunter/Apollo, client key, opt-in) · + socials</text>
+  <text class="lblsm" x="90" y="453" fill="#7fe6c0">→ contact_name / role / email · email_valid</text>
+
+  <rect class="slotB" x="575" y="356" width="475" height="104" rx="10"/>
+  <text class="h slotT" x="595" y="382">② Why-now trigger</text>
+  <text class="lblsm" x="595" y="404" fill="#bdf2dc">Steam News GetNewsForApp (patch/launch, dated)</text>
+  <text class="lblsm" x="595" y="420" fill="#bdf2dc">+ release_date / coming_soon</text>
+  <text class="lblsm" x="595" y="436" fill="#bdf2dc">→ Exa news search on studio (fallback)</text>
+  <text class="lblsm" x="595" y="453" fill="#7fe6c0">→ why_now value + source_url + DATE</text>
+
+  <!-- Row 2 -->
+  <rect class="slotB" x="70" y="476" width="475" height="104" rx="10"/>
+  <text class="h slotT" x="90" y="502">③ Demand signal</text>
+  <text class="lblsm" x="90" y="524" fill="#bdf2dc">Steam appreviews/&lt;appid&gt;?json=1 — dated</text>
+  <text class="lblsm" x="90" y="540" fill="#bdf2dc">player quote (tracker / leaderboard / companion)</text>
+  <text class="lblsm" x="90" y="556" fill="#bdf2dc">→ community / Discord mention via Exa (fallback)</text>
+  <text class="lblsm" x="90" y="573" fill="#7fe6c0">→ evidence_quote / sources / as_of / strength</text>
+
+  <rect class="slotB" x="575" y="476" width="475" height="104" rx="10"/>
+  <text class="h slotT" x="595" y="502">④ Human detail</text>
+  <text class="lblsm" x="595" y="524" fill="#bdf2dc">Exa search + contents over studio site,</text>
+  <text class="lblsm" x="595" y="540" fill="#bdf2dc">devblog, roadmap, interviews</text>
+  <text class="lblsm" x="595" y="556" fill="#bdf2dc">+ Steam developer posts</text>
+  <text class="lblsm" x="595" y="573" fill="#7fe6c0">→ founder_quote + source + date</text>
+
+  <!-- Row 3 -->
+  <rect class="slotB" x="70" y="596" width="475" height="104" rx="10"/>
+  <text class="h slotT" x="90" y="622">⑤ Peer match</text>
+  <text class="lblsm" x="90" y="644" fill="#bdf2dc">DETERMINISTIC nearest-catalogue lookup</text>
+  <text class="lblsm" x="90" y="660" fill="#bdf2dc">genre / feature vector vs the 6 platform games</text>
+  <text class="lblsm" x="90" y="676" fill="#bdf2dc">(not LLM-guessed)</text>
+  <text class="lblsm" x="90" y="693" fill="#7fe6c0">→ peer_publisher_ref · pitch_angle · best_ugc_app</text>
+
+  <rect class="slotB" x="575" y="596" width="475" height="104" rx="10"/>
+  <text class="h slotT" x="595" y="622">⑥ Qualification (two-sided)</text>
+  <text class="lblsm" x="595" y="644" fill="#bdf2dc">fit (Steam facts) × intent (② / ③)</text>
+  <text class="lblsm" x="595" y="660" fill="#bdf2dc">scored vs the CAG rubric</text>
+  <text class="lblsm" x="595" y="676" fill="#bdf2dc">+ risk_flags (flag, not suppress)</text>
+  <text class="lblsm" x="595" y="693" fill="#7fe6c0">→ fit_score · value/match_score · score_rationale</text>
+
+  <path class="edge" d="M130,300 L130,356" marker-end="url(#arrow)"/>
+
+  <!-- provenance write -->
+  <rect class="prov" x="300" y="766" width="520" height="58" rx="10"/>
+  <text class="h" x="560" y="790" fill="#d6def5" text-anchor="middle">Write provenance quad per slot</text>
+  <text class="lblsm" x="560" y="809" fill="#aab8dc" text-anchor="middle">+ evidence_decay_weight = exp(−age_days / halflife)   ·   no url/date ⇒ slot is EMPTY</text>
+  <path class="edge" d="M560,740 L560,766" marker-end="url(#arrow)"/>
+
+  <!-- coverage gate -->
+  <path class="gateB" d="M560,858 L780,910 L560,962 L340,910 Z"/>
+  <text class="h gateT" x="560" y="900" text-anchor="middle">COVERAGE GATE — draft-ready?</text>
+  <text class="lblsm" x="560" y="918" fill="#ffe9cf" text-anchor="middle">1 named contact · 2 fresh+sourced ② or ③ · 3 deterministic peer</text>
+  <text class="lblsm" x="560" y="934" fill="#ffe9cf" text-anchor="middle">all with evidence_strength ≠ 'none'</text>
+  <path class="edge" d="M560,824 L560,858" marker-end="url(#arrow)"/>
+
+  <!-- outcomes -->
+  <!-- DRAFT-READY -->
+  <rect class="readyB" x="370" y="1010" width="380" height="78" rx="12"/>
+  <text class="h readyT" x="560" y="1040" text-anchor="middle">DRAFT-READY ➜ Apply CAG + LLM draft</text>
+  <text class="lblsm" x="560" y="1062" fill="#bdf2c8" text-anchor="middle">hybrid email = researched dossier line ∩ CAG value-prop</text>
+  <text class="lblsm" x="560" y="1078" fill="#bdf2c8" text-anchor="middle">(the empirically optimal structure — §2.3)</text>
+  <path class="edgeG" d="M560,962 L560,1010" marker-end="url(#arrowG)"/>
+  <text class="lblsm" x="574" y="992" fill="#8fe79a">all grounded</text>
+
+  <!-- ENRICH-MORE (loops back) -->
+  <rect class="gateB" x="820" y="884" width="240" height="62" rx="10"/>
+  <text class="h gateT" x="940" y="910" text-anchor="middle">ENRICH-MORE</text>
+  <text class="lblsm" x="940" y="929" fill="#ffe9cf" text-anchor="middle">next venue adapter / waterfall step</text>
+  <path class="edge" d="M780,910 L820,912" marker-end="url(#arrow)"/>
+  <text class="lblsm" x="788" y="900" fill="#ffc98a">missing</text>
+  <path class="edgeR" d="M940,884 L940,420 L1050,420 L1050,408" marker-end="url(#arrow)"/>
+  <text class="lblsm" x="956" y="640" fill="#ff9bab">retry</text>
+
+  <!-- HOLD sink -->
+  <rect class="sinkB" x="60" y="884" width="250" height="62" rx="10"/>
+  <text class="h sinkT" x="185" y="910" text-anchor="middle">HOLD</text>
+  <text class="lblsm" x="185" y="929" fill="#ffd9e0" text-anchor="middle">visible empty slot · no blind draft</text>
+  <path class="edge" d="M340,910 L310,912" marker-end="url(#arrow)"/>
+  <text class="lblsm" x="316" y="900" fill="#ff9bab">unfillable / stale</text>
+
+  <!-- footnote band -->
+  <rect x="40" y="1130" width="1040" height="350" rx="12" fill="#0e1626" stroke="#28344f" stroke-width="1"/>
+  <text class="h" x="60" y="1160" fill="#cdd9f2">Why the gate exists (grounded)</text>
+  <text class="lbl" x="60" y="1188">• Today the engine drafts blind: of 115 rows that should draft, only 29 have a body — a ~75% empty-draft rate, no evidence gate (poc_status_review.md D1).</text>
+  <text class="lbl" x="60" y="1212">• Research: incorrectly-personalised emails reply at 0.84% — BELOW no-personalisation (2.1%). "An accurate generic email beats an inaccurate personalised one." (Warmysender, 25k campaigns)</text>
+  <text class="lbl" x="60" y="1236">• Research: name+company merge-only performed 12% WORSE than no tokens (Lavender, 4.2M emails). A real, sourced, &lt;14-day signal lifts replies 3–5× (Gangly/Prospectory).</text>
+  <text class="lbl" x="60" y="1260">• Gartner: 99% of B2B purchases are triggered by a specific organizational change → a fresh, sourced trigger (slot ②) is the #1 relevance lever.</text>
+  <text class="lbl" x="60" y="1284">• Decision-maker: early DM involvement +55% win rate, delayed −113% (Ebsta/Pavilion 2025). Repo gap: 87% of outreach hits generic Steam support; only 7% have a human name (D8).</text>
+
+  <text class="h" x="60" y="1326" fill="#cdd9f2">Modularity (mandate #7)</text>
+  <text class="lbl" x="60" y="1352">• The six SLOTS + the GATE are tenant config (derived from the CAG). The FILLERS above are venue adapters — swap Steam for another venue, keep the schema.</text>
+  <text class="lbl" x="60" y="1376">• A localisation client reuses the same slots: ② = launch in a new region · ③ = reviews complaining about translation · ⑤ = nearest localised title. New answers, not new questions.</text>
+
+  <text class="h" x="60" y="1418" fill="#cdd9f2">Legend</text>
+  <rect class="venueB" x="60" y="1432" width="22" height="16" rx="4"/><text class="lblsm" x="90" y="1445" fill="#bcd0f5">venue / Steam call</text>
+  <rect class="slotB" x="240" y="1432" width="22" height="16" rx="4"/><text class="lblsm" x="270" y="1445" fill="#bdf2dc">dossier slot filler</text>
+  <rect class="gateB" x="420" y="1432" width="22" height="16" rx="4"/><text class="lblsm" x="450" y="1445" fill="#ffe9cf">gate / decision</text>
+  <rect class="readyB" x="590" y="1432" width="22" height="16" rx="4"/><text class="lblsm" x="620" y="1445" fill="#bdf2c8">draft-ready</text>
+  <rect class="sinkB" x="740" y="1432" width="22" height="16" rx="4"/><text class="lblsm" x="770" y="1445" fill="#ffd9e0">hold / archive (no spend)</text>
+</svg>

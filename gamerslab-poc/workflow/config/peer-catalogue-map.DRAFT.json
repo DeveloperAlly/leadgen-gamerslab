@@ -1,0 +1,154 @@
+{
+  "_meta": {
+    "purpose": "TENANT CONFIG (GamersLab data, NOT engine logic). The deterministic peer-match config consumed by filler-5-peer-match.DRAFT.js. Maps a prospect's genre/feature vector onto the nearest of the six GamersLab catalogue games and the exact UGC offering that peer proves. The matcher that reads this file (filler 5) is engine-generic; this file is the only thing a different client (or a re-pitched GamersLab catalogue) edits.",
+    "status": "DRAFT, PRE-GATE. Not wired into the live v10 engine. No build authorised (CLAUDE.md non-negotiable #1).",
+    "spec": "how/prospect_dossier_build_spec_DRAFT.md S4.4 (Filler 5 deterministic peer match) + S7 modularity ledger row '5 peer' (venue=none-internal, tenant config=the 6-peer catalogue map, engine-generic=nearest-vector matcher).",
+    "source_of_catalogue": "gamerslab-poc/docs/cag-block.md CURRENT GAMES ON PLATFORM (six games + best-peer-for notes) and LIVE UGC APPS (Grudge Goblin, Tournament Garden, GamersLab Plus, Bug & Seek Companion).",
+    "created": "2026-06-24",
+    "owner": "Ally",
+    "author": "Claude (Cowork)",
+    "feature_dimensions_note": "feature_vector keys are the REAL boolean public.publishers columns (verified live 2026-06-24, project ccmwksmgoisijvyovgko): has_online_pvp, has_steam_workshop, has_steam_leaderboards, has_online_coop, has_multi_player. A prospect's vector is built from these flags plus genre/tag keyword hits. Weights below are integers; the matcher sums matched-dimension weights and picks the highest, breaking ties by shared_feature_count then by config order (spec S4.4 'ties break by shared feature count').",
+    "provenance_note": "Peer match is a deterministic computation, not a sourced external fact. Per spec S1 the slot is recorded with peer_match_method='deterministic' as its evidence marker; the matcher stamps a synthetic source ('catalogue:<catalogue_game>') and the run date so downstream tooling can still read a {value, source, date, method} shape. The coverage gate (spec S3 item 2) requires only peer_publisher_ref present with method='deterministic'."
+  },
+
+  "version": "2026-06-24",
+
+  "tenant": "gamerslab",
+
+  "genre_keywords": {
+    "_comment": "Genre/tag keyword sets per catalogue peer. The matcher lowercases primary_genre + steam_tags (a comma string) and counts how many of a peer's keywords appear. Keep terms specific enough to be discriminating; order does not matter (set semantics).",
+    "maelstrom": ["pvp", "battle royale", "battle-royale", "multiplayer", "competitive", "naval", "shooter", "arena", "1v1", "free for all", "deathmatch", "fps", "tps"],
+    "nightspawn": ["survival", "horror", "survival horror", "zombie", "open world survival", "crafting survival", "permadeath", "monster"],
+    "masks_of_the_void": ["roguelite", "roguelike", "action roguelike", "action", "hack and slash", "bullet hell", "dungeon crawler", "run-based", "procedural"],
+    "dark_table_ccg": ["card game", "ccg", "tcg", "deckbuilder", "deck building", "card battler", "strategy", "turn-based strategy", "tabletop"],
+    "bug_and_seek": ["casual", "collection", "collectathon", "cozy", "creature collector", "monster collector", "family friendly", "exploration", "puzzle"],
+    "mullet_cop": ["idle", "incremental", "simulation", "management", "tycoon", "clicker", "sim", "business sim", "manager"]
+  },
+
+  "feature_weights": {
+    "_comment": "Per-feature weight (integer) added to a candidate peer's score when BOTH the prospect has the flag true AND the peer lists that flag in feature_vector below. Tuned so a hard competitive signal (online PvP / leaderboards) outranks a soft genre keyword match. genre keyword hit = 1 each; these are the structural multipliers.",
+    "has_online_pvp": 4,
+    "has_steam_leaderboards": 3,
+    "has_online_coop": 2,
+    "has_multi_player": 1,
+    "has_steam_workshop": 2
+  },
+
+  "default_genre_keyword_weight": 1,
+
+  "catalogue": [
+    {
+      "key": "maelstrom",
+      "catalogue_game": "Maelstrom",
+      "catalogue_descriptor": "Naval Battle Royale (Gunpowder Games)",
+      "peer_publisher_ref": "Maelstrom (Naval Battle Royale, Gunpowder Games)",
+      "best_peer_for": "PvP / competitive / online multiplayer",
+      "feature_vector": {
+        "has_online_pvp": true,
+        "has_steam_leaderboards": true,
+        "has_online_coop": false,
+        "has_multi_player": true,
+        "has_steam_workshop": false
+      },
+      "best_ugc_app": "Grudge Goblin",
+      "ugc_app_pitch": "Grudge Goblin is a rival tracker for multiplayer games: it watches every kill, remembers every foe, and pings players when rivals or prey queue up. It is currently tracking Maelstrom. Free for players (no install, runs in browser), free for studios (no revenue share, no per-seat fees).",
+      "pitch_angle": "Hand your players a reason to come back without building any of it: a live rival tracker for your PvP community, the way Maelstrom already runs it.",
+      "gamerslab_hook": "Maelstrom (a naval battle royale) is already on GamersLab with Grudge Goblin tracking its rivalries. A game like yours, with online PvP, plugs into the same rival-tracking layer."
+    },
+    {
+      "key": "nightspawn",
+      "catalogue_game": "NightSpawn",
+      "catalogue_descriptor": "Horror Survival",
+      "peer_publisher_ref": "NightSpawn (Horror Survival)",
+      "best_peer_for": "survival / horror",
+      "feature_vector": {
+        "has_online_pvp": false,
+        "has_steam_leaderboards": false,
+        "has_online_coop": true,
+        "has_multi_player": true,
+        "has_steam_workshop": false
+      },
+      "best_ugc_app": "GamersLab Plus",
+      "ugc_app_pitch": "GamersLab Plus gives a survival title cloud save and minimal live-ops without standing up a backend, plus a free analytics dashboard most small studios do not have.",
+      "pitch_angle": "Survival communities live on persistence and stats. Add a community data layer (saves, run history, leaderboards) without engineering investment, the way NightSpawn does on GamersLab.",
+      "gamerslab_hook": "NightSpawn (horror survival) is already on GamersLab. A survival game like yours can offer the same persistent community layer without touching your game code."
+    },
+    {
+      "key": "masks_of_the_void",
+      "catalogue_game": "Masks of the Void: Infinity",
+      "catalogue_descriptor": "Action Roguelite (Epic Games Store)",
+      "peer_publisher_ref": "Masks of the Void: Infinity (Action Roguelite, Epic Games Store)",
+      "best_peer_for": "roguelite / action",
+      "feature_vector": {
+        "has_online_pvp": false,
+        "has_steam_leaderboards": true,
+        "has_online_coop": false,
+        "has_multi_player": false,
+        "has_steam_workshop": false
+      },
+      "best_ugc_app": "Tournament Garden",
+      "ugc_app_pitch": "Tournament Garden turns any single or multiplayer game into a tournament or leaderboard. For a run-based roguelite this means seasonal leaderboards and community challenge runs with no backend work.",
+      "pitch_angle": "Run-based games thrive on leaderboards and challenge events. Stand up seasonal tournaments and ranked runs instantly, the way Masks of the Void does on GamersLab.",
+      "gamerslab_hook": "Masks of the Void: Infinity (an action roguelite) is already on GamersLab. A run-based game like yours can add leaderboards and challenge events the same way."
+    },
+    {
+      "key": "dark_table_ccg",
+      "catalogue_game": "Dark Table CCG",
+      "catalogue_descriptor": "Card Game",
+      "peer_publisher_ref": "Dark Table CCG (Card Game)",
+      "best_peer_for": "card games / strategy",
+      "feature_vector": {
+        "has_online_pvp": true,
+        "has_steam_leaderboards": true,
+        "has_online_coop": false,
+        "has_multi_player": true,
+        "has_steam_workshop": false
+      },
+      "best_ugc_app": "Tournament Garden",
+      "ugc_app_pitch": "Tournament Garden gives a competitive card game ladders, tournaments and leaderboards out of the box. 12 tournaments are growing this week across the platform.",
+      "pitch_angle": "Card and strategy communities organise around ladders and tournaments. Hand them ranked play and event infrastructure with no engineering, the way Dark Table CCG does on GamersLab.",
+      "gamerslab_hook": "Dark Table CCG (a competitive card game) is already on GamersLab running tournaments. A strategy or card game like yours plugs into the same ladder and tournament layer."
+    },
+    {
+      "key": "bug_and_seek",
+      "catalogue_game": "Bug & Seek",
+      "catalogue_descriptor": "Casual Collection",
+      "peer_publisher_ref": "Bug & Seek (Casual Collection)",
+      "best_peer_for": "casual / collection",
+      "feature_vector": {
+        "has_online_pvp": false,
+        "has_steam_leaderboards": true,
+        "has_online_coop": false,
+        "has_multi_player": false,
+        "has_steam_workshop": false
+      },
+      "best_ugc_app": "Bug & Seek Companion",
+      "ugc_app_pitch": "Bug & Seek Companion gives a casual collection game a rolling leaderboard, a stats tracker and a custom questing system. Best for casual or collection games with daily active communities.",
+      "pitch_angle": "Daily-active casual communities want streaks, quests and a stats companion. Add exactly that with no backend, the way Bug & Seek runs its companion on GamersLab.",
+      "gamerslab_hook": "Bug & Seek (a casual collection game) is already on GamersLab with its own companion app. A daily-play game like yours can offer the same rolling leaderboard and questing layer."
+    },
+    {
+      "key": "mullet_cop",
+      "catalogue_game": "Mullet Cop",
+      "catalogue_descriptor": "Idle Sim Manager (itch.io)",
+      "peer_publisher_ref": "Mullet Cop (Idle Sim Manager, itch.io)",
+      "best_peer_for": "idle / sim",
+      "feature_vector": {
+        "has_online_pvp": false,
+        "has_steam_leaderboards": true,
+        "has_online_coop": false,
+        "has_multi_player": false,
+        "has_steam_workshop": false
+      },
+      "best_ugc_app": "GamersLab Plus",
+      "ugc_app_pitch": "GamersLab Plus gives an idle or sim title cloud save and minimal live-ops plus a free analytics dashboard, so a small team gets persistence and player insight without standing up a backend.",
+      "pitch_angle": "Idle and management games run on long-tail progression. Add cloud saves, a stats layer and live-ops without engineering, the way Mullet Cop does on GamersLab.",
+      "gamerslab_hook": "Mullet Cop (an idle sim manager) is already on GamersLab. An idle or sim game like yours can add persistence and a free analytics layer the same way."
+    }
+  ],
+
+  "fallback": {
+    "_comment": "Used only when a prospect scores 0 against every peer (no genre keyword hit and no shared feature). The matcher still resolves a peer so the coverage gate (spec S3 item 2) passes, but stamps the lowest-confidence peer and flags it. Casual/collection is the broadest catch-all on the GamersLab catalogue, so Bug & Seek is the safe default; the matcher records that the match was a fallback so qualification (filler 6) can down-weight it.",
+    "peer_key": "bug_and_seek"
+  }
+}

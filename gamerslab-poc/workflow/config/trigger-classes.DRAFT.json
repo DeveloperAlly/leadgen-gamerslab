@@ -1,0 +1,27 @@
+{
+  "_doc": "Canonical trigger-class config for the prospect-dossier why-now slot (spec 4.2). Single source of truth. filler-2-why-now.DRAFT.js (the filler) and filler-coverage-gate.DRAFT.js (the gate) each carry an inline copy that MUST equal this file. At integration, prefer wiring both nodes to read this (n8n workflow static data or a Set node) over hand-syncing. Resolves consistency-review conflicts 2, 3, 4.",
+  "_pre_gate": "DRAFT, not applied. No deploy authorised here.",
+
+  "classes": {
+    "funding":       { "window_days": 90, "halflife_days": 30 },
+    "exec":          { "window_days": 90, "halflife_days": 45 },
+    "launch":        { "window_days": 21, "halflife_days": 10 },
+    "patch":         { "window_days": 21, "halflife_days": 10 },
+    "update":        { "window_days": 14, "halflife_days": 7 },
+    "coming_soon":   { "window_days": 60, "halflife_days": 30 },
+    "pain_velocity": { "window_days": 10, "halflife_days": 4 }
+  },
+
+  "class_priority": ["launch", "patch", "update", "coming_soon", "pain_velocity"],
+
+  "demand_window_days": 90,
+  "default_trigger_window_days": 30,
+
+  "strength_rule": {
+    "_doc": "Single definition of slot-2 (why_now) evidence_strength. Applied at scoring time by filler-6-qualification. The gate (filler-coverage-gate) only needs strength != none, so it treats any grounded why_now as not-none.",
+    "explicit": "why_now_source is an http(s) URL (a real news permalink)",
+    "inferred": "why_now_source is a synthetic steam: token (steam:release_date, steam:appreviews-velocity)"
+  },
+
+  "decay_ownership": "why_now_decay_weight is the slot-2 (why_now) decay column. evidence_decay_weight is the slot-3 (demand) decay column. The two slots never share a decay column (consistency-review conflict 1)."
+}
