@@ -104,3 +104,29 @@ restored). Existing rows show no D1 badge until re-enriched by a discovery run �
 - I1 wiring re-read from live: `Batch→Exa→Exa Has Results?→{Normalise | SerpAPI→Normalise}`. ✓
 - `Build Final Record` live diff vs intended: identical. ✓
 - End-to-end column persistence confirms on the next discovery run (schedule: daily 09:00).
+
+## Contact enrichment lift + WHOIS removal — APPLIED & PUBLISHED LIVE (2026-06-23)
+
+Lifts socials/contact coverage on the cards (founder/contact/socials were resolving ~5-17%).
+Premise check first: the `how/lead_contact_enrichment_options_DRAFT.md` proposal of press-kit
+`data.xml` parsing + per-site /about scraping was **empirically refuted** (0/8 real studios had a
+parseable data.xml — modern sites are SPAs returning HTML shells; /about scrape hit 2/8 and added
+3-7s timeout latency). So that path was **not** shipped. What shipped:
+
+- **WHOIS removed.** Deleted the `WHOIS Lookup` node (0% real registrants by law: ICANN
+  Registration Data Policy / GDPR redaction). Rewired `Normalise Search → Fetch Publisher Website`.
+  `Merge All Data` no longer references the node; `whois_registrant_*` emitted as `''` so
+  `Build Final Record` (`src.whois_registrant_* || ''`) is unaffected.
+- **Search-result social mining** (`merge-all-data.ENRICH-SOCIALS.APPLIED.js`). The pipeline already
+  runs an Exa search per lead (`<studio> contact email founder press`, 10 results); it mined only
+  emails. Now `Merge All Data` also mines canonical twitter / linkedin / discord URLs from the
+  result **links**. SPA-proof (Exa surfaces the studio's real social URLs regardless of site render)
+  and adds **zero** fetches. Social priority: homepage scrape → contact-page scrape → search links.
+- **Contact-page socials** (`scrape-contact-page.SOCIALS.APPLIED.js`). The already-fetched
+  contact/about page now also yields twitter/linkedin/discord, not just emails.
+
+**Applied** via the n8n MCP (`removeNode` + `addConnection` + two `setNodeParameter`) and
+**published** (activeVersionId = 66c4f192). Verified structurally (WHOIS gone, rewire correct,
+no dangling refs) and the Merge logic validated locally against real domains. **Not yet run-tested
+end-to-end** — the lift surfaces on the next discovery run; existing rows are not retro-enriched.
+Tier-4 paid people-data (founder name + LinkedIn) remains the open pre-gate decision in the DRAFT.

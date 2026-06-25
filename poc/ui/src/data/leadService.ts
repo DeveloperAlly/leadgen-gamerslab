@@ -34,6 +34,7 @@ import type {
   RejectReasonCode,
   Source,
   SourceType,
+  ThreadMessage,
   Venue,
 } from "./types";
 
@@ -280,11 +281,11 @@ export const leadService = {
   getOutreach: (): Promise<OutreachItem[]> =>
     USE_FIXTURES ? resolve(seedOutreach) : req<OutreachItem[]>("/outreach"),
 
-  /** Persist a human-edited subject/body to the approved_* columns before approval. */
-  updateOutreach: (id: string, subject: string, body: string): Promise<void> =>
+  /** Persist a human-edited subject/body for one A/B variant (keyed by its message id). */
+  updateOutreach: (messageId: string, subject: string, body: string): Promise<void> =>
     USE_FIXTURES
       ? resolve(undefined)
-      : req<unknown>(`/outreach/${id}`, {
+      : req<unknown>(`/outreach/message/${messageId}`, {
         method: "PATCH",
         body: JSON.stringify({ subject, body }),
       }).then(() => undefined),
@@ -298,6 +299,33 @@ export const leadService = {
     USE_FIXTURES
       ? resolve(undefined)
       : req<unknown>(`/outreach/${id}/skip`, { method: "POST" }).then(() => undefined),
+
+  /** Record the final outcome of a replied prospect (persists to message + publishers). */
+  markOutcome: (id: string, outcome: "won" | "lost"): Promise<void> =>
+    USE_FIXTURES
+      ? resolve(undefined)
+      : req<unknown>(`/outreach/${id}/${outcome}`, { method: "POST" }).then(() => undefined),
+
+  /** Create a step-2 follow-up DRAFT for review (does not send). */
+  followUpOutreach: (id: string): Promise<OutreachItem> =>
+    USE_FIXTURES
+      ? resolve({} as OutreachItem)
+      : req<OutreachItem>(`/outreach/${id}/follow-up`, { method: "POST" }),
+
+  /** Persist final edits to the follow-up draft, then send it in-thread. */
+  sendFollowUp: (id: string, subject: string, body: string): Promise<OutreachItem> =>
+    USE_FIXTURES
+      ? resolve({} as OutreachItem)
+      : req<OutreachItem>(`/outreach/${id}/send-follow-up`, {
+        method: "POST",
+        body: JSON.stringify({ subject, body }),
+      }),
+
+  /** The live Gmail conversation (sent + replies) for a prospect. */
+  getThread: (publisherId: string): Promise<ThreadMessage[]> =>
+    USE_FIXTURES
+      ? resolve([])
+      : req<{ messages: ThreadMessage[] }>(`/email-thread?publisher_id=${publisherId}`).then((r) => r.messages),
 
   /* ---- Email send identity (the inbox outreach sends from) ---- */
   getEmailAccount: (): Promise<EmailAccount> =>

@@ -1,5 +1,6 @@
 import type {
   DashboardInsights,
+  EmailAccount,
   GateFieldKey,
   GateFields,
   Intake,
@@ -24,6 +25,13 @@ export interface Usage {
 export interface PipelineState {
   mode: Mode;
   screen: ScreenKey;
+  /**
+   * Cross-screen navigation target: the publisher id a jump wants the destination screen
+   * to surface (a lead's outreach, or an outreach's lead). Lead.id === OutreachItem.id, so
+   * one id links both. Null when navigation carries no focus. Consumed + cleared by the
+   * destination screen (scroll-to / highlight); GO also auto-expands the lead at Gate B.
+   */
+  focusId: string | null;
 
   email: string;
   password: string;
@@ -33,6 +41,8 @@ export interface PipelineState {
   tenant: TenantConfig;
   usage: Usage;
   insights: DashboardInsights;
+  /** The inbox outreach sends from (where approved drafts go). Null until hydrated. */
+  emailAccount: EmailAccount | null;
   dataState: DataState;
   dataError: string | null;
 
@@ -60,7 +70,8 @@ export interface PipelineState {
   loadingMsgIdx: number;
 
   outreach: OutreachItem[];
-  editingOutreach: string | null;
+  /** message id of the A/B variant currently being edited, or null. */
+  editingMessageId: string | null;
   outreachSubject: string;
   outreachBody: string;
 
@@ -70,20 +81,21 @@ export interface PipelineState {
 export type HydratePayload = Partial<
   Pick<
     PipelineState,
-    "tenant" | "usage" | "insights" | "leads" | "foundCount" | "sources" | "outreach"
+    "tenant" | "usage" | "insights" | "leads" | "foundCount" | "sources" | "outreach" | "emailAccount"
   >
 >;
 
 export type PipelineAction =
-  | { type: "GO"; screen: ScreenKey }
+  | { type: "GO"; screen: ScreenKey; focusId?: string }
   | { type: "SET_MODE"; mode: Mode }
   | { type: "SET_EMAIL"; email: string }
   | { type: "SET_PASSWORD"; password: string }
   | { type: "SET_SIGNIN_STATE"; state: SigninState }
   | { type: "HYDRATE"; payload: HydratePayload }
   | { type: "SET_DATA_STATE"; state: DataState; error?: string }
+  | { type: "SET_EMAIL_ACCOUNT"; account: EmailAccount | null }
   | { type: "DISMISS_REFINEMENT" }
-  | { type: "START_EDIT_OUTREACH"; id: string; subject: string; body: string }
+  | { type: "START_EDIT_OUTREACH"; messageId: string; subject: string; body: string }
   | { type: "SET_OUTREACH_SUBJECT"; value: string }
   | { type: "SET_OUTREACH_BODY"; value: string }
   | { type: "SAVE_OUTREACH_DRAFT" }
@@ -117,7 +129,14 @@ export type PipelineAction =
 export function pipelineReducer(state: PipelineState, action: PipelineAction): PipelineState {
   switch (action.type) {
     case "GO":
-      return { ...state, screen: action.screen };
+      return {
+        ...state,
+        screen: action.screen,
+        focusId: action.focusId ?? null,
+        // Jumping to a specific lead opens its dossier so the link lands on the evidence.
+        expandedLead:
+          action.screen === "gateB" && action.focusId ? action.focusId : state.expandedLead,
+      };
     case "SET_MODE":
       return { ...state, mode: action.mode };
     case "SET_EMAIL":
@@ -130,12 +149,14 @@ export function pipelineReducer(state: PipelineState, action: PipelineAction): P
       return { ...state, ...action.payload };
     case "SET_DATA_STATE":
       return { ...state, dataState: action.state, dataError: action.error ?? null };
+    case "SET_EMAIL_ACCOUNT":
+      return { ...state, emailAccount: action.account };
     case "DISMISS_REFINEMENT":
       return { ...state, refinementDismissed: true };
     case "START_EDIT_OUTREACH":
       return {
         ...state,
-        editingOutreach: action.id,
+        editingMessageId: action.messageId,
         outreachSubject: action.subject,
         outreachBody: action.body,
       };
@@ -143,18 +164,30 @@ export function pipelineReducer(state: PipelineState, action: PipelineAction): P
       return { ...state, outreachSubject: action.value };
     case "SET_OUTREACH_BODY":
       return { ...state, outreachBody: action.value };
-    case "SAVE_OUTREACH_DRAFT":
+    case "SAVE_OUTREACH_DRAFT": {
+      const mid = state.editingMessageId;
+      const subj = state.outreachSubject;
+      const body = state.outreachBody;
       return {
         ...state,
-        outreach: state.outreach.map((o) =>
-          o.id === state.editingOutreach
-            ? { ...o, subject: state.outreachSubject, body: state.outreachBody }
-            : o,
-        ),
-        editingOutreach: null,
+        outreach: state.outreach.map((o) => {
+          const hit = o.variants.find((v) => v.messageId === mid);
+          if (!hit) return o;
+          // Body is shared across variants; subject is per-variant.
+          return {
+            ...o,
+            body,
+            subject: hit.isControl ? subj : o.subject,
+            variants: o.variants.map((v) =>
+              v.messageId === mid ? { ...v, subject: subj, body } : { ...v, body },
+            ),
+          };
+        }),
+        editingMessageId: null,
       };
+    }
     case "CANCEL_EDIT_OUTREACH":
-      return { ...state, editingOutreach: null };
+      return { ...state, editingMessageId: null };
     case "SET_SOURCES":
       return { ...state, sources: action.sources };
     case "ADD_SOURCE":

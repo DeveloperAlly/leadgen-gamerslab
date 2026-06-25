@@ -5,11 +5,13 @@ publishers on behalf of GamersLab. The goal is precision, not volume — every d
 someone spent an hour on the publisher first. All output lands in Supabase for human review;
 **the pipeline never sends.**
 
-> **📍 Source of truth for the live system: [`SPEC.md`](SPEC.md).** This README's "Pipeline
-> overview" below has been updated to the live **v10** graph, but `SPEC.md` is the verified
-> as-built spec (UI ↔ Edge Functions ↔ n8n ↔ Supabase, with the full live schema). The live n8n
-> workflow is **v10** (`MouIeDmDAAHKIpDn` on Sliplane); the committed
-> `workflow/gamerslab-outreach-v9.json` is a **stale v9 export** kept only as a baseline.
+> **📍 Source of truth for the live system:** [`SPEC.md`](SPEC.md) (UI ↔ Edge ↔ n8n ↔ Supabase,
+> full live schema) **and** [`ARCHITECTURE.md`](ARCHITECTURE.md) (the **complete n8n fleet** — all
+> **six** live workflows and how they wire together, not just the engine). This README's "Pipeline
+> overview" below covers only the **v10 discovery engine** (`MouIeDmDAAHKIpDn` on Sliplane); the
+> Send, Reply Poll, Context Builder and Source Ingestion workflows are documented in
+> `ARCHITECTURE.md`. The committed `workflow/gamerslab-outreach-v9.json` is a **stale v9 export**
+> kept only as a baseline (the live v9 workflow is superseded — see `ARCHITECTURE.md §3`).
 
 ## Where this sits
 
@@ -19,17 +21,20 @@ project areas in the repo. **Read the root [`README.md`](../README.md) and
 
 ```
 gamerslab-poc/                              ← you are here (the built v1 pipeline)
+├── SPEC.md                                 ← as-built UI↔Edge↔DB contract (canonical)
+├── ARCHITECTURE.md                         ← ALL 6 live n8n workflows + wiring (canonical)
 ├── workflow/
-│   ├── gamerslab-outreach-v9.json          ← n8n workflow — import this (live instance is v10)
-│   └── gamerslab-outreach-v9.backup.json   ← prior snapshot
+│   ├── gamerslab-outreach-v9.json          ← stale v9 export (baseline only; live engine is v10)
+│   ├── gamerslab-outreach-v9.backup.json   ← prior snapshot
+│   ├── email-*.workflow.ts                 ← Send / Reply-poll source (see ARCHITECTURE.md ②③)
+│   └── v10-live-edits/                      ← v10 engine deltas (the live graph is not fully exported)
 ├── supabase/
 │   ├── schema.sql                          ← run in Supabase SQL editor first
 │   ├── test-queries.sql                    ← review / approval / inspection queries
 │   └── functions/                          ← v1 integration API (Edge Functions) — see its README
 ├── docs/
-│   ├── spec.md                             ← full technical specification
-│   ├── requirements.md                     ← node-by-node build requirements
-│   └── cag-block.md                        ← GamersLab product brief (CAG) used in LLM calls
+│   ├── cag-block.md                        ← GamersLab CAG brief (reference; live CAG is DB-driven)
+│   └── _archive/                           ← superseded spec.md (v1) + requirements.md (v9)
 └── README.md
 
 ../poc/ui/                                  ← the shared UI source (build with `--mode poc` for this POC)
@@ -38,6 +43,27 @@ gamerslab-poc/                              ← you are here (the built v1 pipel
 > The shared white-label **UI lives at `../poc/ui/`** (one source, two build modes). The
 > **white-label v2** design/productisation lives at `../whitelabel/`, and the cross-cutting
 > campaign context (research, business process, architecture) at the repo root (`who/ what/ how/`).
+
+## System flow (end-to-end)
+
+Two flows make up the system. The first builds the client's **CAG brief**; the second is the
+**lead lifecycle** that consumes it. Inputs are on the left of each step, outputs on the right.
+Full node/wiring detail is in [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
+> ⚠️ **Keep these current.** These SVGs are generated from the live system. When a workflow,
+> Edge function, or DB write changes, **update the matching `docs/assets/*.svg` in the same change**
+> — it is step 1 on the `ARCHITECTURE.md §10` maintenance checklist.
+
+### 1 · Client — onboarding & intelligence loop (builds the CAG brief)
+
+![Client onboarding and intelligence loop: sources → ingestion → intake bank → Context Builder → CAG brief](docs/assets/client-intelligence-flow.svg)
+
+### 2 · Leads — end-to-end (Steam → inbox → reply)
+
+![Leads end-to-end flow: trigger, mine, score, enrich, draft, Gate B, Gate C, send, reply, learn — with inputs and outputs per stage](docs/assets/leads-end-to-end-flow.svg)
+
+The single handoff between them is the **CAG brief**: built in flow 1, consumed at the *draft* step
+of flow 2 (`Apply CAG from DB`).
 
 ## Setup
 

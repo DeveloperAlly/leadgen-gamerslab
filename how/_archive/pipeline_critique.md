@@ -1,3 +1,7 @@
+> ⛔ **ARCHIVED / SUPERSEDED.** v1 critique (8 gaps). Superseded by [`../pipeline_critique_v2.md`](../pipeline_critique_v2.md). Kept for history; do not action from this file.
+
+---
+
 # Pipeline Critique & Gap Analysis
 
 **Task 3.** Critical analysis of the proposed end-to-end process pipeline, with gaps, risks,

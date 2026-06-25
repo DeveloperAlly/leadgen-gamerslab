@@ -16,6 +16,11 @@
 White-label v2 = `whitelabel/` (design only). The UI is **one source** at `poc/ui/` — never fork it.
 Ambiguous which project? **Ask before acting.**
 
+**Canonical current-state docs (POC):** `gamerslab-poc/SPEC.md` + **`gamerslab-poc/ARCHITECTURE.md`**
+(the full n8n fleet — **6 live workflows**, not one). Update `ARCHITECTURE.md` with any live workflow
+change. Superseded docs are in `*/_archive/`. The old **v9** workflow is superseded + parked (trigger node
+disabled, does not run) — see `ARCHITECTURE.md §3`.
+
 ## Operating doctrine (applies to all areas)
 
 No build before the human gate · look at data/tools before asking · recall the aDNA memory before

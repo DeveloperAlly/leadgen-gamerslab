@@ -1,3 +1,7 @@
+> ⛔ **ARCHIVED / SUPERSEDED.** Original aspirational v1 design spec (May 2026). As-built system is in [`../../SPEC.md`](../../SPEC.md) and [`../../ARCHITECTURE.md`](../../ARCHITECTURE.md). Kept for design-intent history.
+
+---
+
 # GamersLab — Publisher Outreach Automation Pipeline
 **Version 1.0 · May 2026**
 

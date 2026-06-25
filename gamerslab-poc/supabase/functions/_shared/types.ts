@@ -59,6 +59,21 @@ export interface EvidenceItem {
 
 export type LeadStatus = "pending" | "approved" | "rejected";
 
+/**
+ * Public contact + presence resolved for a lead. Every field optional; URLs normalized
+ * and sentinel values ("", "unknown") dropped in the mapper so the UI treats any present
+ * value as real.
+ */
+export interface LeadContact {
+  website?: string;
+  email?: string;
+  name?: string;
+  role?: string;
+  twitter?: string;
+  linkedin?: string;
+  discord?: string;
+}
+
 /** N5 — an anti-fit signal. Surfaced as a warning; never auto-suppresses the lead. */
 export interface RiskFlag {
   flag: string;
@@ -92,6 +107,8 @@ export interface Lead {
   evidenceStrength?: "explicit" | "inferred" | "none";
   /** N5 — anti-fit signals, surfaced as warnings (never auto-suppressed). */
   riskFlags?: RiskFlag[];
+  /** Public contact + presence (website, socials, email, human name). */
+  contact?: LeadContact;
   status: LeadStatus;
 }
 
@@ -103,14 +120,35 @@ export type OutreachStage =
   | "partial"
   | "lost";
 
+/** One A/B variant of an outreach message (step 1 = initial, 2+ = follow-up). */
+export interface OutreachVariant {
+  messageId: string;
+  variant: string; // 'A' | 'B' | 'control'
+  isControl: boolean;
+  step: number;
+  subject?: string;
+  body?: string;
+  /** A/B accumulation counters (per variant). Real once sending is live. */
+  sentCount: number;
+  replyCount: number;
+}
+
 export interface OutreachItem {
-  id: string;
+  id: string; // publisher id (the approve/skip key)
   name: string;
   initials: string;
   channel: string;
   stage: OutreachStage;
+  /** Recipient address this outreach sends TO. Undefined when no contact was found. */
+  toEmail?: string;
+  /** Whether the recipient address passed deliverability (MX) validation. */
+  emailValid?: boolean;
+  /** Control-variant subject (convenience for the board / single-variant view). */
   subject?: string;
+  /** Shared body. */
   body?: string;
+  /** All A/B variants for the initial step. */
+  variants: OutreachVariant[];
   last?: string;
 }
 

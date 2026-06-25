@@ -1,9 +1,19 @@
 import { useState } from "react";
-import type { Lead, RejectReasonCode } from "../../data/types";
+import type { Lead, LeadContact, RejectReasonCode } from "../../data/types";
 import { radius, space } from "../../theme/tokens";
 import { ScoreBadge } from "./ScoreBadge";
 import { TwoSidedScore } from "./TwoSidedScore";
-import { CheckIcon, ChevronIcon, ExternalIcon, ShieldIcon, XIcon } from "../icons";
+import {
+  AtIcon,
+  CheckIcon,
+  ChevronIcon,
+  ExternalIcon,
+  GlobeIcon,
+  MailIcon,
+  ShieldIcon,
+  UsersIcon,
+  XIcon,
+} from "../icons";
 
 interface LeadRowProps {
   lead: Lead;
@@ -56,6 +66,90 @@ const actionBtn = (active: boolean, tone: "success" | "danger" | "muted"): React
   background: active && tone !== "muted" ? `var(--${tone})` : "var(--bg-surface)",
   color: active && tone !== "muted" ? "#fff" : `var(--${tone === "muted" ? "text-muted" : tone})`,
 });
+
+/** Strip the scheme/path from a URL for a compact, readable label (e.g. "tellusgames.com"). */
+const hostLabel = (url: string): string => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
+  }
+};
+
+const contactLink: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 4,
+  fontSize: 12,
+  fontWeight: 600,
+  color: "var(--accent)",
+  textDecoration: "none",
+};
+
+/**
+ * Public contact + presence resolved for a lead: website, socials, email, and the human
+ * contact (name · role). Renders only the fields we actually have, so a sparse lead shows
+ * a short strip and a rich one shows the full set — nothing renders when nothing resolved.
+ */
+function ContactStrip({ contact }: { contact?: LeadContact }) {
+  if (!contact) return null;
+  const { website, email, name, role, twitter, linkedin, discord } = contact;
+  if (!website && !email && !name && !twitter && !linkedin && !discord) return null;
+
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: space.md,
+        flexWrap: "wrap",
+        marginTop: 9,
+      }}
+    >
+      {name && (
+        <span
+          style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--text-secondary)" }}
+        >
+          <UsersIcon size={12} strokeWidth={2.2} />
+          {name}
+          {role ? <span style={{ color: "var(--text-muted)" }}>· {role}</span> : null}
+        </span>
+      )}
+      {website && (
+        <a href={website} target="_blank" rel="noreferrer" onClick={stop} style={contactLink}>
+          <GlobeIcon size={12} strokeWidth={2.2} />
+          {hostLabel(website)}
+        </a>
+      )}
+      {email && (
+        <a href={`mailto:${email}`} onClick={stop} style={contactLink}>
+          <MailIcon size={12} strokeWidth={2.2} />
+          {email}
+        </a>
+      )}
+      {twitter && (
+        <a href={twitter} target="_blank" rel="noreferrer" onClick={stop} style={contactLink}>
+          <AtIcon size={12} strokeWidth={2.2} />
+          X
+        </a>
+      )}
+      {linkedin && (
+        <a href={linkedin} target="_blank" rel="noreferrer" onClick={stop} style={contactLink}>
+          <ExternalIcon size={12} strokeWidth={2.2} />
+          LinkedIn
+        </a>
+      )}
+      {discord && (
+        <a href={discord} target="_blank" rel="noreferrer" onClick={stop} style={contactLink}>
+          <ExternalIcon size={12} strokeWidth={2.2} />
+          Discord
+        </a>
+      )}
+    </div>
+  );
+}
 
 /** Lead row with verification pill, match reason, meta chips, two-sided score, and evidence dossier. */
 export function LeadRow({ lead, expanded, onToggle, onApprove, onReject }: LeadRowProps) {
@@ -111,6 +205,7 @@ export function LeadRow({ lead, expanded, onToggle, onApprove, onReject }: LeadR
             <span style={{ fontSize: 16, fontWeight: 700 }}>{lead.name}</span>
             {lead.verified && (
               <span
+                title="Verified: we found a deliverable contact email for this publisher and it passed mail-server validation. It confirms we can reach them, not the company's other details."
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -121,6 +216,7 @@ export function LeadRow({ lead, expanded, onToggle, onApprove, onReject }: LeadR
                   background: "var(--success-soft)",
                   borderRadius: radius.pill,
                   padding: "2px 9px",
+                  cursor: "help",
                 }}
               >
                 <ShieldIcon size={12} strokeWidth={2.2} />
@@ -193,6 +289,8 @@ export function LeadRow({ lead, expanded, onToggle, onApprove, onReject }: LeadR
               ))}
             </div>
           )}
+
+          <ContactStrip contact={lead.contact} />
 
           <button
             onClick={onToggle}

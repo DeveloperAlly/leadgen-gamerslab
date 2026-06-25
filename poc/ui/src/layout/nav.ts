@@ -4,7 +4,6 @@ import {
   FlowIcon,
   HomeIcon,
   LayersIcon,
-  MailIcon,
   SlidersIcon,
   SparkleIcon,
   UsersIcon,
@@ -24,7 +23,6 @@ export const navItems: NavItem[] = [
   { label: "Sources", Icon: LayersIcon, target: "sources" },
   { label: "Intake", Icon: EditIcon, target: "profile" },
   { label: "Context", Icon: SparkleIcon, target: "cag" },
-  { label: "Email", Icon: MailIcon, target: "email" },
   { label: "Settings", Icon: SlidersIcon, target: "settings" },
 ];
 
@@ -36,7 +34,6 @@ export const activeNavForScreen: Partial<Record<ScreenKey, string>> = {
   sources: "Sources",
   profile: "Intake",
   cag: "Context",
-  email: "Email",
   settings: "Settings",
 };
 
@@ -48,6 +45,5 @@ export const shellTitle: Partial<Record<ScreenKey, string>> = {
   sources: "Sources",
   profile: "Business intake",
   cag: "Business context",
-  email: "Email",
   settings: "Settings",
 };

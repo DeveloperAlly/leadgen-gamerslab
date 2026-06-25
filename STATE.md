@@ -3,8 +3,26 @@
 > Read after `CLAUDE.md`. Mandated read at the start of every session on this campaign.
 
 **Campaign:** `gamers_lab_lead_gen`
-**As of:** 2026-06-21
-**Phase:** `RESEARCH + DESIGN` — **PRE-GATE** (no build authorised)
+**As of:** 2026-06-23
+
+**Phase — two parallel tracks, different rules (do not conflate):**
+
+| Area | Phase | Build rule |
+|------|-------|-----------|
+| **GamersLab POC (v1)** | **BUILT & ACTIVE — iterating on the live system** | POC iteration is in motion (6 live n8n workflows, Supabase, UI). Free-tier only. |
+| **White-label v2** | `RESEARCH + DESIGN` — **PRE-GATE** | **No build** until the hard human gate (UI + verified architecture) passes. |
+
+> The "no build before gate" doctrine governs **white-label v2 only**. The GamersLab POC is the
+> built proof-of-concept and is being iterated live. An older version of this file framed the whole
+> campaign as "PRE-GATE, no build" — that was wrong about the POC and caused agents to misread state.
+
+**Canonical current-state docs (read before acting on the POC):**
+`gamerslab-poc/SPEC.md` (UI↔Edge↔DB) · **`gamerslab-poc/ARCHITECTURE.md` (all 6 n8n workflows)** ·
+`gamerslab-poc/workflow/v10-live-edits/` (engine deltas).
+
+**v9 status:** the old **v9** outreach workflow (`bGxcwlp3VRL8jT9r-Mm_h`) is superseded by v10 and
+**parked** — its Schedule Trigger node is disabled, so it does not run (no double-run risk).
+See `ARCHITECTURE.md §3`.
 
 ## Gate status
 
@@ -30,8 +48,8 @@
 | Infra stack & layers (the HOW) | Agent (done) | `how/infra_stack_and_layers_DRAFT.md` (+ embedded `infra_stack_diagram.svg`) | ✅ v10 |
 | v9 pipeline reconciliation | Agent (done) | Both docs §v10; aDNA tag `v9` | ✅ |
 | Pipeline critique v2 — Tier 1 (POC) | Live + verified | `gamerslab-poc/workflow/v10-live-edits/` | ✅ n8n (I1/I6/D1/N5/N9 + prompt) · DB migration · `leads` Edge v3 · UI badges/reason picker — all live & verified |
-| Email send pipeline (identity + delivery) | Build (Claude) — gate passed 2026-06-22 | `how/email_send_pipeline_DRAFT.md`; `gamerslab-poc/supabase` (0005+0006 + 5 email fns); `gamerslab-poc/workflow/email-*.workflow.ts`; `poc/ui` EmailScreen | 🟢 Built (Gmail-only). Live: `email_accounts`+thread cols, 5 Edge fns (email-account verified end-to-end), EmailScreen (both states verified). n8n Send (`YEgPZ0eATTSAb9pa`) + Reply Poll (`LAPjN0jbvV9GAetX`) created via broker design. ⏳ Ally-only: create Google OAuth app + set secrets, activate the 2 workflows, set N8N_SEND_WEBHOOK_URL + re-deploy `outreach`. Endpoints verified vs 2026 docs |
-| Pipeline messaging (subject split · A/B · sequencing · reply detect) | Phase 0 built; Phases 1-3 design | `how/pipeline_messaging_ab_sequencing_DRAFT.md` (+ `pipeline_messaging_architecture.svg`); `gamerslab-poc/supabase/functions/outreach` + `_shared/mapper.ts`; `poc/ui` ProspectTrackingScreen | 🟢 Phase 0 (subject/body split + `PATCH /outreach/:id`) built, `outreach` Edge fn **redeployed v4 & verified live**. 🟢 Em dashes fixed: existing 235 drafts normalized in `publishers`+`message` (0 left), and `Build Final Record` Code node now strips dashes on every future run. 🟢 Phase 1 schema: `message` entity migration `0007` **applied + backfilled (235 rows)** live. ⏳ Remaining build: switch n8n draft to write A/B variant rows → rebind `outreach` Edge fn + Send/Reply-Poll to `message` → Phase 3 UI (step switcher · inbox · A/B view, gated on send volume). One coherent next increment |
+| Email send pipeline (identity + delivery) | Build (Claude) — gate passed 2026-06-22 | `how/email_send_pipeline_DRAFT.md`; `gamerslab-poc/supabase` (0005+0006 + 5 email fns); `gamerslab-poc/workflow/email-*.workflow.ts`; `poc/ui` EmailScreen | 🟢 Built (Gmail-only). Live: `email_accounts`+thread cols, 5 Edge fns (email-account verified end-to-end), EmailScreen (both states verified). n8n Send (`YEgPZ0eATTSAb9pa`) + Reply Poll (`LAPjN0jbvV9GAetX`) via broker design. ✅ **LIVE & full-loop verified 2026-06-22**: Google OAuth app created, secrets set, inbox connected (`ally@gamerslab.gg`), workflows active, `outreach` approve→send fires. Real approve sent a real email + stamped the row `sent` (exec 68446). Send/Reply-Poll **rebound to the `message` entity** (dual-write to publishers) + verified. RFC 2047 subject encoding fixed; no em dashes. ⏳ Only the positive reply-flip remains to demo (needs an external-sender reply). Endpoints verified vs 2026 docs |
+| Pipeline messaging (subject split · A/B · sequencing · reply detect) | Phases 0-3 built & verified | `how/pipeline_messaging_ab_sequencing_DRAFT.md` (+ `pipeline_messaging_architecture.svg`); `gamerslab-poc/supabase/functions/outreach` + `_shared/mapper.ts`; `poc/ui` ProspectTrackingScreen | 🟢 Phase 0 (subject/body split + `PATCH /outreach/:id`) built, `outreach` Edge fn **redeployed v4 & verified live**. 🟢 Em dashes fixed: existing 235 drafts normalized in `publishers`+`message` (0 left), and `Build Final Record` Code node now strips dashes on every future run. 🟢 Migrations `0007` (`message` entity + backfill 235), `0008` (B-subject cols + publishers→message sync trigger), `0009` (trigger B-delete) applied. `outreach` Edge fn **rebound to `message` (v8)**: GET groups by publisher with A/B variants; `PATCH /outreach/message/:id` edits a variant (writes the publishers column, trigger mirrors) — full round-trip verified live. UI: A/B variant tabs + per-variant edit + honest "needs ~200/variant" accumulation line, verified in preview. Send/Reply-Poll already rebound to `message` (email send track). 🟢 **B generation LIVE 2026-06-23**: new n8n node `Add B Variant` (between `Build Final Record` and `Upsert`) writes a question/pairing B subject (`game + ugc?` / `Quick idea for game`, dashes stripped) → autoMap upsert → trigger makes the B row. `outreach` Edge fn **redeployed v13, now self-contained** (mapping inlined, no `_shared/mapper` import) after a stale parallel deploy had reverted it to the flat shape and crashed the board; UI hardened with `item.variants?.length` guard. Live API verified: returns `variants`+`toEmail`+`emailValid`; board shows A/B tabs, recipients, enabled approve. ⏳ Remaining: step-2 follow-up sequencing + inbox UI (no data until sends accumulate); A/B winner-call UI volume-gated |
 | Requirements specs (M1) | Pending Ally go | — | ⏸ awaiting next session |
 | Verified architecture (M2) | Pending M1 | — | ⏸ |
 | UI design (M3) | Pending M2 | — | ⏸ |

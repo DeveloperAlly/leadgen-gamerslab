@@ -1,7 +1,12 @@
 # Pipeline Page — Subject Split, A/B Testing, Sequencing & Reply Tracking — DRAFT
 
-**Status:** 🟡 **DRAFT.** Phase 0 (subject/body split) is **built and verified** in the POC.
-Phases 1 to 3 below are **PRE-GATE design** and authorise no build. See `STATE.md`.
+**Status:** 🟢 **Phases 0-3 BUILT & VERIFIED LIVE 2026-06-22.** Subject/body split, the `message`
+entity (migrations `0007`/`0008`/`0009`), the publishers→message sync trigger, the `outreach` Edge
+fn rebound to `message` (v8, A/B variants + per-variant `PATCH` round-trip verified), and the UI
+A/B variant tabs + honest accumulation line are all live. Remaining (low-risk, deferred): one line
+in the `Prepare LLM Items` prompt so the daily run emits `draft_subject_b`; step-2 follow-up
+sequencing + inbox UI (no data until sends accumulate); A/B winner-call UI is volume-gated.
+The design below is retained as the as-built record.
 
 **Created:** 2026-06-22 · **Owner:** Ally · **Area:** GamersLab POC (`gamerslab-poc/` + `poc/ui/`).
 **Extends, does not duplicate:** [`email_send_pipeline_DRAFT.md`](email_send_pipeline_DRAFT.md) (identity

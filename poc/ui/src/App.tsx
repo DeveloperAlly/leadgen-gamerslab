@@ -18,7 +18,6 @@ import { SourcesScreen } from "./screens/SourcesScreen";
 import { IntakeBankScreen } from "./screens/IntakeBankScreen";
 import { ContextScreen } from "./screens/ContextScreen";
 import { ProspectTrackingScreen } from "./screens/ProspectTrackingScreen";
-import { EmailScreen } from "./screens/EmailScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 
 const screens: Record<ScreenKey, () => JSX.Element> = {
@@ -34,7 +33,6 @@ const screens: Record<ScreenKey, () => JSX.Element> = {
   profile: IntakeBankScreen,
   cag: ContextScreen,
   outreach: ProspectTrackingScreen,
-  email: EmailScreen,
   settings: SettingsScreen,
 };
 

@@ -76,6 +76,14 @@ export const seedLeads: Lead[] = [
     reason: 'Closed a $2.1M seed and posted a "first UX hire" role — actively building a research function.',
     source: "TechCrunch",
     meta: ["14 people", "Seattle", "38k wishlists"],
+    contact: {
+      website: "https://pixelforge.studio",
+      email: "hello@pixelforge.studio",
+      name: "Maya Okonkwo",
+      role: "Founder & CEO",
+      twitter: "https://x.com/pixelforge",
+      linkedin: "https://www.linkedin.com/company/pixel-forge-studios",
+    },
     venue: "Steam",
     status: "pending",
     evidenceStrength: "explicit",
@@ -96,6 +104,12 @@ export const seedLeads: Lead[] = [
     reason: 'Wishlists surging on an unreleased title; founder posted about "flying blind on playtest data."',
     source: "Steam · X",
     meta: ["9 people", "Remote", "Pre-launch"],
+    contact: {
+      website: "https://hollowoak.games",
+      name: "Tomas Reyes",
+      twitter: "https://x.com/hollowoakgames",
+      discord: "https://discord.gg/hollowoak",
+    },
     venue: "Reddit",
     status: "pending",
     evidenceStrength: "inferred",
@@ -115,6 +129,11 @@ export const seedLeads: Lead[] = [
     reason: "Second title in production; hiring two designers this quarter.",
     source: "LinkedIn",
     meta: ["28 people", "Berlin", "Series A"],
+    contact: {
+      website: "https://neondrift.gg",
+      email: "studio@neondrift.gg",
+      linkedin: "https://www.linkedin.com/company/neon-drift-games",
+    },
     venue: "LinkedIn",
     status: "pending",
     evidence: [
@@ -151,6 +170,9 @@ export const seedLeads: Lead[] = [
     reason: "Active in r/gamedev about playtest pains; small but highly engaged.",
     source: "Reddit",
     meta: ["5 people", "Austin"],
+    contact: {
+      twitter: "https://x.com/starboundco",
+    },
     venue: "Reddit",
     status: "pending",
     evidence: [
@@ -168,6 +190,9 @@ export const seedLeads: Lead[] = [
     reason: "Early prototype stage — fit is plausible but timing may be too early.",
     source: "itch.io",
     meta: ["4 people", "Remote"],
+    contact: {
+      website: "https://lumentactics.dev",
+    },
     venue: "X",
     status: "pending",
     evidenceStrength: "none",
@@ -198,15 +223,32 @@ export const seedLeads: Lead[] = [
 ];
 
 export const seedOutreach: OutreachItem[] = [
-  { id: "out-1", name: "Pixel Forge Studios", initials: "PF", channel: "Warm intro", stage: "awaiting", subject: "Pixel Forge playtests, structured before launch", body: "Hi Maya, huge congrats on the seed. Saw you’re standing up a UX research function. We help studios run structured playtests and turn the data into clear design calls before launch. Worth a 20-min look next week?" },
-  { id: "out-2", name: "Hollow Oak Interactive", initials: "HO", channel: "Cold email", stage: "awaiting", subject: "Turning playtest feedback into shippable calls", body: "Hi, noticed wishlists climbing on your next title. We help small teams turn scattered playtest feedback into shippable design decisions, fast. Open to a quick intro this week?" },
-  { id: "out-3", name: "Neon Drift Games", initials: "ND", channel: "Warm intro", stage: "contacted", last: "Sent 1d ago" },
-  { id: "out-8", name: "Maple & Bit", initials: "MB", channel: "Cold email", stage: "contacted", last: "Sent 3d ago" },
-  { id: "out-4", name: "Voxel Republic", initials: "VR", channel: "Cold email", stage: "replied", last: "Replied 4h ago" },
-  { id: "out-9", name: "Ashen Foundry", initials: "AF", channel: "Warm intro", stage: "replied", last: "Replied 1d ago" },
-  { id: "out-5", name: "Lumen Tactics", initials: "LT", channel: "Warm intro", stage: "success", last: "Demo booked — trialing" },
-  { id: "out-6", name: "Starbound Collective", initials: "SC", channel: "Cold email", stage: "partial", last: "Interested, not now" },
-  { id: "out-7", name: "Granite & Gold", initials: "GG", channel: "Cold email", stage: "lost", last: "No fit — platform mismatch" },
+  {
+    id: "out-1", name: "Pixel Forge Studios", initials: "PF", channel: "Warm intro", stage: "awaiting",
+    toEmail: "maya@pixelforge.studio", emailValid: true,
+    subject: "Pixel Forge playtests, structured before launch",
+    body: "Hi Maya, huge congrats on the seed. Saw you’re standing up a UX research function. We help studios run structured playtests and turn the data into clear design calls before launch. Worth a 20-min look next week?",
+    variants: [
+      { messageId: "m1a", variant: "A", isControl: true, step: 1, subject: "Pixel Forge playtests, structured before launch", body: "Hi Maya, huge congrats on the seed. Saw you’re standing up a UX research function. We help studios run structured playtests and turn the data into clear design calls before launch. Worth a 20-min look next week?", sentCount: 0, replyCount: 0 },
+      { messageId: "m1b", variant: "B", isControl: false, step: 1, subject: "Quick question, Pixel Forge playtests", body: "Hi Maya, huge congrats on the seed. Saw you’re standing up a UX research function. We help studios run structured playtests and turn the data into clear design calls before launch. Worth a 20-min look next week?", sentCount: 0, replyCount: 0 },
+    ],
+  },
+  {
+    id: "out-2", name: "Hollow Oak Interactive", initials: "HO", channel: "Cold email", stage: "awaiting",
+    toEmail: "hello@hollowoak.gg", emailValid: false,
+    subject: "Turning playtest feedback into shippable calls",
+    body: "Hi, noticed wishlists climbing on your next title. We help small teams turn scattered playtest feedback into shippable design decisions, fast. Open to a quick intro this week?",
+    variants: [
+      { messageId: "m2a", variant: "A", isControl: true, step: 1, subject: "Turning playtest feedback into shippable calls", body: "Hi, noticed wishlists climbing on your next title. We help small teams turn scattered playtest feedback into shippable design decisions, fast. Open to a quick intro this week?", sentCount: 0, replyCount: 0 },
+    ],
+  },
+  { id: "out-3", name: "Neon Drift Games", initials: "ND", channel: "Warm intro", stage: "contacted", last: "Sent 1d ago", variants: [] },
+  { id: "out-8", name: "Maple & Bit", initials: "MB", channel: "Cold email", stage: "contacted", last: "Sent 3d ago", variants: [] },
+  { id: "out-4", name: "Voxel Republic", initials: "VR", channel: "Cold email", stage: "replied", last: "Replied 4h ago", variants: [] },
+  { id: "out-9", name: "Ashen Foundry", initials: "AF", channel: "Warm intro", stage: "replied", last: "Replied 1d ago", variants: [] },
+  { id: "out-5", name: "Lumen Tactics", initials: "LT", channel: "Warm intro", stage: "success", last: "Demo booked, trialing", variants: [] },
+  { id: "out-6", name: "Starbound Collective", initials: "SC", channel: "Cold email", stage: "partial", last: "Interested, not now", variants: [] },
+  { id: "out-7", name: "Granite & Gold", initials: "GG", channel: "Cold email", stage: "lost", last: "No fit, platform mismatch", variants: [] },
 ];
 
 export const seedDashboardInsights: DashboardInsights = {
